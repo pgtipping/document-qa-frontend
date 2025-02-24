@@ -47,3 +47,5 @@ next-env.d.ts
 
 # Performance logs
 /performance_logs 
+# Sentry Config File
+.env.sentry-build-plugin
