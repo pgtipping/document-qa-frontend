@@ -2,6 +2,7 @@ import { Providers } from "@/components/Providers";
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import "./compiled.css";
 
@@ -35,6 +36,7 @@ export default function RootLayout({
             {children}
           </main>
           <Toaster />
+          <Analytics />
         </Providers>
       </body>
     </html>
