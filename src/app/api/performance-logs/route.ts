@@ -2,12 +2,43 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 
+interface DocumentMetrics {
+  size_kb: number;
+  total_chunks: number;
+  selected_chunks: number;
+  chunk_size: number;
+  context_length: number;
+}
+
+interface TimingEntry {
+  name: string;
+  duration: number;
+}
+
+interface PerformanceLog {
+  timestamp: string;
+  document_metrics: DocumentMetrics;
+  total_llm_time: number;
+  total_doc_time: number;
+  llm_timing: TimingEntry[];
+  doc_timing: TimingEntry[];
+}
+
 export async function GET(req: NextRequest) {
   try {
-    // Read the performance metrics JSON file
+    // In production, return empty data as we'll handle metrics differently
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json({
+        logs: [],
+        documentMetrics: [],
+        processingTimes: [],
+        latestTimings: { llm: [], doc: [] },
+      });
+    }
+
+    // Read the performance metrics JSON file (only in development)
     const filePath = path.join(
       process.cwd(),
-      "frontend",
       "performance_logs",
       "performance_metrics.json"
     );
@@ -39,7 +70,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Parse JSON data
-    const logs = JSON.parse(content);
+    const logs: PerformanceLog[] = JSON.parse(content);
     console.log(`Found ${logs.length} metric entries`);
 
     // Create specialized data structures for different chart types
@@ -49,31 +80,31 @@ export async function GET(req: NextRequest) {
 
       // Document metrics for bar chart
       documentMetrics: logs
-        .map((log) => ({
+        .map((log: PerformanceLog) => ({
           name: "Document Size (KB)",
           value: log.document_metrics.size_kb,
         }))
         .concat(
-          logs.map((log) => ({
+          logs.map((log: PerformanceLog) => ({
             name: "Total Chunks",
             value: log.document_metrics.total_chunks,
           })),
-          logs.map((log) => ({
+          logs.map((log: PerformanceLog) => ({
             name: "Selected Chunks",
             value: log.document_metrics.selected_chunks,
           })),
-          logs.map((log) => ({
+          logs.map((log: PerformanceLog) => ({
             name: "Chunk Size",
             value: log.document_metrics.chunk_size,
           })),
-          logs.map((log) => ({
+          logs.map((log: PerformanceLog) => ({
             name: "Context Length",
             value: log.document_metrics.context_length,
           }))
         ),
 
       // Processing times for line chart
-      processingTimes: logs.map((log) => ({
+      processingTimes: logs.map((log: PerformanceLog) => ({
         timestamp: new Date(log.timestamp).toLocaleTimeString(),
         llm_time: log.total_llm_time,
         doc_time: log.total_doc_time,

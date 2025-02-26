@@ -6,7 +6,7 @@
   "framework": "nextjs",
   "outputDirectory": ".next",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://api.document-qa.com"
+    "NEXT_PUBLIC_API_URL": "https://document-qa-backend-c6d040fdd108.herokuapp.com"
   },
   "headers": [
     {
@@ -25,14 +25,10 @@
       ]
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     }
   ]
 }

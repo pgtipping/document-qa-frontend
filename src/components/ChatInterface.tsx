@@ -92,13 +92,14 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
         },
         body: JSON.stringify({
           question: input.trim(),
-          documentId,
+          document_id: documentId,
           model: currentModel?.model,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.detail || "Failed to get answer");
       }
 
       const data = await response.json();
@@ -108,13 +109,13 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
       };
       setMessages((prev) => [...prev, assistantMessage]);
 
-      // Trigger metrics refresh after getting LLM response
+      // Trigger metrics refresh after successful response
       triggerMetricsRefresh();
     } catch (error) {
-      console.error("Chat error:", error);
+      console.error("Error asking question:", error);
       toast({
         title: "Error",
-        description: "Failed to get response",
+        description: error instanceof Error ? error.message : "Failed to get answer",
         variant: "destructive",
       });
     } finally {

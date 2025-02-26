@@ -49,3 +49,5 @@ next-env.d.ts
 /performance_logs 
 # Sentry Config File
 .env.sentry-build-plugin
+
+.vercel

@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && sentry-cli releases propose-version",
-    "vercel-build": "sentry-cli releases new $VERCEL_GIT_COMMIT_SHA && next build && sentry-cli releases finalize $VERCEL_GIT_COMMIT_SHA",
+    "build": "next build",
+    "vercel-build": "next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest"
@@ -43,7 +43,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.475.0",
-    "next": "^14.0.0",
+    "next": "^15.1.7",
     "next-themes": "^0.4.4",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
@@ -55,6 +55,7 @@
   "devDependencies": {
     "@sentry/cli": "^2.0.0",
     "@shadcn/ui": "^0.0.4",
+    "@swc/jest": "^0.2.37",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",
     "@types/jest": "^29.0.0",
@@ -69,6 +70,7 @@
     "postcss": "^8.4.33",
     "shadcn-ui": "^0.9.4",
     "tailwindcss": "^3.4.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
   }
 }
