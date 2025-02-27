@@ -44,7 +44,12 @@ type EventProperties = {
 // Base trackEvent function
 const baseTrackEvent = (name: string, properties?: EventProperties) => {
   try {
-    window.va?.("event", { event_name: name, ...properties });
+    // Check if we're in a browser environment and analytics is initialized
+    if (typeof window === "undefined" || !window.va) {
+      console.warn("Analytics not initialized or not in browser environment");
+      return;
+    }
+    window.va("event", { event_name: name, ...properties });
   } catch (error) {
     console.error("Error tracking event:", error);
   }
