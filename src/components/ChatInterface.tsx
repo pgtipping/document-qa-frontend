@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import ModelSelector, { ModelSelection } from "@/components/ModelSelector";
 import { triggerMetricsRefresh } from "@/hooks/useMetrics";
+import { trackEvent } from "@/lib/analytics";
 
 // Function to format message content with proper styling
 const formatMessageContent = (content: string) => {
@@ -60,6 +61,9 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
 
   const handleModelSelect = useCallback((selection: ModelSelection) => {
     setCurrentModel(selection);
+    trackEvent("provider_selected", {
+      provider: selection.model,
+    });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,6 +88,13 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
     setInput("");
     setLoading(true);
 
+    trackEvent("question_asked", {
+      provider: currentModel?.model,
+      questionLength: input.trim().length,
+    });
+
+    const startTime = performance.now();
+
     try {
       const response = await fetch("/api/ask", {
         method: "POST",
@@ -99,23 +110,44 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || errorData.detail || "Failed to get answer");
+        throw new Error(
+          errorData.error || errorData.detail || "Failed to get answer"
+        );
       }
 
       const data = await response.json();
+      const responseTime = performance.now() - startTime;
+
       const assistantMessage: Message = {
         role: "assistant",
         content: data.answer,
       };
       setMessages((prev) => [...prev, assistantMessage]);
 
+      trackEvent("answer_received", {
+        provider: currentModel?.model,
+        responseTime,
+        answerLength: data.answer.length,
+      });
+
       // Trigger metrics refresh after successful response
       triggerMetricsRefresh();
     } catch (error) {
+      const errorTime = performance.now() - startTime;
       console.error("Error asking question:", error);
+
+      trackEvent("error_occurred", {
+        provider: currentModel?.model,
+        errorType: "question_error",
+        errorMessage:
+          error instanceof Error ? error.message : "Failed to get answer",
+        timeTaken: errorTime,
+      });
+
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to get answer",
+        description:
+          error instanceof Error ? error.message : "Failed to get answer",
         variant: "destructive",
       });
     } finally {

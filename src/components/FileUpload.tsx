@@ -6,6 +6,7 @@ import { Upload, File, X, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
+import { trackEvent } from "@/lib/analytics";
 import axios, { AxiosProgressEvent } from "axios";
 
 declare global {
@@ -55,10 +56,16 @@ export default function FileUpload() {
       setIsUploading(true);
       setUploadProgress(0);
 
+      trackEvent("document_upload_start", {
+        documentSize: fileToUpload.size,
+        documentType: fileToUpload.type,
+      });
+
       const formData = new FormData();
       formData.append("file", fileToUpload);
 
       try {
+        const startTime = performance.now();
         const response = await axios.post<{ document_id: string }>(
           "/api/upload",
           formData,
@@ -77,8 +84,17 @@ export default function FileUpload() {
           }
         );
 
+        const uploadDuration = performance.now() - startTime;
+
         // Store document ID for later use
         localStorage.setItem("currentDocumentId", response.data.document_id);
+
+        trackEvent("document_upload_success", {
+          documentSize: fileToUpload.size,
+          documentType: fileToUpload.type,
+          uploadDuration,
+          documentId: response.data.document_id,
+        });
 
         toast({
           title: "Success",
@@ -87,6 +103,14 @@ export default function FileUpload() {
         });
       } catch (error) {
         console.error("Upload error:", error);
+
+        trackEvent("document_upload_error", {
+          documentSize: fileToUpload.size,
+          documentType: fileToUpload.type,
+          errorMessage:
+            error instanceof Error ? error.message : "Unknown error",
+        });
+
         toast({
           title: "Error",
           description: "Failed to upload file",
