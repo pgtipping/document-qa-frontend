@@ -3,24 +3,29 @@ import nodemailer from "nodemailer";
 
 // Configure email transporter
 const getEmailTransporter = () => {
-  if (
-    !process.env.EMAIL_SERVICE ||
-    !process.env.EMAIL_USER ||
-    !process.env.EMAIL_PASSWORD
-  ) {
-    console.warn(
-      "Email configuration missing. Alerts will be logged but not sent."
-    );
+  try {
+    if (
+      !process.env.EMAIL_SERVICE ||
+      !process.env.EMAIL_USER ||
+      !process.env.EMAIL_PASSWORD
+    ) {
+      console.warn(
+        "Email configuration missing. Alerts will be logged but not sent."
+      );
+      return null;
+    }
+
+    return nodemailer.createTransport({
+      service: process.env.EMAIL_SERVICE,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+  } catch (error) {
+    console.error("Error creating email transporter:", error);
     return null;
   }
-
-  return nodemailer.createTransport({
-    service: process.env.EMAIL_SERVICE,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  });
 };
 
 export async function GET() {
@@ -43,34 +48,74 @@ export async function GET() {
       pass: config.pass ? "***" : false,
     });
 
-    const transporter = getEmailTransporter();
-
-    if (!transporter || !process.env.ALERT_EMAIL_RECIPIENT) {
+    // Check if all required environment variables are set
+    if (!config.service || !config.user || !config.pass || !config.recipient) {
       return NextResponse.json({
         success: false,
         message: "Email configuration incomplete",
+        config,
+        env: {
+          NODE_ENV: process.env.NODE_ENV || "unknown",
+          // List other non-sensitive environment variables
+          VERCEL_ENV: process.env.VERCEL_ENV || "unknown",
+          VERCEL_URL: process.env.VERCEL_URL || "unknown",
+        },
+      });
+    }
+
+    const transporter = getEmailTransporter();
+
+    if (!transporter) {
+      return NextResponse.json({
+        success: false,
+        message: "Failed to create email transporter",
+        config,
+      });
+    }
+
+    // Verify transporter connection
+    try {
+      await transporter.verify();
+    } catch (verifyError) {
+      return NextResponse.json({
+        success: false,
+        message: "Email transporter verification failed",
+        error:
+          verifyError instanceof Error
+            ? verifyError.message
+            : String(verifyError),
         config,
       });
     }
 
     // Send test email
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.ALERT_EMAIL_RECIPIENT,
-      subject: `[Document QA${
-        process.env.NODE_ENV === "production" ? " PROD" : ""
-      }] Test Email`,
-      html: `
-        <h2>Test Email</h2>
-        <p>This is a test email to verify your email configuration.</p>
-        <hr>
-        <p><strong>Environment:</strong> ${
-          process.env.NODE_ENV || "development"
-        }</p>
-        <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-        <p><strong>Sender:</strong> ${process.env.EMAIL_USER}</p>
-      `,
-    });
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: process.env.ALERT_EMAIL_RECIPIENT,
+        subject: `[Document QA${
+          process.env.NODE_ENV === "production" ? " PROD" : ""
+        }] Test Email`,
+        html: `
+          <h2>Test Email</h2>
+          <p>This is a test email to verify your email configuration.</p>
+          <hr>
+          <p><strong>Environment:</strong> ${
+            process.env.NODE_ENV || "development"
+          }</p>
+          <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+          <p><strong>Sender:</strong> ${process.env.EMAIL_USER}</p>
+        `,
+      });
+    } catch (sendError) {
+      return NextResponse.json({
+        success: false,
+        message: "Failed to send email",
+        error:
+          sendError instanceof Error ? sendError.message : String(sendError),
+        config,
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -84,6 +129,7 @@ export async function GET() {
         success: false,
         error:
           error instanceof Error ? error.message : "Failed to send test email",
+        stack: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );
