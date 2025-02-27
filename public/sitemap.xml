@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+<url><loc>https://doc-chat-qa.vercel.app</loc><lastmod>2025-02-27T07:23:37.459Z</lastmod><changefreq>daily</changefreq><priority>1</priority></url>
+<url><loc>https://doc-chat-qa.vercel.app/blog</loc><lastmod>2025-02-27T07:23:37.461Z</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://doc-chat-qa.vercel.app/performance</loc><lastmod>2025-02-27T07:23:37.461Z</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+<url><loc>https://doc-chat-qa.vercel.app/backlink-strategy</loc><lastmod>2025-02-27T07:23:37.461Z</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+<url><loc>https://doc-chat-qa.vercel.app/blog/ai-document-analysis</loc><lastmod>2025-02-27T07:23:37.461Z</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+<url><loc>https://doc-chat-qa.vercel.app/blog/document-qa-best-practices</loc><lastmod>2025-02-27T07:23:37.461Z</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+<url><loc>https://doc-chat-qa.vercel.app/blog/comparing-ai-models</loc><lastmod>2025-02-27T07:23:37.461Z</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+</urlset>

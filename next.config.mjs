@@ -12,9 +12,7 @@ const nextConfig = {
     ];
   },
   // API configuration
-  responseLimit: false,
   experimental: {
-    serverComponentsExternalPackages: [],
     largePageDataBytes: 128 * 100000, // Increase size limit for large responses
   },
   webpack: (config) => {

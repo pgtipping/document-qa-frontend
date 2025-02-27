@@ -1,0 +1,13 @@
+# Allow all web crawlers
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://doc-chat-qa.vercel.app/sitemap.xml
+
+# Disallow API routes
+Disallow: /api/
+
+# Disallow test routes
+Disallow: /test-email/
+Disallow: /sentry-example-page/ 

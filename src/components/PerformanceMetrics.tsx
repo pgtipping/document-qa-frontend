@@ -70,13 +70,19 @@ export default function PerformanceMetrics({
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="border shadow-md">
         <CardHeader>
-          <CardTitle>Performance Metrics</CardTitle>
+          <CardTitle className="text-xl">Performance Metrics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[400px]">
-            <p className="text-muted-foreground">Loading metrics...</p>
+          <div className="flex items-center justify-center h-[300px]">
+            <p className="text-muted-foreground flex items-center gap-2">
+              <span
+                className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                aria-hidden="true"
+              ></span>
+              Loading metrics...
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -85,13 +91,16 @@ export default function PerformanceMetrics({
 
   if (error) {
     return (
-      <Card>
+      <Card className="border shadow-md">
         <CardHeader>
-          <CardTitle>Performance Metrics</CardTitle>
+          <CardTitle className="text-xl">Performance Metrics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[400px] text-destructive">
-            {error}
+          <div className="flex items-center justify-center h-[300px] text-destructive">
+            <p className="flex flex-col items-center gap-2 text-center">
+              <span className="text-lg">Error loading metrics</span>
+              <span className="text-sm text-muted-foreground">{error}</span>
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -100,14 +109,16 @@ export default function PerformanceMetrics({
 
   if (!data || data.logs.length === 0) {
     return (
-      <Card>
+      <Card className="border shadow-md">
         <CardHeader>
-          <CardTitle>Performance Metrics</CardTitle>
+          <CardTitle className="text-xl">Performance Metrics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[400px]">
-            <p className="text-muted-foreground">
-              No performance data available
+          <div className="flex items-center justify-center h-[300px]">
+            <p className="text-muted-foreground text-center">
+              No performance data available yet.
+              <br />
+              Upload a document and ask questions to generate metrics.
             </p>
           </div>
         </CardContent>
@@ -118,16 +129,22 @@ export default function PerformanceMetrics({
   const latestLog = data.logs[data.logs.length - 1];
 
   return (
-    <Card>
+    <Card className="border shadow-md">
       <CardHeader>
-        <CardTitle>Performance Metrics</CardTitle>
+        <CardTitle className="text-xl">Performance Metrics</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="timing">Processing Times</TabsTrigger>
-            <TabsTrigger value="document">Document Metrics</TabsTrigger>
-            <TabsTrigger value="history">Historical Data</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full justify-start mb-4">
+            <TabsTrigger value="timing" className="flex-1 md:flex-none">
+              Processing Times
+            </TabsTrigger>
+            <TabsTrigger value="document" className="flex-1 md:flex-none">
+              Document Metrics
+            </TabsTrigger>
+            <TabsTrigger value="history" className="flex-1 md:flex-none">
+              Historical Data
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="timing" className="space-y-4">
