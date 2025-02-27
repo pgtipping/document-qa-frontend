@@ -41,12 +41,98 @@ type EventProperties = {
   timeTaken?: number;
 };
 
-export const trackEvent = (name: string, properties?: EventProperties) => {
+// Base trackEvent function
+const baseTrackEvent = (name: string, properties?: EventProperties) => {
   try {
     window.va?.("event", { event_name: name, ...properties });
   } catch (error) {
     console.error("Error tracking event:", error);
   }
+};
+
+// Alert tracking function
+export const trackAlert = async (
+  type: "error_rate" | "response_time" | "upload_failures",
+  value: number,
+  details?: Record<string, any>
+) => {
+  try {
+    const response = await fetch("/api/alerts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type,
+        value,
+        timestamp: new Date().toISOString(),
+        details,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to send alert");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error sending alert:", error);
+  }
+};
+
+// Error rate tracking
+let errorCount = 0;
+let totalOperations = 0;
+
+export const trackErrorRate = () => {
+  const errorRate = totalOperations > 0 ? errorCount / totalOperations : 0;
+  return trackAlert("error_rate", errorRate);
+};
+
+// Response time tracking
+const responseTimeSamples: number[] = [];
+
+export const trackResponseTime = (duration: number) => {
+  responseTimeSamples.push(duration);
+  const average =
+    responseTimeSamples.reduce((a, b) => a + b, 0) / responseTimeSamples.length;
+  return trackAlert("response_time", average);
+};
+
+// Upload failure tracking
+let uploadFailures = 0;
+
+export const trackUploadFailure = () => {
+  uploadFailures++;
+  return trackAlert("upload_failures", uploadFailures);
+};
+
+export const resetUploadFailures = () => {
+  uploadFailures = 0;
+};
+
+// Enhanced trackEvent with alert tracking
+export const trackEvent = (name: string, properties?: EventProperties) => {
+  totalOperations++;
+
+  if (name.includes("error") || properties?.errorType) {
+    errorCount++;
+    trackErrorRate();
+  }
+
+  if (properties?.responseTime) {
+    trackResponseTime(properties.responseTime);
+  }
+
+  if (name === "document_upload_error") {
+    trackUploadFailure();
+  }
+
+  if (name === "document_upload_success") {
+    resetUploadFailures();
+  }
+
+  return baseTrackEvent(name, properties);
 };
 
 export const trackTiming = async <T>(
