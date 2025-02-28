@@ -110,8 +110,8 @@ export default function BlogPage() {
                     href="/blog/comparing-ai-models"
                     className="hover:text-primary transition-colors"
                   >
-                    Comparing AI Models for Document Analysis: Gemini vs. GPT-4O
-                    vs. Deepseek
+                    Comparing AI Models for Document Analysis: Gemini vs.
+                    GPT-4o-mini vs. Deepseek
                   </Link>
                 </CardTitle>
                 <CardDescription>
@@ -123,7 +123,7 @@ export default function BlogPage() {
                   Not all AI models are created equal when it comes to document
                   analysis. In this comprehensive comparison, we evaluate the
                   performance, accuracy, and speed of different AI models
-                  including Gemini 1.5 Flash, GPT-4O Mini, Deepseek Chat, and
+                  including Gemini 1.5 Flash, GPT-4o-mini, Deepseek Chat, and
                   Meta Llama 3.1.
                 </p>
                 <Link
