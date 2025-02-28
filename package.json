@@ -10,7 +10,8 @@
     "lint": "next lint",
     "test": "jest",
     "sitemap": "next-sitemap",
-    "postbuild": "next-sitemap"
+    "postbuild": "next-sitemap",
+    "generate-admin-key": "ts-node scripts/generate-admin-key.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.3",
@@ -40,11 +41,13 @@
     "@radix-ui/react-tooltip": "^1.1.8",
     "@sentry/nextjs": "^9.2.0",
     "@types/axios": "^0.14.4",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/nodemailer": "^6.4.14",
     "@vercel/analytics": "^1.5.0",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.475.0",
     "next": "^15.1.7",
     "next-seo": "^6.6.0",
