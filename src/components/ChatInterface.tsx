@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
-import ModelSelector, { ModelSelection } from "@/components/ModelSelector";
 import { triggerMetricsRefresh } from "@/hooks/useMetrics";
 import { trackEvent } from "@/lib/analytics";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { Sparkles } from "lucide-react"; // Import Sparkles icon
 
 // Function to format message content with proper styling
 const formatMessageContent = (content: string) => {
@@ -47,9 +49,12 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [currentModel, setCurrentModel] = useState<ModelSelection | null>(null);
+  const [currentMode, setCurrentMode] = useState<"user" | "model">("user"); // Add mode state
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated";
+  const isLoadingSession = status === "loading";
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,38 +64,47 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
     scrollToBottom();
   }, [messages, loading, scrollToBottom]);
 
-  const handleModelSelect = useCallback((selection: ModelSelection) => {
-    setCurrentModel(selection);
-    trackEvent("provider_selected", {
-      provider: selection.model,
-    });
-  }, []);
+  // Separate handler for generating question
+  const handleGenerateQuestion = async () => {
+    if (loading || !isAuthenticated) return;
+    setCurrentMode("model"); // Set mode for the upcoming request
+    // Trigger submit with empty input, API will handle generation
+    handleSubmit(new Event("submit") as unknown as React.FormEvent, "model");
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (
+    e: React.FormEvent,
+    modeOverride?: "user" | "model"
+  ) => {
     e.preventDefault();
     if (onSubmit) {
       onSubmit(e);
     }
-    if (!input.trim() || loading) return;
 
-    const documentId = localStorage.getItem("currentDocumentId");
-    if (!documentId) {
-      toast({
-        title: "Error",
-        description: "Please upload a document first",
-        variant: "destructive",
-      });
-      return;
+    const mode = modeOverride || currentMode; // Use override if provided (for generate button)
+
+    // Allow submission with empty input only if mode is 'model'
+    if (mode === "user" && !input.trim()) return;
+    if (loading || !isAuthenticated) return;
+
+    // Document context is now handled by the backend based on the user session.
+    // No need to check localStorage or send document_id from the client.
+
+    // Only add user message if it's user mode and input is not empty
+    if (mode === "user" && input.trim()) {
+      const userMessage: Message = { role: "user", content: input.trim() };
+      setMessages((prev) => [...prev, userMessage]);
+      setInput(""); // Clear input only for user submissions
+    } else if (mode === "model") {
+      // Optionally add a placeholder message like "Generating question..."
+      // setMessages((prev) => [...prev, { role: 'assistant', content: 'Generating question...' }]);
     }
 
-    const userMessage: Message = { role: "user", content: input.trim() };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
     setLoading(true);
 
     trackEvent("question_asked", {
-      provider: currentModel?.model,
-      questionLength: input.trim().length,
+      questionLength: mode === "user" ? input.trim().length : 0,
+      mode: mode, // Track the mode used
     });
 
     const startTime = performance.now();
@@ -102,21 +116,50 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          question: input.trim(),
-          document_id: documentId,
-          model: currentModel?.model,
+          question: mode === "user" ? input.trim() : null, // Send null question if mode is 'model'
+          // document_id is no longer needed here
+          mode: mode, // Send the mode
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || errorData.detail || "Failed to get answer"
-        );
+        let errorMsg = "Failed to get answer.";
+        try {
+          // Check for specific auth errors first
+          if (response.status === 401) {
+            errorMsg = "Authentication error. Please log in again.";
+            // Optionally trigger a sign-in redirect or prompt
+          } else if (response.status === 403) {
+            errorMsg = "Forbidden: You don't have permission for this action.";
+          } else {
+            // Try to parse other errors from the response body
+            const errorData = await response.json();
+            errorMsg =
+              errorData.error ||
+              errorData.detail ||
+              `API Error: ${response.status}`;
+          }
+        } catch (jsonError) {
+          // If response is not JSON or parsing fails
+          errorMsg = `API Error: ${response.status} - ${
+            response.statusText || "Failed to get answer"
+          }`;
+        }
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();
       const responseTime = performance.now() - startTime;
+
+      // Handle potential generated question
+      if (data.generatedQuestion) {
+        const generatedQMessage: Message = {
+          role: "user", // Display generated question as if user asked it
+          content: data.generatedQuestion,
+        };
+        // Add generated question first, then the answer
+        setMessages((prev) => [...prev, generatedQMessage]);
+      }
 
       const assistantMessage: Message = {
         role: "assistant",
@@ -125,23 +168,24 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
       setMessages((prev) => [...prev, assistantMessage]);
 
       trackEvent("answer_received", {
-        provider: currentModel?.model,
         responseTime,
         answerLength: data.answer.length,
+        mode: mode, // Track the mode used
+        generatedQuestion: !!data.generatedQuestion,
       });
 
       // Trigger metrics refresh after successful response
       triggerMetricsRefresh();
     } catch (error) {
       const errorTime = performance.now() - startTime;
-      console.error("Error asking question:", error);
+      console.error(`Error asking question in mode ${mode}:`, error);
 
       trackEvent("error_occurred", {
-        provider: currentModel?.model,
         errorType: "question_error",
         errorMessage:
           error instanceof Error ? error.message : "Failed to get answer",
         timeTaken: errorTime,
+        mode: mode, // Track the mode used
       });
 
       toast({
@@ -152,14 +196,12 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
       });
     } finally {
       setLoading(false);
+      setCurrentMode("user"); // Reset mode back to user after request finishes
     }
   };
 
   return (
     <div className="flex flex-col h-[600px]">
-      <div className="p-4 border-b">
-        <ModelSelector onModelSelect={handleModelSelect} />
-      </div>
       <div className="flex-1 overflow-y-auto space-y-4 p-4">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
@@ -211,26 +253,57 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t">
-        <div className="flex space-x-2">
-          <Input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question about your document..."
-            disabled={loading}
-            className="flex-1 bg-background"
-          />
-          <Button
-            type="submit"
-            disabled={loading || !input.trim()}
-            variant="default"
-            className="px-4"
-          >
-            {loading ? "Sending..." : "Send"}
-          </Button>
+      {isLoadingSession ? (
+        <div className="p-4 text-center text-muted-foreground">
+          Loading session...
         </div>
-      </form>
+      ) : !isAuthenticated ? (
+        <div className="p-4 text-center text-muted-foreground">
+          Please{" "}
+          <Link href="/api/auth/signin" className="underline text-primary">
+            log in
+          </Link>{" "}
+          to use the chat.
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="p-4 border-t">
+          <div className="flex space-x-2">
+            <Input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask a question about your document..."
+              disabled={loading || !isAuthenticated}
+              className="flex-1 bg-background"
+            />
+            <Button
+              type="submit"
+              disabled={loading || !input.trim() || !isAuthenticated}
+              variant="default"
+              className="px-4"
+            >
+              {loading && currentMode === "user" ? "Sending..." : "Send"}
+            </Button>
+            {/* Generate Question Button */}
+            <Button
+              type="button"
+              onClick={handleGenerateQuestion}
+              disabled={loading || !isAuthenticated}
+              variant="outline"
+              size="icon"
+              title="Generate question based on document"
+              className="shrink-0"
+            >
+              {loading && currentMode === "model" ? (
+                <Sparkles className="h-4 w-4 animate-pulse" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              <span className="sr-only">Generate Question</span>
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

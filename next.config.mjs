@@ -1,10 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Rewrites configuration to proxy specific API routes, excluding /api/auth
   async rewrites() {
     return [
+      // Proxy all API routes EXCEPT /api/auth/* to the backend
       {
-        source: "/api/:path*",
+        source: "/api/((?!auth/).*)", // Use negative lookahead to exclude /api/auth/
         destination: `${
           process.env.BACKEND_URL || "http://localhost:8001"
         }/api/:path*`,
@@ -14,13 +16,6 @@ const nextConfig = {
   // API configuration
   experimental: {
     largePageDataBytes: 128 * 100000, // Increase size limit for large responses
-  },
-  webpack: (config) => {
-    config.watchOptions = {
-      poll: 1000,
-      aggregateTimeout: 300,
-    };
-    return config;
   },
 };
 

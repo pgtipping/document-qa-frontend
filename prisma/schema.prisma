@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Using PostgreSQL as requested
+  url      = env("DATABASE_URL")
+}
+
+model Document {
+  id        String   @id @default(cuid()) // Unique identifier for the document record
+  filename  String   // Original filename uploaded by the user
+  s3Key     String   @unique // Unique key identifying the file in S3
+  // Removed sessionId: String
+  status    String   // Status of the document (e.g., 'active', 'deleted')
+  createdAt DateTime @default(now()) // Timestamp when the record was created
+  updatedAt DateTime @updatedAt // Timestamp when the record was last updated
+
+  // Relation to User model
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Removed @@index([sessionId])
+  @@index([userId]) // Index for faster querying by user
+}
+
+// NextAuth.js Models (added previously)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId]) // Index for faster querying by user
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId]) // Index for faster querying by user
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // Added field to store hashed password for credentials login
+  accounts      Account[]
+  sessions      Session[]
+  documents     Document[] // Relation back to documents owned by the user
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

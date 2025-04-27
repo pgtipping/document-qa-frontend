@@ -4,16 +4,19 @@ import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { Loader2, BarChart4, Menu, X } from "lucide-react";
+import { Loader2, BarChart4, Menu, X, LogIn, LogOut } from "lucide-react";
 import { useMetrics } from "@/hooks/useMetrics";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function Navigation() {
   const [showMetrics, setShowMetrics] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { hasMetrics, isLoading } = useMetrics();
+  const { hasMetrics, isLoading: metricsLoading } = useMetrics();
   const pathname = usePathname();
+  const { data: session, status } = useSession();
+  const isLoading = status === "loading";
 
   // Close mobile menu when path changes
   useEffect(() => {
@@ -64,9 +67,30 @@ export default function Navigation() {
   }, []);
 
   const navItems = [
-    { name: "Home", href: "/" },
-    { name: "Chat & Upload", href: "/chat" },
-    { name: "Blog", href: "/blog" },
+    { name: "Home", href: "/", id: "home" },
+    { name: "Chat & Upload", href: "/chat", id: "chat" },
+    {
+      name: "Resources",
+      href: "#",
+      id: "resources",
+      children: [
+        { name: "Documentation", href: "/docs" },
+        { name: "API Reference", href: "/api-docs" },
+        { name: "Tutorials", href: "/tutorials" },
+      ],
+    },
+    {
+      name: "Company",
+      href: "#",
+      id: "company",
+      children: [
+        { name: "About Us", href: "/company" },
+        { name: "Contact", href: "/company#contact" },
+        { name: "Privacy Policy", href: "/privacy" },
+        { name: "Terms of Service", href: "/terms" },
+      ],
+    },
+    { name: "Blog", href: "/blog", id: "blog" },
   ];
 
   return (
@@ -80,18 +104,39 @@ export default function Navigation() {
           </Link>
           <nav className="hidden md:flex gap-6">
             {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center text-sm font-medium transition-colors",
-                  pathname === item.href
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+              <div key={item.id} className="relative group">
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "flex items-center text-sm font-medium transition-colors",
+                    pathname === item.href
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {item.name}
+                </Link>
+                {item.children && (
+                  <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-background border border-border/40 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    <div className="py-1">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          className={cn(
+                            "block px-4 py-2 text-sm transition-colors",
+                            pathname === child.href
+                              ? "text-foreground bg-accent"
+                              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                          )}
+                        >
+                          {child.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              >
-                {item.name}
-              </Link>
+              </div>
             ))}
           </nav>
         </div>
@@ -102,11 +147,11 @@ export default function Navigation() {
               variant="outline"
               size="sm"
               className="gap-2"
-              disabled={isLoading}
+              disabled={metricsLoading}
               aria-expanded={showMetrics}
               aria-controls="metrics-panel"
             >
-              {isLoading ? (
+              {metricsLoading ? (
                 <>
                   <Loader2
                     className="h-4 w-4 animate-spin"
@@ -127,6 +172,26 @@ export default function Navigation() {
             </Button>
           )}
           <ThemeToggle />
+          {/* Auth Buttons */}
+          {isLoading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : session ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground hidden sm:inline">
+                {session.user?.email}
+              </span>
+              <Button onClick={() => signOut()} variant="outline" size="sm">
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={() => signIn()} variant="outline" size="sm">
+              <LogIn className="h-4 w-4 mr-2" />
+              Login
+            </Button>
+          )}
+          {/* Mobile Menu Button */}
           <Button
             variant="ghost"
             size="icon"
@@ -148,19 +213,69 @@ export default function Navigation() {
         <div className="md:hidden">
           <div className="container py-4 space-y-3">
             {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex w-full items-center py-2 text-base font-medium transition-colors",
-                  pathname === item.href
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+              <div key={item.id}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "flex w-full items-center py-2 text-base font-medium transition-colors",
+                    pathname === item.href
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {item.name}
+                </Link>
+                {item.children && (
+                  <div className="pl-4 space-y-2 mt-2">
+                    {item.children.map((child) => (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        className={cn(
+                          "flex w-full items-center py-2 text-sm transition-colors",
+                          pathname === child.href
+                            ? "text-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {child.name}
+                      </Link>
+                    ))}
+                  </div>
                 )}
-              >
-                {item.name}
-              </Link>
+              </div>
             ))}
+            {/* Mobile Auth Buttons */}
+            <div className="pt-4 border-t border-border/40">
+              {isLoading ? (
+                <div className="flex justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : session ? (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground px-2">
+                    Logged in as {session.user?.email}
+                  </p>
+                  <Button
+                    onClick={() => signOut()}
+                    variant="ghost"
+                    className="w-full justify-start"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => signIn()}
+                  variant="ghost"
+                  className="w-full justify-start"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Login
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       )}

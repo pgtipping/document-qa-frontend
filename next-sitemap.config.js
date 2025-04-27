@@ -8,59 +8,40 @@ module.exports = {
   changefreq: "weekly",
   priority: 0.7,
   sitemapSize: 5000,
+  // additionalPaths can be used to add paths not automatically discovered,
+  // but blog/tutorial pages should be found automatically now.
+  // We keep a few key pages here for explicit priority/changefreq control.
   additionalPaths: async (config) => {
     const paths = [
       {
         loc: "/",
         changefreq: "daily",
         priority: 1.0,
-        lastmod: new Date().toISOString(),
       },
       {
-        loc: "/blog",
+        loc: "/blog", // Main blog index
         changefreq: "weekly",
         priority: 0.8,
-        lastmod: new Date().toISOString(),
       },
       {
-        loc: "/performance",
-        changefreq: "monthly",
-        priority: 0.7,
-        lastmod: new Date().toISOString(),
+        loc: "/tutorials", // Assuming a tutorials index exists or will exist
+        changefreq: "weekly",
+        priority: 0.8,
       },
-      {
-        loc: "/backlink-strategy",
-        changefreq: "monthly",
-        priority: 0.7,
-        lastmod: new Date().toISOString(),
-      },
-      {
-        loc: "/blog/ai-document-analysis",
-        changefreq: "monthly",
-        priority: 0.7,
-        lastmod: new Date().toISOString(),
-      },
-      {
-        loc: "/blog/document-qa-best-practices",
-        changefreq: "monthly",
-        priority: 0.7,
-        lastmod: new Date().toISOString(),
-      },
-      {
-        loc: "/blog/comparing-ai-models",
-        changefreq: "monthly",
-        priority: 0.7,
-        lastmod: new Date().toISOString(),
-      },
+      // Add other key static pages if needed
     ];
+    // The library automatically adds lastmod based on git history or file modification time
+    // when autoLastmod is true (default).
     return paths;
   },
-  transform: async (config, path) => {
-    return {
-      loc: path,
-      changefreq: config.changefreq,
-      priority: config.priority,
-      lastmod: config.autoLastmod ? new Date().toISOString() : undefined,
-    };
-  },
+  // The default transform function is usually sufficient when autoLastmod is true.
+  // We remove the custom transform to rely on defaults for accurate lastmod.
+  // transform: async (config, path) => {
+  //   return {
+  //     loc: path, // The path
+  //     changefreq: config.changefreq, // Default changefreq
+  //     priority: config.priority, // Default priority
+  //     lastmod: config.autoLastmod ? new Date().toISOString() : undefined, // Default autoLastmod
+  //   }
+  // },
 };

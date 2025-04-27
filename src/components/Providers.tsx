@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ThemeProvider } from "next-themes";
+import { SessionProvider } from "next-auth/react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = React.useState(false);
@@ -50,16 +51,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, [mounted]);
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="light"
-      value={{
-        dark: "dark",
-        light: "light",
-      }}
-      enableSystem={false}
-    >
-      {children}
-    </ThemeProvider>
+    <SessionProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        value={{
+          dark: "dark",
+          light: "light",
+        }}
+        enableSystem={false}
+      >
+        {children}
+      </ThemeProvider>
+    </SessionProvider>
   );
 }

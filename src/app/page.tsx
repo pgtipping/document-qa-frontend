@@ -458,17 +458,26 @@ export default function Home() {
               <h3 className="font-semibold text-lg mb-4">Resources</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
+                  <a
+                    href="/docs"
+                    className="hover:text-primary transition-colors"
+                  >
                     Documentation
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
+                  <a
+                    href="/api-docs"
+                    className="hover:text-primary transition-colors"
+                  >
                     API Reference
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
+                  <a
+                    href="/tutorials"
+                    className="hover:text-primary transition-colors"
+                  >
                     Tutorials
                   </a>
                 </li>
@@ -478,18 +487,35 @@ export default function Home() {
               <h3 className="font-semibold text-lg mb-4">Company</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
+                  <a
+                    href="/company"
+                    className="hover:text-primary transition-colors"
+                  >
                     About Us
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
+                  <a
+                    href="/company#contact"
+                    className="hover:text-primary transition-colors"
+                  >
                     Contact
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary transition-colors">
+                  <a
+                    href="/privacy"
+                    className="hover:text-primary transition-colors"
+                  >
                     Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/terms"
+                    className="hover:text-primary transition-colors"
+                  >
+                    Terms of Service
                   </a>
                 </li>
               </ul>

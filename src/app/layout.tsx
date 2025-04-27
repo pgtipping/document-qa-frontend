@@ -4,6 +4,7 @@ import Navigation from "@/components/Navigation";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+// SessionProvider import removed as it's handled in Providers.tsx
 import "./globals.css";
 import "./compiled.css";
 
@@ -87,6 +88,7 @@ export default function RootLayout({
         className={`${inter.className} ${inter.variable} min-h-screen bg-background text-foreground [&.dark]:bg-background [&.dark]:text-foreground [&.light]:bg-background [&.light]:text-foreground`}
         data-theme="light"
       >
+        {/* SessionProvider wrapper removed as it's handled in Providers.tsx */}
         <Providers>
           <Navigation />
           <main
@@ -96,8 +98,9 @@ export default function RootLayout({
             {children}
           </main>
           <Toaster />
-          <Analytics />
+          {process.env.NODE_ENV === "production" && <Analytics />}
         </Providers>
+        {/* SessionProvider wrapper removed */}
       </body>
     </html>
   );
