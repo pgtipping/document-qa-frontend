@@ -111,7 +111,7 @@ export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET, // Secret for signing JWTs, etc.
   pages: {
     // Optional: Define custom pages if needed
-    // signIn: '/auth/signin',
+    signIn: "/auth/signin", // Use the custom sign-in page
     // signOut: '/auth/signout',
     // error: '/auth/error', // Error code passed in query string as ?error=
     // verifyRequest: '/auth/verify-request', // (used for email/passwordless login)

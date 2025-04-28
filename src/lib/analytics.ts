@@ -1,4 +1,5 @@
-import { type Analytics } from "@vercel/analytics/react";
+// Removed unused Analytics import
+// import { type Analytics } from "@vercel/analytics/react";
 
 declare global {
   interface Window {
@@ -9,17 +10,18 @@ declare global {
   }
 }
 
-type EventName =
-  | "document_upload_start"
-  | "document_upload_success"
-  | "document_upload_error"
-  | "question_asked"
-  | "answer_received"
-  | "provider_selected"
-  | "error_occurred"
-  | "timing"
-  | "timing_error"
-  | "web_vitals";
+// Removed unused EventName type
+// type EventName =
+//   | "document_upload_start"
+//   | "document_upload_success"
+//   | "document_upload_error"
+//   | "question_asked"
+//   | "answer_received"
+//   | "provider_selected"
+//   | "error_occurred"
+//   | "timing"
+//   | "timing_error"
+//   | "web_vitals";
 
 type EventProperties = {
   provider?: string;
@@ -59,7 +61,7 @@ const baseTrackEvent = (name: string, properties?: EventProperties) => {
 export const trackAlert = async (
   type: "error_rate" | "response_time" | "upload_failures",
   value: number,
-  details?: Record<string, any>
+  details?: Record<string, unknown> // Changed any to unknown
 ) => {
   try {
     const response = await fetch("/api/alerts", {
@@ -76,12 +78,22 @@ export const trackAlert = async (
     });
 
     if (!response.ok) {
-      throw new Error("Failed to send alert");
+      // Log the error but don't throw, to avoid interrupting other processes
+      console.error(`Failed to send alert via API. Status: ${response.status}`);
+      // Optionally parse and log the response body for more details
+      try {
+        const errorBody = await response.json();
+        console.error("Alert API error response:", errorBody);
+      } catch (parseError) {
+        console.error("Failed to parse alert API error response:", parseError); // Log the parseError
+      }
+      return null; // Indicate failure without throwing
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error sending alert:", error);
+    console.error("Error calling /api/alerts:", error);
+    return null; // Indicate failure without throwing
   }
 };
 
@@ -168,17 +180,38 @@ export const trackTiming = async <T>(
 export const trackWebVitals = () => {
   try {
     if (typeof window !== "undefined") {
-      const reportWebVitals = (metric: any) => {
-        const { id, name, label, value } = metric;
-        trackEvent("web_vitals", {
-          id,
-          name,
-          label,
-          value: Math.round(name === "CLS" ? value * 1000 : value),
-        });
+      const reportWebVitals = (metric: unknown) => {
+        // Changed any to unknown
+        // Type guard or assertion needed if accessing metric properties
+        if (
+          metric &&
+          typeof metric === "object" &&
+          "id" in metric &&
+          "name" in metric &&
+          "label" in metric &&
+          "value" in metric
+        ) {
+          const { id, name, label, value } = metric as {
+            id: string;
+            name: string;
+            label: string;
+            value: number;
+          }; // Type assertion
+          trackEvent("web_vitals", {
+            id,
+            name,
+            label,
+            value: Math.round(name === "CLS" ? value * 1000 : value),
+          });
+        } else {
+          console.warn(
+            "Received unexpected metric format for Web Vitals:",
+            metric
+          );
+        }
       };
 
-      // @ts-ignore - Web Vitals are added by Next.js
+      // @ts-expect-error - Web Vitals are added by Next.js
       window.reportWebVitals = reportWebVitals;
     }
   } catch (error) {

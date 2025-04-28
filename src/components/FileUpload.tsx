@@ -11,29 +11,6 @@ import axios, { AxiosProgressEvent } from "axios";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      input: React.DetailedHTMLProps<
-        React.InputHTMLAttributes<HTMLInputElement>,
-        HTMLInputElement
-      >;
-      p: React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLParagraphElement>,
-        HTMLParagraphElement
-      >;
-      span: React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLSpanElement>,
-        HTMLSpanElement
-      >;
-      div: React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLDivElement>,
-        HTMLDivElement
-      >;
-    }
-  }
-}
-
 const IconWrapper = ({
   Icon,
   size,
@@ -49,7 +26,7 @@ export default function FileUpload() {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const { toast } = useToast();
-  const { data: session, status } = useSession();
+  const { status } = useSession(); // Removed unused 'session'
   const isAuthenticated = status === "authenticated";
   const isLoadingSession = status === "loading";
 
@@ -70,6 +47,7 @@ export default function FileUpload() {
       const formData = new FormData();
       formData.append("file", fileToUpload);
 
+      let uploadErrorOccurred = false; // Flag to track if an error happened
       try {
         const startTime = performance.now();
         const response = await axios.post<{ document_id: string }>(
@@ -95,20 +73,27 @@ export default function FileUpload() {
         // Store document ID for later use
         localStorage.setItem("currentDocumentId", response.data.document_id);
 
-        trackEvent("document_upload_success", {
-          documentSize: fileToUpload.size,
-          documentType: fileToUpload.type,
-          uploadDuration,
-          documentId: response.data.document_id,
-        });
+        // Attempt to track success event, but don't let it block UI
+        try {
+          trackEvent("document_upload_success", {
+            documentSize: fileToUpload.size,
+            documentType: fileToUpload.type,
+            uploadDuration,
+            documentId: response.data.document_id,
+          });
+        } catch (trackingError) {
+          console.error("Failed to track upload success event:", trackingError);
+          // Optionally send this specific error to a different monitoring service if needed
+        }
 
         toast({
           title: "Success",
           description: "File uploaded successfully",
           duration: 3000,
         });
-      } catch (error: any) {
-        // Use 'any' or a more specific Axios error type
+      } catch (error: unknown) {
+        uploadErrorOccurred = true; // Set flag on error
+        // Use unknown type
         console.error("Upload error:", error);
         let errorDesc = "Failed to upload file. Please try again.";
         let errorTitle = "Upload Error";
@@ -126,28 +111,40 @@ export default function FileUpload() {
             errorDesc = "The selected file exceeds the 10MB size limit.";
           } else {
             try {
-              const errorData = error.response.data;
+              // Attempt to parse specific error data from response
+              const errorData = error.response.data as {
+                error?: string;
+                detail?: string;
+              }; // Type assertion
               errorDesc =
-                errorData.error ||
-                errorData.detail ||
+                errorData?.error ||
+                errorData?.detail ||
                 `Server Error (${status})`;
             } catch (parseError) {
+              // Log the parsing error specifically
+              console.error("Error parsing server error response:", parseError);
               errorDesc = `Server Error (${status}): Failed to upload file.`;
             }
           }
         } else if (error instanceof Error) {
-          // Handle non-Axios errors (e.g., network issues)
+          // Handle generic Error objects
           errorDesc = error.message || errorDesc;
         }
 
-        trackEvent("document_upload_error", {
-          documentSize: fileToUpload?.size, // Use optional chaining as file might be null on error
-          documentType: fileToUpload?.type,
-          errorMessage: errorDesc,
-          errorStatus: axios.isAxiosError(error)
-            ? error.response?.status
-            : undefined,
-        });
+        // Attempt to track error event, but don't let it block UI/error reporting
+        try {
+          trackEvent("document_upload_error", {
+            documentSize: fileToUpload?.size, // Use optional chaining as file might be null on error
+            documentType: fileToUpload?.type,
+            errorMessage: errorDesc,
+            // Removed errorStatus as it's not defined in EventProperties
+            // errorStatus: axios.isAxiosError(error)
+            //   ? error.response?.status
+            //   : undefined,
+          });
+        } catch (trackingError) {
+          console.error("Failed to track upload error event:", trackingError);
+        }
 
         toast({
           title: errorTitle,
@@ -159,19 +156,16 @@ export default function FileUpload() {
         setIsUploading(false); // Immediately reset uploading state on error
         setUploadProgress(0);
       } finally {
-        // Only reset upload state after a delay IF SUCCESSFUL
-        // Error handling now resets immediately in the catch block
-        if (!axios.isAxiosError(error)) {
-          // Check if it wasn't an error path
+        // Reset UI state after a short delay ONLY if upload was successful
+        if (!uploadErrorOccurred) {
           setTimeout(() => {
-            if (uploadProgress === 100) {
-              // Ensure it only resets if upload seemed complete
-              setIsUploading(false);
-              setUploadProgress(0);
-              // Keep file state set on success
-            }
-          }, 1000);
+            // If no error occurred, reset the uploading state after the delay
+            setIsUploading(false);
+            setUploadProgress(0);
+            // Keep file state set on success
+          }, 1000); // Delay to allow user to see 100%
         }
+        // Note: Error state reset is handled immediately in the catch block
       }
     },
     [toast, isAuthenticated] // Add isAuthenticated dependency

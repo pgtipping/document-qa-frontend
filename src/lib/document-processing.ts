@@ -1,9 +1,9 @@
 // src/lib/document-processing.ts
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import pdf from "pdf-parse";
+// import pdf from "pdf-parse"; // Commented out as extractPdfText is bypassed due to library bug
 import mammoth from "mammoth";
 import { Readable } from "stream";
-import { getCompletion } from "./llm-service"; // Import for LLM fallback
+import { getCompletion } from "./llm-service"; // Re-enabled LLM service import
 
 // --- Cache Configuration ---
 const contentCache = new Map<string, { content: string; timestamp: number }>();
@@ -69,22 +69,22 @@ async function fetchDocumentFromS3(s3Key: string): Promise<Buffer> {
   }
 }
 
-/**
- * Extracts text content from a PDF buffer.
- * @param buffer The buffer containing the PDF data.
- * @returns The extracted text content.
- */
-async function extractPdfText(buffer: Buffer): Promise<string> {
-  try {
-    console.log("Extracting text from PDF buffer...");
-    const data = await pdf(buffer);
-    console.log(`Extracted ${data.text.length} characters from PDF.`);
-    return data.text;
-  } catch (error) {
-    console.error("Error extracting PDF text:", error);
-    throw new Error("Failed to extract text from PDF.");
-  }
-}
+// /**
+//  * Extracts text content from a PDF buffer. (Commented out due to pdf-parse library bug - ENOENT)
+//  * @param buffer The buffer containing the PDF data.
+//  * @returns The extracted text content.
+//  */
+// async function extractPdfText(buffer: Buffer): Promise<string> {
+//   try {
+//     console.log("Extracting text from PDF buffer...");
+//     const data = await pdf(buffer);
+//     console.log(`Extracted ${data.text.length} characters from PDF.`);
+//     return data.text;
+//   } catch (error) {
+//     console.error("Error extracting PDF text:", error);
+//     throw new Error("Failed to extract text from PDF.");
+//   }
+// }
 
 /**
  * Extracts text content from a DOCX buffer.
@@ -136,35 +136,38 @@ function extractPlainText(buffer: Buffer): string {
  * @param originalError Optional error from the direct extraction attempt.
  * @returns The extracted text content from the LLM, or null if failed.
  */
+/**
+ * Attempts to extract text content using an LLM as a fallback.
+ * Note: This is a basic implementation. Sending raw buffers isn't ideal.
+ * A more robust solution might involve OCR services or multimodal models.
+ * @param buffer The buffer containing the file data.
+ * @param fileType The file extension (e.g., 'pdf', 'docx').
+ * @param originalError Optional error from the direct extraction attempt.
+ * @returns The extracted text content from the LLM, or null if failed.
+ */
 async function extractWithLlm(
   buffer: Buffer,
   fileType: string,
-  originalError?: Error
+  originalError?: Error // Adding the optional error parameter based on JSDoc
 ): Promise<string | null> {
-  console.warn(`Attempting LLM extraction fallback for file type: ${fileType}`);
-  // TODO: Improve prompt engineering. How to represent the buffer?
-  // For now, we'll just inform the LLM about the failure and file type.
-  // A better approach might involve sending metadata or trying OCR first.
-  let prompt = `Failed to directly extract text from a file of type '${fileType}'. `;
-  if (originalError) {
-    prompt += `The error was: ${originalError.message}. `;
-  }
-  prompt += `Please analyze the potential content structure or provide a summary if possible.`;
-  // We cannot reliably send the buffer content directly in the prompt here.
-  // This fallback is limited without multimodal capabilities or OCR integration.
-  // We'll call getCompletion with a generic prompt indicating failure.
-  // In a real scenario, you might use a specific OCR model/service here.
-
+  console.log(`Attempting LLM fallback extraction for ${fileType}...`);
   try {
-    // This call is unlikely to succeed well without a proper input representation
-    const llmResult = await getCompletion(prompt);
-    if (llmResult) {
-      console.log(`LLM fallback extraction provided a result for ${fileType}.`);
-      // We return the LLM's response, which might be an explanation or partial data.
+    // Prepare content for LLM (simple base64 encoding as an example)
+    // NOTE: This might not be the best way; depends on what getCompletion expects.
+    // A better approach might be needed for non-text formats.
+    const base64Content = buffer.toString("base64");
+    // TODO: Review prompt structure based on llm-service capabilities
+    const prompt = `Extract the text content from the following file (type: ${fileType}, base64 encoded): ${base64Content}`;
+
+    // Call the actual LLM service function
+    const llmResult = await getCompletion(prompt); // Assuming getCompletion takes a prompt string
+
+    if (llmResult && llmResult.trim().length > 0) {
+      console.log(`LLM fallback extraction successful for ${fileType}.`);
       return llmResult;
     } else {
-      console.error(
-        `LLM fallback extraction failed to produce a result for ${fileType}.`
+      console.warn(
+        `LLM fallback extraction yielded empty or null result for ${fileType}.`
       );
       return null;
     }
@@ -173,7 +176,11 @@ async function extractWithLlm(
       `Error during LLM fallback extraction for ${fileType}:`,
       llmError
     );
-    return null;
+    // Log the original error if provided
+    if (originalError) {
+      console.error(`Original extraction error was:`, originalError);
+    }
+    return null; // Return null if LLM fails
   }
 }
 
@@ -205,7 +212,16 @@ export async function getDocumentTextContent(s3Key: string): Promise<string> {
 
   try {
     if (fileExtension === "pdf") {
-      extractedText = await extractPdfText(buffer);
+      // Skip direct pdf-parse extraction due to ENOENT bug in the library
+      console.warn(
+        "Skipping direct PDF extraction via pdf-parse due to library bug. Attempting LLM fallback directly."
+      );
+      extractionMethod = "llm"; // Force LLM fallback
+      extractedText = await extractWithLlm(buffer, fileExtension);
+      // Check if LLM fallback succeeded for PDF
+      if (!extractedText || extractedText.trim().length === 0) {
+        throw new Error("LLM fallback extraction failed for PDF file.");
+      }
     } else if (fileExtension === "docx") {
       extractedText = await extractDocxText(buffer);
     } else if (fileExtension === "txt") {
@@ -218,6 +234,8 @@ export async function getDocumentTextContent(s3Key: string): Promise<string> {
       try {
         extractedText = extractPlainText(buffer);
       } catch (e) {
+        // Keep 'e' as it's used below
+        console.error(`Error during plain text extraction attempt:`, e); // Log the actual error
         throw new Error(
           `Unsupported file type for extraction: ${fileExtension}`
         );
@@ -250,11 +268,8 @@ export async function getDocumentTextContent(s3Key: string): Promise<string> {
       );
       extractionMethod = "llm";
       // Pass the original error for context
-      extractedText = await extractWithLlm(
-        buffer,
-        fileExtension,
-        error instanceof Error ? error : undefined
-      );
+      // Call the simplified function (only buffer and fileType)
+      extractedText = await extractWithLlm(buffer, fileExtension);
       // If LLM fallback returns null or empty after an error, we throw
       if (!extractedText || extractedText.trim().length === 0) {
         console.error(

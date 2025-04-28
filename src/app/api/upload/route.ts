@@ -119,7 +119,6 @@ export async function POST(request: NextRequest) {
         // Decide if this should be a fatal error for the upload or just logged
       }
       // --- End Trigger ---
-
       // Construct URL after successful DB entry
       const url = `https://${S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
 
@@ -136,7 +135,22 @@ export async function POST(request: NextRequest) {
     // Return results for all uploaded files
     return NextResponse.json({ uploads: uploadResults });
   } catch (error) {
-    console.error("Upload error:", error);
+    // Enhanced error logging
+    console.error("Upload API error details:", {
+      errorType:
+        typeof error === "object" && error !== null && error.constructor
+          ? error.constructor.name
+          : typeof error,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
+      envVarsPresent: {
+        AWS_REGION: !!process.env.AWS_REGION,
+        AWS_ACCESS_KEY_ID: !!process.env.AWS_ACCESS_KEY_ID,
+        AWS_SECRET_ACCESS_KEY: !!process.env.AWS_SECRET_ACCESS_KEY,
+        S3_BUCKET_NAME: !!process.env.S3_BUCKET_NAME,
+      },
+    });
+
     // Provide more specific error feedback if possible
     const errorMessage =
       error instanceof Error ? error.message : "Unknown upload error";

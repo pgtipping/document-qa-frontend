@@ -4,9 +4,10 @@ import {
   GoogleGenerativeAI,
   HarmCategory,
   HarmBlockThreshold,
+  GenerativeModel, // Import the specific type
 } from "@google/generative-ai";
 import Groq from "groq-sdk";
-import { getEncoding } from "tiktoken"; // For token counting
+import { encoding_for_model } from "tiktoken"; // For token counting
 
 // --- Configuration ---
 
@@ -15,9 +16,9 @@ const TOKEN_ENCODING_MODEL = "gpt-4o"; // Use encoding for a common, recent mode
 const MAX_CONTEXT_TOKENS = 120000; // As per overhaul_plan.md
 
 // Initialize tiktoken encoding
-let encoding: ReturnType<typeof getEncoding> | null = null;
+let encoding: ReturnType<typeof encoding_for_model> | null = null;
 try {
-  encoding = getEncoding(TOKEN_ENCODING_MODEL);
+  encoding = encoding_for_model(TOKEN_ENCODING_MODEL);
   console.log(`Tiktoken encoding (${TOKEN_ENCODING_MODEL}) initialized.`);
 } catch (error) {
   console.error("Failed to initialize tiktoken encoding:", error);
@@ -28,7 +29,7 @@ try {
 const fallbackProviders = [
   {
     name: "openrouter",
-    model: "nvidia/llama-3.1-nemotron-ultra-253b-v1:free",
+    model: "nvidia/nemotron-4-340b", // Changed default model to Neumotron 4 340B as requested
     apiKey: process.env.OPENROUTER_API_KEY,
     client: null as OpenAI | null, // Client will be initialized if API key exists
     init: function () {
@@ -58,12 +59,34 @@ const fallbackProviders = [
     model: "gemini-2.5-flash-preview-04-17", // Model from overhaul_plan.md
     apiKey: process.env.GOOGLE_API_KEY, // Assuming GOOGLE_API_KEY for Gemini
     client: null as GoogleGenerativeAI | null,
-    genModel: null as any | null, // Placeholder for the specific model client
+    genModel: null as GenerativeModel | null, // Use the specific type
     init: function () {
       if (this.apiKey) {
         this.client = new GoogleGenerativeAI(this.apiKey);
-        this.genModel = this.client.getGenerativeModel({ model: this.model });
-        console.log("Google Gemini client initialized.");
+        // Initialize model with safety settings
+        this.genModel = this.client.getGenerativeModel({
+          model: this.model,
+          safetySettings: [
+            {
+              category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+              threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+              threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+              threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+            {
+              category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+              threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+            },
+          ],
+          // Add generationConfig here if needed (e.g., temperature, maxOutputTokens)
+        });
+        console.log("Google Gemini client initialized with safety settings.");
         return true;
       }
       console.log("Google API key not found, client not initialized.");
@@ -71,27 +94,8 @@ const fallbackProviders = [
     },
     call: async function (prompt: string): Promise<string | null> {
       if (!this.genModel) return null;
-      const result = await this.genModel.generateContent(prompt, {
-        // Configure safety settings if needed - example:
-        safetySettings: [
-          {
-            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-          },
-        ],
-      });
+      // Pass only the prompt, safety settings are now part of the model instance
+      const result = await this.genModel.generateContent(prompt);
       const response = result.response;
       return response.text();
     },
@@ -227,27 +231,68 @@ export function splitIntoChunks(
 }
 
 /**
- * Placeholder function for selecting relevant chunks.
- * In a real implementation, this would use embeddings and vector search.
- * Currently returns the first `maxChunks`.
+ * Selects relevant chunks based on simple keyword matching from the question.
+ * NOTE: This is an interim solution. Proper implementation should use embeddings and vector search.
  * @param chunks Array of all text chunks.
- * @param question The user's question (unused in placeholder).
+ * @param question The user's question.
  * @param maxChunks Maximum number of chunks to return.
- * @returns An array of selected chunks.
+ * @returns An array of selected chunks, prioritized by keyword matches.
  */
 export function getRelevantChunks(
   chunks: string[],
-  question: string, // Keep for future embedding-based relevance
+  question: string,
   maxChunks: number = 5
 ): string[] {
-  console.warn(
-    `getRelevantChunks using placeholder logic: returning first ${Math.min(
-      maxChunks,
-      chunks.length
-    )} chunks.`
+  console.log(
+    `Selecting relevant chunks using basic keyword matching for question: "${question}"`
   );
-  // TODO: Replace with actual relevance scoring (e.g., vector similarity)
-  return chunks.slice(0, maxChunks);
+
+  if (!question || chunks.length === 0) {
+    return chunks.slice(0, maxChunks); // Return first chunks if no question or chunks
+  }
+
+  // Simple keyword extraction (split by space, lowercase, remove common punctuation)
+  const questionKeywords = question
+    .toLowerCase()
+    .replace(/[.,!?;:]/g, "")
+    .split(/\s+/)
+    .filter(Boolean); // Remove empty strings
+
+  if (questionKeywords.length === 0) {
+    return chunks.slice(0, maxChunks); // Return first chunks if no keywords found
+  }
+
+  // Score chunks based on keyword presence
+  const scoredChunks = chunks.map((chunk, index) => {
+    const lowerChunk = chunk.toLowerCase();
+    let score = 0;
+    for (const keyword of questionKeywords) {
+      if (lowerChunk.includes(keyword)) {
+        score++;
+      }
+    }
+    return { chunk, score, index }; // Keep original index for stability if scores are equal
+  });
+
+  // Sort chunks by score (descending), then by original index (ascending)
+  scoredChunks.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    return a.index - b.index;
+  });
+
+  // Select the top `maxChunks`
+  const selectedChunks = scoredChunks
+    .slice(0, maxChunks)
+    .map((item) => item.chunk);
+
+  console.log(
+    `Selected ${selectedChunks.length} chunks based on keyword relevance.`
+  );
+
+  // TODO: Replace this entire function with vector similarity search for production.
+  return selectedChunks;
 }
 
 /**
