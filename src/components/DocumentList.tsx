@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react"; // Removed SetStateAction
 import { useSession } from "next-auth/react";
-import axios from "axios";
+import axios from "axios"; // Removed unused AxiosError type
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, FileText, Trash2, AlertTriangle } from "lucide-react";
 import {
@@ -34,12 +35,26 @@ interface Document {
   s3Key: string;
 }
 
-export default function DocumentList() {
-  const { data: session, status } = useSession();
+interface DocumentListProps {
+  onSelectionChange?: (selectedIds: string[]) => void; // Optional prop to notify parent of selection changes
+}
+
+export default function DocumentList({ onSelectionChange }: DocumentListProps) {
+  const { status } = useSession(); // Removed unused 'session' variable
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(
+    new Set()
+  ); // State for selected IDs
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Notify parent when selection changes
+  useEffect(() => {
+    if (onSelectionChange) {
+      onSelectionChange(Array.from(selectedDocuments));
+    }
+  }, [selectedDocuments, onSelectionChange]);
 
   const fetchDocuments = useCallback(async () => {
     if (status !== "authenticated") return;
@@ -49,10 +64,11 @@ export default function DocumentList() {
     try {
       const response = await axios.get<{ documents: Document[] }>("/api/files");
       setDocuments(response.data.documents);
-    } catch (err: any) {
-      // Use 'any' or a more specific Axios error type
+    } catch (err: unknown) {
+      // Use unknown for better type safety
       console.error("Failed to fetch documents:", err);
       let errorMsg = "Failed to load your documents. Please try again later.";
+      // Type guard for AxiosError
       if (axios.isAxiosError(err) && err.response) {
         if (err.response.status === 401) {
           errorMsg = "Authentication error. Please log in again.";
@@ -83,7 +99,43 @@ export default function DocumentList() {
       setError(null);
       setIsLoading(false);
     }
-  }, [status, fetchDocuments]);
+  }, [status, toast]); // Removed fetchDocuments from dependency array as it's defined outside useEffect scope now
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchDocuments();
+    } else if (status === "unauthenticated") {
+      // Clear documents and selection if user logs out
+      setDocuments([]);
+      setSelectedDocuments(new Set()); // Clear selection
+      setError(null);
+      setIsLoading(false);
+    }
+    // fetchDocuments is stable and doesn't need to be in dependency array if defined outside
+  }, [status, fetchDocuments]); // Added fetchDocuments back as it's defined within the component scope
+
+  const handleSelectDocument = (
+    documentId: string,
+    checked: boolean | "indeterminate"
+  ) => {
+    setSelectedDocuments((prevSelected) => {
+      const newSelected = new Set(prevSelected);
+      if (checked === true) {
+        newSelected.add(documentId);
+      } else {
+        newSelected.delete(documentId);
+      }
+      return newSelected;
+    });
+  };
+
+  const handleSelectAll = (checked: boolean | "indeterminate") => {
+    if (checked === true) {
+      setSelectedDocuments(new Set(documents.map((doc) => doc.id)));
+    } else {
+      setSelectedDocuments(new Set());
+    }
+  };
 
   const handleDelete = async (documentId: string) => {
     setIsLoading(true); // Indicate loading state during deletion
@@ -94,11 +146,18 @@ export default function DocumentList() {
         description: "Document deleted successfully.",
       });
       // Refresh the document list after deletion
-      fetchDocuments();
-    } catch (err: any) {
-      // Use 'any' or a more specific Axios error type
+      await fetchDocuments(); // Ensure fetch completes before potentially resetting loading state
+      // Also remove deleted doc from selection
+      setSelectedDocuments((prev) => {
+        const newSelected = new Set(prev);
+        newSelected.delete(documentId);
+        return newSelected;
+      });
+    } catch (err: unknown) {
+      // Use unknown for better type safety
       console.error("Failed to delete document:", err);
       let errorDesc = "Failed to delete document. Please try again.";
+      // Type guard for AxiosError
       if (axios.isAxiosError(err) && err.response) {
         if (err.response.status === 401) {
           errorDesc = "Authentication error. Please log in again.";
@@ -151,43 +210,90 @@ export default function DocumentList() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px] hidden sm:table-cell">
+            <TableHead className="w-[50px]">
+              {" "}
+              {/* Checkbox column */}
+              <Checkbox
+                checked={
+                  documents.length > 0 &&
+                  selectedDocuments.size === documents.length
+                }
+                onCheckedChange={handleSelectAll}
+                aria-label="Select all rows"
+                disabled={isLoading || documents.length === 0}
+              />
+            </TableHead>
+            <TableHead className="w-[60px] hidden sm:table-cell">
+              {" "}
+              {/* Icon column */}
               Icon
             </TableHead>
-            <TableHead>Filename</TableHead>
-            <TableHead className="hidden md:table-cell">Uploaded On</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>Filename</TableHead> {/* Filename column */}
+            <TableHead className="hidden md:table-cell">
+              Uploaded On
+            </TableHead>{" "}
+            {/* Date column */}
+            <TableHead className="text-right w-[60px]">Actions</TableHead>{" "}
+            {/* Actions column */}
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading && documents.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="h-24 text-center">
+              <TableCell colSpan={5} className="h-24 text-center">
+                {" "}
+                {/* Adjusted colSpan */}
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto" />
               </TableCell>
             </TableRow>
           ) : documents.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={4}
+                colSpan={5} // Adjusted colSpan
                 className="h-24 text-center text-muted-foreground"
               >
-                You haven't uploaded any documents yet.
+                You haven&apos;t uploaded any documents yet.{" "}
+                {/* Escaped apostrophe */}
               </TableCell>
             </TableRow>
           ) : (
             documents.map((doc) => (
-              <TableRow key={doc.id}>
+              <TableRow
+                key={doc.id}
+                data-state={
+                  selectedDocuments.has(doc.id) ? "selected" : undefined
+                } // Highlight selected row
+              >
+                <TableCell>
+                  {" "}
+                  {/* Checkbox cell */}
+                  <Checkbox
+                    checked={selectedDocuments.has(doc.id)}
+                    onCheckedChange={(
+                      checked: boolean | "indeterminate" // Added explicit type
+                    ) => handleSelectDocument(doc.id, checked)}
+                    aria-label={`Select document ${doc.filename}`}
+                    disabled={isLoading}
+                  />
+                </TableCell>
                 <TableCell className="hidden sm:table-cell">
+                  {" "}
+                  {/* Icon cell */}
                   <FileText className="h-5 w-5 text-muted-foreground" />
                 </TableCell>
                 <TableCell className="font-medium truncate max-w-xs">
+                  {" "}
+                  {/* Filename cell */}
                   {doc.filename}
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
+                  {" "}
+                  {/* Date cell */}
                   {format(new Date(doc.createdAt), "PPp")} {/* Format date */}
                 </TableCell>
                 <TableCell className="text-right">
+                  {" "}
+                  {/* Actions cell */}
                   {/* Conditionally render delete button only if authenticated */}
                   {status === "authenticated" && (
                     <AlertDialog>

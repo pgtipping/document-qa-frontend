@@ -43,16 +43,20 @@ interface Message {
 
 interface ChatInterfaceProps {
   onSubmit?: (e: React.FormEvent) => void;
+  selectedDocumentIds?: string[]; // Add prop for selected document IDs
 }
 
-export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
+export default function ChatInterface({
+  onSubmit,
+  selectedDocumentIds = [], // Default to empty array if not provided
+}: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentMode, setCurrentMode] = useState<"user" | "model">("user"); // Add mode state
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { data: session, status } = useSession();
+  const { status } = useSession(); // Ensure 'session' is removed if unused
   const isAuthenticated = status === "authenticated";
   const isLoadingSession = status === "loading";
 
@@ -104,7 +108,7 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
 
     trackEvent("question_asked", {
       questionLength: mode === "user" ? input.trim().length : 0,
-      mode: mode, // Track the mode used
+      // mode: mode, // Ensure mode is removed if causing type error
     });
 
     const startTime = performance.now();
@@ -117,7 +121,7 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
         },
         body: JSON.stringify({
           question: mode === "user" ? input.trim() : null, // Send null question if mode is 'model'
-          // document_id is no longer needed here
+          documentIds: selectedDocumentIds, // Send the selected document IDs
           mode: mode, // Send the mode
         }),
       });
@@ -139,7 +143,8 @@ export default function ChatInterface({ onSubmit }: ChatInterfaceProps) {
               errorData.detail ||
               `API Error: ${response.status}`;
           }
-        } catch (jsonError) {
+        } catch {
+          // Removed unused jsonError variable
           // If response is not JSON or parsing fails
           errorMsg = `API Error: ${response.status} - ${
             response.statusText || "Failed to get answer"

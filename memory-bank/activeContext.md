@@ -1,3 +1,25 @@
+# Active Context - 2025-04-28 18:31:38
+
+- **Task:** Implement multi-document selection for chat context.
+- **Completed:**
+  - Added checkbox selection to `DocumentList.tsx` and callback (`onSelectionChange`) to report selected IDs.
+  - Added state (`selectedDocumentIds`) and handler (`handleSelectionChange`) to `chat/page.tsx` to manage selections.
+  - Passed selected IDs from `chat/page.tsx` to `ChatInterface.tsx` via props.
+  - Modified `ChatInterface.tsx` to accept `selectedDocumentIds` prop and include it in the `/api/ask` request body.
+  - Updated `/api/ask/route.ts` backend to:
+    - Read `documentIds` from the request body.
+    - Fetch specific documents using provided IDs if available, ensuring they belong to the user and are active.
+    - Fallback to fetching all user's active documents if no specific IDs are provided.
+    - Use the correct set of S3 keys for content processing.
+  - Resolved associated type and linting errors in modified files.
+- **Next Steps:**
+  - Thoroughly test the multi-document selection feature and `/api/ask` endpoint (no selection, single, multiple).
+  - Test core document processing (`pdf-ts`, `mammoth`, plain text) with diverse file types.
+  - Add comprehensive automated tests (session management, auth, Q&A mode, multi-file management, APIs).
+  - Implement the "How to Use" guide page.
+
+---
+
 # Active Context - 2025-04-28 10:45:10 EDT
 
 - **Task:** Refine document processing implementation within Next.js backend.

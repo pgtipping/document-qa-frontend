@@ -4,7 +4,7 @@ import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import mammoth from "mammoth";
 import { Readable } from "stream";
 import { pdfToText } from "pdf-ts"; // Correct named import
-// import { getCompletion } from "./llm-service"; // LLM Fallback removed
+import { getExtractionFallback } from "./llm-service"; // Import the specific fallback function
 
 // --- Constants ---
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
@@ -159,11 +159,11 @@ export async function getDocumentTextContent(s3Key: string): Promise<string> {
   let extractionMethod = "unknown"; // Default, will be updated
 
   try {
+    // --- Direct Extraction Attempt ---
     if (fileExtension === "pdf") {
-      // Attempt extraction using pdf-ts
       console.log("Attempting PDF text extraction using pdf-ts...");
       extractionMethod = "pdf-ts";
-      extractedText = await pdfToText(buffer); // Correct function call
+      extractedText = await pdfToText(buffer);
       console.log(
         `Extracted ${extractedText?.length ?? 0} characters using pdf-ts.`
       );
@@ -181,8 +181,8 @@ export async function getDocumentTextContent(s3Key: string): Promise<string> {
         extractionMethod = "plain-fallback";
         extractedText = extractPlainText(buffer);
       } catch (e) {
-        console.error(`Error during plain text extraction attempt:`, e);
-        // Ensure we throw an actual Error object
+        // If plain text fallback fails for unsupported type, throw specific error
+        console.error(`Plain text extraction failed for unsupported type:`, e);
         const message = `Unsupported file type for extraction: ${fileExtension}`;
         if (e instanceof Error) {
           throw new Error(`${message}. Reason: ${e.message}`);
@@ -192,43 +192,118 @@ export async function getDocumentTextContent(s3Key: string): Promise<string> {
       }
     }
 
-    // Basic check for sufficient content after direct extraction
+    // --- Check if Fallback Needed ---
     const insufficientContent =
       !extractedText ||
       extractedText.trim().length < MIN_EXTRACTED_CHARS_THRESHOLD;
 
     if (insufficientContent) {
       console.warn(
-        `Direct extraction method '${extractionMethod}' yielded potentially insufficient content (${
+        `Direct extraction method '${extractionMethod}' yielded insufficient content (${
           extractedText?.trim().length ?? 0
-        } chars) for ${s3Key}.`
+        } chars) for ${s3Key}. Attempting LLM fallback.`
       );
-      // Optionally, we could still throw an error here if content is truly empty or below a critical threshold
-      // For now, we proceed but log the warning. If it's completely empty later, an error will be thrown.
+
+      // --- LLM Fallback Logic ---
+      extractionMethod = "llm-fallback (google)";
+      let bufferString = "";
+      try {
+        bufferString = buffer.toString("utf-8");
+      } catch {
+        try {
+          bufferString = buffer.toString("latin1");
+        } catch {
+          console.error("Failed to convert buffer to string for LLM fallback.");
+        }
+      }
+      // Limit buffer string length to avoid overly large prompts
+      const maxBufferStringLength = 15000; // Increased limit slightly
+      if (bufferString.length > maxBufferStringLength) {
+        bufferString =
+          bufferString.substring(0, maxBufferStringLength) + "... [truncated]";
+      }
+
+      const fallbackPrompt = `Direct text extraction failed or yielded insufficient content for a document (key: ${s3Key}). Please extract all readable text from the following potentially raw or truncated content:\n\n---\n${bufferString}\n---\n\nExtracted Text:`;
+      extractedText = await getExtractionFallback(fallbackPrompt); // Call the specific fallback
+
+      if (
+        !extractedText ||
+        extractedText.trim().length < MIN_EXTRACTED_CHARS_THRESHOLD
+      ) {
+        console.error(
+          `LLM fallback also failed or yielded insufficient content for ${s3Key}.`
+        );
+        throw new Error(
+          `LLM fallback failed to extract sufficient content for ${s3Key}.`
+        );
+      } else {
+        console.log(
+          `LLM fallback extraction successful for ${s3Key}. Length: ${extractedText.length}`
+        );
+      }
+      // End of LLM Fallback Logic
     }
+    // End of Fallback Check
   } catch (error) {
+    // --- Catch Direct Extraction Errors & Attempt Fallback ---
     console.error(
       `Direct extraction method '${extractionMethod}' failed for ${s3Key}:`,
       error
     );
-    // Re-throw the error from the direct extraction method. No LLM fallback.
-    // Ensure we throw an actual Error object
-    const message = `Extraction failed for ${s3Key} using method ${extractionMethod}`;
-    if (error instanceof Error) {
-      throw new Error(`${message}. Reason: ${error.message}`);
-    } else {
-      throw new Error(`${message}. Reason: ${String(error)}`);
+    console.log(
+      `Attempting LLM fallback due to direct extraction error for ${s3Key}.`
+    );
+    extractionMethod = "llm-fallback (google)";
+
+    let bufferString = "";
+    try {
+      bufferString = buffer.toString("utf-8");
+    } catch {
+      try {
+        bufferString = buffer.toString("latin1");
+      } catch {
+        console.error("Failed to convert buffer to string for LLM fallback.");
+      }
     }
+    const maxBufferStringLength = 15000;
+    if (bufferString.length > maxBufferStringLength) {
+      bufferString =
+        bufferString.substring(0, maxBufferStringLength) + "... [truncated]";
+    }
+
+    const fallbackPrompt = `Direct text extraction failed for a document (key: ${s3Key}). Please extract all readable text from the following potentially raw or truncated content:\n\n---\n${bufferString}\n---\n\nExtracted Text:`;
+    extractedText = await getExtractionFallback(fallbackPrompt); // Call the specific fallback
+
+    if (
+      !extractedText ||
+      extractedText.trim().length < MIN_EXTRACTED_CHARS_THRESHOLD
+    ) {
+      console.error(
+        `LLM fallback also failed or yielded insufficient content after direct extraction error for ${s3Key}.`
+      );
+      const message = `Both direct extraction and LLM fallback failed for ${s3Key}`;
+      if (error instanceof Error) {
+        throw new Error(`${message}. Initial error: ${error.message}`);
+      } else {
+        throw new Error(`${message}. Initial error: ${String(error)}`);
+      }
+    } else {
+      console.log(
+        `LLM fallback extraction successful after direct extraction error for ${s3Key}. Length: ${extractedText.length}`
+      );
+    }
+    // End of LLM Fallback Logic in Catch
   }
 
-  // Final check - ensure text is not null or empty before caching/returning
+  // --- Final Validation & Cache Update ---
+  // This check ensures we always have *some* content after potentially falling back
   if (!extractedText || extractedText.trim().length === 0) {
+    // This should ideally not be reached if fallback logic throws errors properly on failure
     throw new Error(
-      `Failed to extract text content from ${s3Key} using method ${extractionMethod}. Result was empty.`
+      `Failed to extract text content from ${s3Key} using method ${extractionMethod}. Result was empty after all attempts.`
     );
   }
 
-  // --- Update Cache ---
   contentCache.set(s3Key, { content: extractedText, timestamp: Date.now() });
   console.log(`Cached content for: ${s3Key}`);
 

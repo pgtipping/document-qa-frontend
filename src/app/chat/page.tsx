@@ -19,8 +19,16 @@ import { MessageSquare, Upload, MessageCircle, List } from "lucide-react"; // Ad
 
 export default function ChatPage() {
   const [activeTab, setActiveTab] = useState<string>("chat");
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]); // State for selected doc IDs
   const [feedbackText, setFeedbackText] = useState<string>("");
   const feedbackRef = useRef<HTMLTextAreaElement>(null);
+
+  // Callback for DocumentList to update selected IDs
+  const handleSelectionChange = (selectedIds: string[]) => {
+    setSelectedDocumentIds(selectedIds);
+    // Optional: Log selection change for debugging
+    // console.log("Selected document IDs:", selectedIds);
+  };
 
   const handleChatSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,7 +115,11 @@ export default function ChatPage() {
                   Ask questions about your uploaded documents and get AI-powered
                   answers
                 </CardDescription>
-                <ChatInterface onSubmit={handleChatSubmit} />
+                {/* Pass selected IDs to ChatInterface */}
+                <ChatInterface
+                  onSubmit={handleChatSubmit}
+                  selectedDocumentIds={selectedDocumentIds}
+                />
               </TabsContent>
 
               <TabsContent value="upload" className="mt-6">
@@ -139,7 +151,8 @@ export default function ChatPage() {
                 <CardDescription className="mb-6">
                   View and manage your uploaded documents
                 </CardDescription>
-                <DocumentList />
+                {/* Pass selection handler to DocumentList */}
+                <DocumentList onSelectionChange={handleSelectionChange} />
               </TabsContent>
 
               <TabsContent value="feedback" className="mt-6">

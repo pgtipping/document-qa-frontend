@@ -1,3 +1,40 @@
+## 2025-04-28 18:31:38 - Multi-Document Selection for Chat Context
+
+### Completed
+
+- **Frontend (`DocumentList.tsx`):** Implemented checkbox UI for document selection and added `onSelectionChange` prop to communicate selected IDs.
+- **Frontend (`chat/page.tsx`):** Added state (`selectedDocumentIds`) to manage selections and passed the state/handler between `DocumentList` and `ChatInterface`.
+- **Frontend (`ChatInterface.tsx`):** Updated component to accept `selectedDocumentIds` prop and include this array in the body of the `/api/ask` request.
+- **Backend (`/api/ask/route.ts`):**
+  - Modified route to read the optional `documentIds` array from the request body.
+  - Updated Prisma query logic:
+    - If `documentIds` is present and non-empty, fetch only those specific active documents belonging to the user.
+    - If `documentIds` is absent or empty, fetch all active documents for the user (maintaining previous behavior).
+  - Ensured subsequent document processing uses the correctly fetched set of S3 keys.
+- **Fixes:** Resolved associated type errors and linting issues in all modified frontend and backend files.
+
+### In Progress
+
+- N/A (Feature complete)
+
+### Next Steps
+
+- **Testing:**
+  - Thoroughly test the multi-document selection feature end-to-end:
+    - Chat with no documents selected (should use all active).
+    - Chat with one document selected.
+    - Chat with multiple documents selected.
+    - Verify context relevance in answers.
+  - Test core document processing (`pdf-ts`, `mammoth`, plain text) with diverse file types.
+- **Automated Testing:** Add comprehensive tests covering:
+  - Session management & authorization.
+  - Q&A mode functionality.
+  - Multi-file management (list, select, delete).
+  - API route interactions (`/api/ask`, `/api/files`, `/api/upload`).
+- **Documentation:** Implement the "How to Use" guide page.
+
+---
+
 ## 2025-04-28 10:45:10 EDT - Architecture Confirmation & Linting Fixes
 
 ### Completed

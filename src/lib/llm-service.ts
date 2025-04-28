@@ -193,7 +193,49 @@ export async function getCompletion(prompt: string): Promise<string | null> {
   return null;
 }
 
-// --- Helper Functions (Placeholder - to be implemented based on Python logic) ---
+/**
+ * Gets a completion specifically for text extraction fallback using the configured Google provider.
+ * @param prompt The prompt to send to the Google LLM.
+ * @returns The LLM completion string or null if the Google provider fails.
+ */
+export async function getExtractionFallback(
+  prompt: string
+): Promise<string | null> {
+  const googleProvider = availableProviders.find((p) => p.name === "google");
+
+  if (!googleProvider) {
+    console.error("Google provider not available for extraction fallback.");
+    return null;
+  }
+
+  console.log(
+    `Attempting extraction fallback with ${googleProvider.name} (${googleProvider.model})...`
+  );
+  try {
+    const startTime = Date.now();
+    // Directly call the Google provider's call method
+    const result = await googleProvider.call(prompt);
+    const duration = Date.now() - startTime;
+
+    if (result) {
+      console.log(
+        `Extraction fallback successful with ${googleProvider.name} in ${duration}ms.`
+      );
+      return result;
+    } else {
+      console.warn(
+        `Extraction fallback provider ${googleProvider.name} returned null or empty result.`
+      );
+      return null;
+    }
+  } catch (error) {
+    console.error(
+      `Error calling ${googleProvider.name} for extraction fallback:`,
+      error instanceof Error ? error.message : error
+    );
+    return null;
+  }
+}
 
 // --- Helper Functions ---
 

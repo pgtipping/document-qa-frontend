@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma"; // Import Prisma client instance
+import prisma, { Prisma } from "@/lib/prisma"; // Import Prisma client instance and types
 import { getDocumentTextContent } from "@/lib/document-processing";
 import {
   getCompletion,
@@ -28,8 +28,12 @@ export async function POST(request: NextRequest) {
     // --- End Authentication Check ---
 
     const body = await request.json();
-    // Expect question and optional mode, userId comes from session
-    const { question: userQuestion, mode = "user" } = body; // Default mode to 'user'
+    // Expect question, optional mode, optional documentIds. userId comes from session
+    const {
+      question: userQuestion,
+      mode = "user",
+      documentIds, // Array of specific document IDs to use
+    } = body; // Default mode to 'user'
 
     if (
       mode === "user" &&
@@ -49,15 +53,35 @@ export async function POST(request: NextRequest) {
       console.log(`User question: "${userQuestion}"`);
     }
 
-    // --- Prisma Integration: Fetch active documents for the user ---
-    let activeDocuments;
+    // --- Prisma Integration: Fetch documents based on selection or all active ---
+    let documentsToProcess;
     try {
-      activeDocuments = await prisma.document.findMany({
-        where: {
-          userId: userId, // Use authenticated userId
-          status: "active", // Only fetch active documents
-        },
+      // Define the base where clause with proper typing
+      const whereClause: Prisma.DocumentWhereInput = {
+        userId: userId, // Always filter by user
+        status: "active", // Always fetch active documents
+      };
+
+      // If specific document IDs are provided, add them to the clause
+      if (Array.isArray(documentIds) && documentIds.length > 0) {
+        console.log(
+          `Fetching specific documents for user ${userId}:`,
+          documentIds
+        );
+        whereClause.id = {
+          in: documentIds,
+        };
+      } else {
+        console.log(
+          `No specific documents selected, fetching all active for user ${userId}.`
+        );
+        // No additional ID filter needed, will fetch all active for the user
+      }
+
+      documentsToProcess = await prisma.document.findMany({
+        where: whereClause,
         select: {
+          id: true, // Select ID for potential logging/debugging
           s3Key: true, // Only select the s3Key
           filename: true, // Keep filename for logging/context
         },
@@ -76,33 +100,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!activeDocuments || activeDocuments.length === 0) {
+    if (!documentsToProcess || documentsToProcess.length === 0) {
+      const message =
+        Array.isArray(documentIds) && documentIds.length > 0
+          ? "None of the selected documents were found or are active."
+          : "No active documents found for this user to provide context.";
       return NextResponse.json(
-        {
-          answer: "No active documents found for this user to provide context.",
-        },
-        { status: 200 } // Not an error, just no context
+        { answer: message },
+        { status: 200 } // Not an error, just no context available
       );
     }
 
-    const activeS3Keys = activeDocuments.map((doc) => doc.s3Key);
+    const s3KeysToProcess = documentsToProcess.map((doc) => doc.s3Key);
     console.log(
-      `Found ${activeS3Keys.length} active documents for user ${userId}:`,
-      activeDocuments.map((d) => d.filename)
+      `Processing ${s3KeysToProcess.length} documents for user ${userId}:`,
+      documentsToProcess.map((d) => d.filename)
     );
     // --- End Prisma Integration ---
 
-    // 1. Fetch and extract content for all *active* documents concurrently
-    const contentPromises = activeS3Keys.map((key) =>
-      getDocumentTextContent(key).catch((err) => {
-        console.error(`Failed to get content for key ${key}:`, err);
-        return null; // Return null on error for individual file
-      })
+    // 1. Fetch and extract content for the selected/active documents concurrently
+    const contentPromises = s3KeysToProcess.map(
+      (
+        key: string // Add type for key
+      ) =>
+        getDocumentTextContent(key).catch((err) => {
+          console.error(`Failed to get content for key ${key}:`, err);
+          return null; // Return null on error for individual file
+        })
     );
-    const allContents = await Promise.all(contentPromises);
+    const allContents = (await Promise.all(contentPromises)) as (
+      | string
+      | null
+    )[]; // Type assertion
     const validContents = allContents.filter(
-      (content) => content !== null
-    ) as string[];
+      (content: string | null): content is string => content !== null // Type guard for filter
+    );
 
     if (validContents.length === 0) {
       return NextResponse.json(
@@ -212,7 +244,16 @@ export async function POST(request: NextRequest) {
         ? error.message
         : "Unknown error processing request";
     // Determine appropriate status code based on error type if possible
-    const status = (error as any)?.status || 500; // Use status from error if available
+    let status = 500;
+    // Refined type check to avoid 'any'
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "status" in error &&
+      typeof error.status === "number" // Direct access after 'in' check
+    ) {
+      status = error.status; // Direct access after check
+    }
     return NextResponse.json(
       { error: "Failed to get answer", details: errorMessage },
       { status }
