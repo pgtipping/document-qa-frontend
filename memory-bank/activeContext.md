@@ -1,0 +1,247 @@
+# Active Context - 2025-04-28 10:45:10 EDT
+
+- **Task:** Refine document processing implementation within Next.js backend.
+- **Completed:**
+  - Confirmed architectural direction via `overhaul_plan.md`: All backend processing, including document extraction, should reside within the Next.js application (`document-qa-frontend`), eliminating the separate Python backend.
+  - Verified that the current implementation uses `pdf-ts` in `document-qa-frontend/src/lib/document-processing.ts`, aligning with the plan for the MVP.
+  - Refactored `document-qa-frontend/src/lib/document-processing.ts` to fix linting issues: removed unused code/imports, added environment variable checks, improved error handling, and defined a constant for the minimum character threshold. (Note: LLM fallback for extraction was _not_ removed per user instruction).
+- **Next Steps:**
+  - Continue implementing features outlined in `overhaul_plan.md`, focusing on:
+    - Comprehensive testing of the current document processing (`pdf-ts`, `mammoth`, plain text) with various file types.
+    - Implementing remaining multi-file management UI refinements (e.g., document selection influencing chat context if needed beyond just fetching all active documents).
+    - Adding comprehensive tests for session management, authorization, Q&A mode, multi-file management, and related API interactions.
+    - Implementing the "How to Use" guide page.
+
+---
+
+# Active Context - 2025-04-28T05:27:33-04:00
+
+- **Task:** Improve PDF text extraction reliability and efficiency.
+- **Completed:**
+  - Analyzed current LLM fallback issues (slowness, errors) in `document-qa-frontend/src/lib/document-processing.ts`.
+  - Explored Vercel AI SDK PDF handling (relies on LLM).
+  - Investigated TypeScript PDF parsing libraries (`pdf-parse`, `pdf-ts`).
+  - Identified previous attempts and errors with `pdf-parse` and `pdfjs-dist` in the codebase.
+  - Installed `pdf-ts` library in `document-qa-frontend`.
+  - Updated `document-qa-frontend/src/lib/document-processing.ts` to use `pdf-ts` (via `pdfToText` named import) for direct PDF text extraction, replacing the previous LLM-only approach for PDFs.
+- **Next Steps:**
+  - Test the updated PDF processing with `pdf-ts` using various PDF types (native text, scanned images, mixed).
+  - If `pdf-ts` proves unreliable or insufficient, consider switching to `pdf-parse` or reverting to the Python backend approach.
+  - Update `progress.md` to reflect these changes.
+
+---
+
+# Active Context - 2025-04-28T02:47:42-04:00
+
+- **Task:** Improve PDF text extraction reliability and efficiency.
+- **Completed:**
+  - Analyzed previous PDF processing failures (OCR-only approach using `pdfjs-dist` + `Tesseract.js`).
+  - Refactored PDF extraction in `document-qa-frontend/src/lib/document-processing.ts` to use a hybrid approach:
+    - First attempts direct text layer extraction via `pdfjs-dist` (`page.getTextContent()`).
+    - Falls back to OCR (`pdfjs-dist` rendering + `Tesseract.js`) if text layer yields insufficient content.
+    - Retains LLM extraction as a final fallback.
+  - Resolved associated ESLint errors (type safety, unused imports).
+- **Next Steps:**
+  - Test the updated PDF processing with various PDF types (native text, scanned images, mixed).
+  - Update `progress.md` to reflect these changes.
+
+---
+
+# Active Context - 2025-04-27T23:24:51-04:00
+
+- **Task:** Troubleshoot incorrect `GROQ_API_KEY` loading in `document-qa-frontend`.
+- **Completed:**
+  - Verified the correct key was present in `.env`.
+  - Added debug logging to `/api/test-groq` route.
+  - Confirmed via logs that an incorrect key was being loaded despite cache clearing.
+  - Ruled out terminal/shell environment variable overrides.
+  - Ruled out `next.config.mjs` as the source.
+  - Identified that `.env.local` existed and contained an incorrect `GROQ_API_KEY`.
+  - User confirmed correcting the key in `.env.local` resolved the issue.
+  - Removed debug log from `/api/test-groq/route.ts`.
+- **Next Steps:**
+  - Continue with planned testing or address next priority task.
+  - Ensure consistency between `.env`, `.env.local`, and `.env.example` for relevant keys.
+
+---
+
+_Previous context entries kept for history, but the entry above reflects the current focus._
+
+# Active Context - 2025-04-27T05:50:39-04:00
+
+- **Task:** Debug file upload errors (`ENOENT`, `EAUTH`).
+- **Completed:**
+  - Identified `ENOENT` error linked to `llm-service.ts` import/initialization by temporarily disabling its import and usage in `document-processing.ts`.
+  - Identified `EAUTH` error in `/api/alerts` due to email sending failure (invalid credentials).
+  - Temporarily disabled email sending in `/api/alerts/route.ts` by commenting out `transporter.sendMail` block.
+  - Resolved associated lint errors in `document-processing.ts` and `alerts/route.ts` arising from commented-out code.
+- **Next Steps:**
+  - Restart the development server.
+  - Test file upload functionality to confirm `ENOENT` and `EAUTH` errors are resolved.
+  - If upload succeeds, re-enable `llm-service.ts` import and functionality in `document-processing.ts` and test again.
+  - If Q&A works after re-enabling LLM service, proceed with original testing plan (document listing/deletion).
+
+---
+
+# Active Context - 2025-04-26T23:37:27-04:00
+
+- **Task:** Diagnose and fix the `[next-auth][error][CLIENT_FETCH_ERROR]` runtime error.
+- **Completed:**
+  - Identified the root cause as the `rewrites` rule in `next.config.mjs` incorrectly proxying `/api/auth/*` routes.
+  - Modified the `rewrites` rule source to `"/api/((?!auth/).*)"` using a negative lookahead to exclude `/api/auth/` paths from being proxied.
+  - Confirmed with the user that restarting the development server resolved the `CLIENT_FETCH_ERROR` and the `404` error for `/api/auth/session`.
+- **Next Steps:**
+  - Perform comprehensive testing of the authentication flows (registration, login via Credentials, login via GitHub if configured, logout) to ensure they work correctly after the recent fixes and configuration changes.
+  - Test other core functionalities like file upload, Q&A, and document management to check for any regressions.
+
+---
+
+## Active Context - 4/26/2025, 4:09:50 AM
+
+- **Task:** Debug frontend build/runtime errors and refine authentication handling.
+- **Completed:**
+  - Resolved multiple build errors (`Module not found` for `alert-dialog`, `table`, `date-fns`) by installing missing dependencies (`date-fns`), correctly adding shadcn components (`alert-dialog`), and troubleshooting persistent path resolution issues (cache clearing, dependency reinstall, relative path testing).
+  - Fixed syntax error in `DocumentList.tsx`.
+  - Added `withAdminAuth` helper function to `lib/auth.ts` to handle admin route protection.
+  - Added NextAuth environment variable placeholders (`NEXTAUTH_SECRET`, `GITHUB_ID`, `GITHUB_SECRET`) to `.env.example` and clarified their purpose.
+  - Removed redundant auth check from `AdminMetrics` page.
+  - Reviewed and confirmed robust authentication handling (conditional rendering, disabled elements, user prompts, specific error toasts) in `useMetrics`, `FileUpload`, `ChatInterface`, and `DocumentList`.
+- **Next Steps:**
+  - Perform comprehensive testing of authentication flows, multi-file management, Q&A mode, and admin features to ensure stability and correct behavior after recent changes.
+  - Address any remaining TODOs or minor refinements identified during testing.
+
+---
+
+## Active Context - 4/25/2025, 10:19:05 AM
+
+- Continuing task to test LLM fallback system.
+- Identified and fixed indentation errors in `document-qa-backend/app/services/llm.py`.
+- Added missing `_init_openrouter` method in the previous session.
+- Next step is to verify the backend server starts successfully and then test the fallback system.
+
+---
+
+## Active Context - 4/25/2025, 5:57:55 PM
+
+- **Task:** Begin implementation of the `overhaul_plan.md`.
+- **Completed:**
+  - Refined `overhaul_plan.md` based on user feedback (multi-file handling, persistence, deletion, Q&A mode, context limits, user guide).
+  - Started Step 2 (Backend Migration & Feature Enhancement in Next.js):
+    - Installed necessary dependencies (`@aws-sdk/client-s3`, `pdf-parse`, `mammoth`, `openai`, `@google/generative-ai`, `groq-sdk`, `tiktoken`).
+    - Implemented S3 multi-file upload logic in `/api/upload/route.ts`.
+    - Implemented S3 file deletion logic in `/api/files/[fileId]/route.ts`.
+    - Created `lib/document-processing.ts` with functions for S3 fetching and text extraction (PDF, DOCX, TXT).
+    - Created `lib/llm-service.ts` with LLM client initialization and provider fallback logic.
+    - Integrated document processing and LLM service into `/api/ask/route.ts`, including token limiting with `tiktoken`.
+- **Next Step:** Implement database persistence (e.g., using Prisma) to track uploaded files and manage user context for file operations (add/remove/delete).
+
+---
+
+## Active Context - 4/25/2025, 6:49:47 PM
+
+- **Task:** Implement database persistence using Prisma (Step 2 of `overhaul_plan.md`).
+- **Completed:**
+  - Installed Prisma CLI and Client (`prisma`, `@prisma/client`).
+  - Initialized Prisma (`npx prisma init`).
+  - Defined `Document` model in `prisma/schema.prisma` (using `postgresql` provider).
+  - Configured `.env` for `DATABASE_URL` (placeholder value, needs actual PostgreSQL string).
+  - Ensured `.env` is in `.gitignore`.
+  - Created singleton Prisma Client instance (`src/lib/prisma.ts`).
+  - Generated Prisma Client (`npx prisma generate`).
+  - Integrated Prisma Client into API routes:
+    - `/api/upload/route.ts`: Creates `Document` record on successful S3 upload.
+    - `/api/files/[fileId]/route.ts`: Updates `Document` status to 'deleted' and deletes from S3.
+    - `/api/ask/route.ts`: Fetches active `Document` s3Keys based on `sessionId` to build context.
+- **Next Steps:**
+  - Obtain and set the actual PostgreSQL `DATABASE_URL` in `.env`.
+  - Run Prisma migration (`npx prisma migrate dev --name init`) to create the database table.
+  - Implement actual session management (replace placeholder `sessionId`).
+  - Implement authorization checks in API routes.
+  - Update frontend components to use modified API routes and handle file management UI.
+  - Refine error handling and add comprehensive tests.
+
+---
+
+## Active Context - 4/25/2025, 10:00:59 PM
+
+- **Task:** Refine library functions (`llm-service.ts`, `document-processing.ts`) and integrate them into API routes (`/api/ask`, `/api/upload`) per `overhaul_plan.md`.
+- **Completed:**
+  - Refined `llm-service.ts` with chunking, token counting/limiting (`tiktoken`), placeholder relevance scoring, and context building logic.
+  - Refined `document-processing.ts` with caching and LLM extraction fallback.
+  - Integrated refined library functions into `/api/ask` (using new context processing) and `/api/upload` (triggering processing/caching).
+- **Next Steps (Continuing Step 2 & moving towards Step 4 of `overhaul_plan.md`):**
+  - Set actual PostgreSQL `DATABASE_URL` and run initial migration.
+  - Implement proper session management (replace placeholder `sessionId`).
+  - Implement authorization checks in API routes.
+  - Implement Q&A Mode support (backend logic, frontend UI).
+  - Update frontend components for multi-file management and Q&A mode.
+  - Add comprehensive tests for new backend logic and features.
+
+---
+
+## Active Context - 4/25/2025, 11:08:34 PM
+
+- **Task:** Implement session management using NextAuth.js and Prisma adapter.
+- **Completed:**
+  - Installed `next-auth` and `@auth/prisma-adapter`.
+  - Updated `prisma/schema.prisma` with NextAuth.js required models and linked `Document` to `User`.
+  - Ran Prisma migration (`link_document_to_user`) and regenerated client.
+  - Created NextAuth.js config (`src/lib/auth.ts`) with Prisma adapter, providers (GitHub, Credentials placeholder), JWT strategy.
+  - Created NextAuth.js API handler (`src/app/api/auth/[...nextauth]/route.ts`).
+  - Integrated session handling (`userId`) into API routes: `/api/ask`, `/api/upload`, `/api/files/[fileId]`.
+  - Added authorization check to `/api/files/[fileId]` to ensure user owns the document.
+- **Next Steps:**
+  - Implement frontend integration for session management (SessionProvider, login/logout UI).
+  - Implement Q&A Mode support (backend logic, frontend UI).
+  - Update frontend components for multi-file management (view, add, delete).
+  - Add comprehensive tests for new backend logic and features.
+
+---
+
+## Active Context - 4/25/2025, 11:30:38 PM
+
+- **Task:** Implement frontend integration for session management.
+- **Completed:**
+  - Added `SessionProvider` to `src/components/Providers.tsx`.
+  - Added Login/Logout buttons and session status display to `src/components/Navigation.tsx`.
+  - Updated `src/components/ChatInterface.tsx` to require authentication and disable input if logged out.
+  - Updated `src/components/FileUpload.tsx` to require authentication and disable dropzone if logged out.
+- **Next Steps:**
+  - Implement Q&A Mode support (backend logic, frontend UI).
+  - Update frontend components for multi-file management (view, add, delete).
+  - Add comprehensive tests for session management, authorization, and related API interactions.
+
+---
+
+## Active Context - 4/25/2025, 11:39:43 PM
+
+- **Task:** Implement Q&A Mode support (backend logic, frontend UI).
+- **Completed:**
+  - Updated `/api/ask/route.ts` to accept `mode` parameter, generate questions using a new prompt template when `mode` is 'model', and return the generated question along with the answer.
+  - Updated `src/components/ChatInterface.tsx` to include a state for the current mode, a button to trigger 'model' mode, logic to send the mode to the API, and handling for displaying the generated question.
+- **Next Steps:**
+  - Update frontend components for multi-file management (view, add, delete).
+  - Add comprehensive tests for session management, authorization, Q&A mode, and related API interactions.
+
+---
+
+## Active Context - 4/25/2025, 11:47:51 PM
+
+- **Task:** Implement multi-file management UI.
+- **Completed:**
+  - Created API endpoint `/api/files/route.ts` (GET) to fetch user's active documents.
+  - Created `DocumentList.tsx` component to display documents and handle deletion via `/api/files/[fileId]`.
+  - Integrated `DocumentList.tsx` into `chat/page.tsx` within a new "Documents" tab.
+- **Next Steps:**
+  - Refine the document selection logic in `ChatInterface.tsx` to use the managed documents instead of `localStorage`.
+  - Add comprehensive tests for session management, authorization, Q&A mode, multi-file management, and related API interactions.
+
+---
+
+## Active Context - 4/25/2025, 11:53:56 PM
+
+- **Task:** Refine chat context logic.
+- **Completed:**
+  - Removed `localStorage` check and `document_id` parameter from the `/api/ask` call in `ChatInterface.tsx`. Backend now uses all active documents from the user's session for context.
+- **Next Steps:**
+  - Add comprehensive tests for session management, authorization, Q&A mode, multi-file management, and related API interactions.

@@ -1,0 +1,385 @@
+## 2025-04-28 10:45:10 EDT - Architecture Confirmation & Linting Fixes
+
+### Completed
+
+- **Architecture Confirmation:** Reviewed `overhaul_plan.md` and confirmed the architectural decision to consolidate backend functionality within the Next.js application (`document-qa-frontend`), eliminating the separate Python backend.
+- **PDF Extraction Strategy:** Confirmed that using the existing `pdf-ts` library within the Next.js backend (`src/lib/document-processing.ts`) is the correct approach for the MVP, aligning with the overhaul plan. Decided against exploring Puppeteer or migrating to Python.
+- **Linting:** Fixed linting issues in `document-qa-frontend/src/lib/document-processing.ts` (removed unused code, added env var checks, improved error handling, defined constant). Retained LLM fallback logic for extraction per user instruction.
+
+### In Progress
+
+- Refining document processing within the Next.js backend.
+- Continuing implementation according to `overhaul_plan.md`.
+
+### Next Steps
+
+- Thoroughly test the current document processing (`pdf-ts`, `mammoth`, plain text) with various file types.
+- Implement remaining multi-file management UI refinements.
+- Add comprehensive tests for session management, authorization, Q&A mode, multi-file management, and related API interactions.
+- Implement the "How to Use" guide page.
+
+---
+
+## 2025-04-28T05:29:30-04:00 - PDF Processing Update (Attempting pdf-ts)
+
+### Completed
+
+- **Analysis:** Reviewed current LLM fallback issues for PDF extraction in `document-qa-frontend`.
+- **Research:** Explored Vercel AI SDK PDF capabilities and alternative TypeScript PDF parsing libraries (`pdf-parse`, `pdf-ts`).
+- **Investigation:** Confirmed previous attempts to use `pdf-parse`/`pdfjs-dist` in `document-processing.ts` were unsuccessful (commented out code, error notes).
+- **Decision:** Opted to try the `pdf-ts` library for direct PDF parsing within the Next.js frontend API routes.
+- **Dependency:** Installed `pdf-ts` package in `document-qa-frontend`.
+- **Implementation:** Modified `document-qa-frontend/src/lib/document-processing.ts` to:
+  - Import `pdfToText` from `pdf-ts`.
+  - Replace the LLM-only fallback for PDFs with a call to `pdfToText`.
+  - Keep existing LLM fallback logic for cases where `pdfToText` might fail or return insufficient content.
+
+### In Progress
+
+- Improving PDF text extraction reliability using a direct parsing library (`pdf-ts`).
+
+### Next Steps
+
+- Thoroughly test the new `pdf-ts` extraction logic with various PDF types:
+  - PDFs with native text layers.
+  - Scanned image-only PDFs.
+  - PDFs containing both text and images.
+- Verify performance and accuracy compared to the previous LLM-only method.
+- If `pdf-ts` proves unreliable, consider switching to `pdf-parse` or reverting to the Python backend approach.
+- Stage changes and commit once testing is successful.
+
+---
+
+## 2025-04-28T02:48:45-04:00 - PDF Processing Enhancement
+
+### Completed
+
+- **Analysis:** Reviewed previous PDF processing attempts (`pdf-parse` failure, OCR-only method using `pdfjs-dist` + `Tesseract.js`).
+- **Refactoring:** Modified `document-qa-frontend/src/lib/document-processing.ts` to implement a hybrid PDF text extraction strategy:
+  - Prioritizes direct text layer extraction (`pdfjs-dist`'s `getTextContent`).
+  - Falls back to OCR (`pdfjs-dist` rendering + `Tesseract.js`) for image-based or low-text PDFs.
+  - Retains LLM extraction as a final fallback.
+- **Cleanup:** Resolved ESLint errors introduced during refactoring (type safety, unused imports).
+
+### In Progress
+
+- Improving document processing reliability.
+
+### Next Steps
+
+- Thoroughly test the new hybrid PDF extraction logic with various PDF types:
+  - PDFs with native text layers.
+  - Scanned image-only PDFs.
+  - PDFs containing both text and images.
+- Verify performance and accuracy compared to the previous OCR-only method.
+- Stage changes and commit once testing is successful.
+
+---
+
+# Progress Log
+
+## 2025-04-27T23:24:51-04:00 - GROQ API Key Loading Issue Resolution
+
+### Completed
+
+- **Diagnosis:** Troubleshooted persistent issue where `document-qa-frontend` loaded an incorrect `GROQ_API_KEY`.
+  - Verified correct key in `.env`.
+  - Added debug logging to `/api/test-groq` route.
+  - Confirmed via logs that an incorrect key was loaded despite cache clearing.
+  - Ruled out terminal/shell environment variable overrides.
+  - Ruled out `next.config.mjs` as the source.
+  - Identified `.env.local` as the source of the override.
+- **Resolution:** User confirmed correcting the incorrect `GROQ_API_KEY` value within `.env.local` resolved the loading issue. Subsequent tests showed successful API calls to Groq.
+- **Cleanup:** Removed debug log statement from `/api/test-groq/route.ts`.
+
+### In Progress
+
+- N/A (Issue Resolved)
+
+### Next Steps
+
+- Continue with planned application testing or address the next priority task.
+- Review and ensure consistency of API keys and other sensitive variables across `.env`, `.env.local`, and `.env.example` files.
+
+---
+
+## 2025-04-27T05:50:39-04:00 - File Upload Debugging (ENOENT & EAUTH)
+
+### Completed
+
+- Investigated persistent `ENOENT` error during file upload, tracing it back to the import/initialization phase of `llm-service.ts` within `document-processing.ts`.
+- Temporarily disabled the import and usage of `llm-service.ts` in `document-processing.ts` to isolate the `ENOENT` error. Confirmed this resolved the `ENOENT` issue.
+- Identified `EAUTH` error in `/api/alerts` caused by failed email sending attempt (likely invalid credentials).
+- Temporarily disabled email sending functionality in `/api/alerts/route.ts` by commenting out the relevant code block, resolving the `EAUTH` error.
+- Addressed associated ESLint warnings in modified files (`document-processing.ts`, `alerts/route.ts`).
+
+### In Progress
+
+- File upload functionality debugging.
+
+### Next Steps
+
+- Restart the development server with the latest changes (LLM service import disabled, email alerts disabled).
+- Test file upload again to confirm both `ENOENT` and `EAUTH` errors are gone.
+- If upload succeeds, systematically re-enable the LLM service functionality in `document-processing.ts` and test Q&A.
+- If Q&A works, proceed with the original testing plan (document listing/deletion).
+
+---
+
+## 2025-04-26T23:37:27-04:00 - NextAuth CLIENT_FETCH_ERROR Resolution
+
+### Completed
+
+- Diagnosed the `[next-auth][error][CLIENT_FETCH_ERROR]` and associated `404` for `/api/auth/session`.
+- Verified environment variables (`NEXTAUTH_URL`, `NEXTAUTH_SECRET`), API route handler (`[...nextauth]/route.ts`), `SessionProvider` setup (`Providers.tsx`, `layout.tsx`), and middleware (`middleware.ts`) were correctly configured.
+- Identified the conflicting `rewrites` rule in `next.config.mjs` as the root cause, which was proxying `/api/auth/*` routes incorrectly.
+- Modified the `rewrites` rule source to `"/api/((?!auth/).*)"` to exclude NextAuth routes from the proxy.
+- Confirmed with the user that restarting the development server resolved the error.
+
+### In Progress
+
+- Debugging NextAuth integration issues.
+
+### Next Steps
+
+- Perform comprehensive testing of the authentication flows (registration, login via Credentials, login via GitHub if configured, logout) to ensure they work correctly after the fix.
+- Test other core functionalities like file upload, Q&A, and document management to check for any regressions introduced by the `next.config.mjs` change.
+
+---
+
+## 2025-04-26T04:09:50-04:00 - Debugging & Auth Refinement
+
+### Completed
+
+- **Debugging:**
+  - Resolved `Module not found` errors for `alert-dialog`, `table`, and `date-fns` by installing/re-adding components and dependencies.
+  - Investigated and resolved persistent path resolution issues through cache clearing, dependency reinstall, and path testing.
+  - Fixed syntax error in `DocumentList.tsx`.
+- **Authentication:**
+  - Added `withAdminAuth` helper to `lib/auth.ts`.
+  - Added NextAuth env var placeholders to `.env.example`.
+  - Refined authentication checks and error handling in `useMetrics`, `FileUpload`, `ChatInterface`, `DocumentList`, and `AdminMetrics` page for better UX.
+  - Removed redundant auth logic in `AdminMetrics`.
+
+### In Progress
+
+- Frontend stabilization and feature refinement.
+
+### Next Steps
+
+- **Testing:** Conduct thorough testing of authentication, multi-file management, Q&A mode, and admin features.
+- **Refinement:** Address any issues or necessary improvements identified during testing.
+
+---
+
+## 2025-04-25T03:50:29-04:00 - Implementation Progress
+
+### Completed
+
+- Read memory bank files and discussed initial next steps.
+- Updated activeContext.md with the new LLM fallback plan.
+
+### In Progress
+
+- Remove model selection component from frontend.
+- Update backend LLMService to implement fallback logic.
+
+### Next Steps
+
+- Configure backend with the specified Openrouter, Google, and Groq models.
+- Test the fallback system with different scenarios.
+
+---
+
+## 2025-04-25T17:59:11-04:00 - Backend Migration to Next.js Progress
+
+### Completed
+
+- **Overhaul Plan:** Refined `overhaul_plan.md` with multi-file handling, persistence, deletion, Q&A mode, context limits, and user guide requirements.
+- **Dependencies:** Installed necessary packages in `document-qa-frontend`:
+  - `@aws-sdk/client-s3`
+  - `pdf-parse`, `mammoth`, `@types/pdf-parse`
+  - `openai`, `@google/generative-ai`, `groq-sdk`
+  - `tiktoken`
+- **API Routes (Initial Implementation):**
+  - `/api/upload/route.ts`: Implemented direct S3 multi-file upload.
+  - `/api/files/[fileId]/route.ts`: Implemented S3 file deletion.
+  - `/api/ask/route.ts`: Integrated document processing, LLM fallback, and token limiting.
+- **Utility Libraries:**
+  - `lib/document-processing.ts`: Created functions for S3 fetching and text extraction (PDF, DOCX, TXT).
+  - `lib/llm-service.ts`: Created service for LLM client initialization and provider fallback logic.
+
+### In Progress
+
+- Backend migration to Next.js API routes (Step 2 of `overhaul_plan.md`).
+
+### Next Steps
+
+- **Persistence:** Implement database integration (e.g., Prisma) for file tracking and user context management.
+- **Frontend Integration:** Update UI components to use new Next.js API routes and features.
+- **Refinement:** Address TODOs in the implemented code (LLM extraction fallback, caching, relevance scoring, authorization).
+- **Testing:** Begin comprehensive testing of the migrated backend components.
+
+---
+
+## 2025-04-25T18:51:37-04:00 - Prisma Persistence Implementation Progress
+
+### Completed
+
+- **Prisma Setup:**
+  - Installed Prisma CLI and Client.
+  - Initialized Prisma (`prisma init`).
+  - Defined `Document` model in `prisma/schema.prisma` (provider: `postgresql`).
+  - Configured `.env` for `DATABASE_URL` (placeholder).
+  - Created singleton Prisma Client instance (`src/lib/prisma.ts`).
+  - Generated Prisma Client.
+- **API Route Integration:**
+  - `/api/upload/route.ts`: Integrated `prisma.document.create` to save metadata on upload.
+  - `/api/files/[fileId]/route.ts`: Integrated `prisma.document.update` to mark status as 'deleted'.
+  - `/api/ask/route.ts`: Integrated `prisma.document.findMany` to fetch active document keys based on `sessionId`.
+
+### In Progress
+
+- Backend migration to Next.js API routes (Step 2 of `overhaul_plan.md`).
+- Database persistence implementation.
+
+### Next Steps
+
+- **Database Connection & Migration:** Set actual PostgreSQL `DATABASE_URL` in `.env` and run `npx prisma migrate dev --name init`.
+- **Session Management:** Implement proper session handling to replace placeholder `sessionId`.
+- **Authorization:** Add checks to ensure users only interact with their own documents.
+- **Frontend Integration:** Update UI for multi-file management (view, add, delete) and connect to new API logic.
+- **Refinement & Testing:** Address TODOs, refine error handling, and add tests for persistence logic.
+
+---
+
+## 2025-04-25T22:02:24-04:00 - Library Refinement & API Integration Progress
+
+### Completed
+
+- **Library Refinements:**
+  - `llm-service.ts`: Implemented chunking, token counting/limiting (`tiktoken`), placeholder relevance scoring, context building logic. Maintained LLM provider fallback.
+  - `document-processing.ts`: Implemented in-memory caching and basic LLM extraction fallback.
+- **API Route Integration:**
+  - `/api/ask`: Updated to use refined library functions for context processing (chunking, relevance placeholder, token limiting) and LLM calls.
+  - `/api/upload`: Updated to call `getDocumentTextContent` post-upload to trigger processing/caching.
+
+### In Progress
+
+- Backend migration to Next.js API routes (Step 2 of `overhaul_plan.md`).
+
+### Next Steps
+
+- **Database Connection & Migration:** Set actual PostgreSQL `DATABASE_URL` in `.env` and run `npx prisma migrate dev --name init`.
+- **Session Management:** Implement proper session handling to replace placeholder `sessionId`.
+- **Authorization:** Add checks to ensure users only interact with their own documents.
+- **Q&A Mode:** Implement backend logic and frontend UI for Q&A prompt suggestions.
+- **Frontend Integration:** Update UI for multi-file management (view, add, delete) and connect to new API logic.
+- **Testing:** Add comprehensive tests for persistence, context handling, file management, and Q&A mode.
+
+---
+
+## 2025-04-25T23:11:04-04:00 - Session Management Implementation Progress
+
+### Completed
+
+- **Dependencies:** Installed `next-auth` and `@auth/prisma-adapter`.
+- **Schema Update:** Added NextAuth.js required models to `prisma/schema.prisma` and linked `Document` to `User`.
+- **Migration:** Ran `npx prisma migrate dev --name link_document_to_user` and regenerated client.
+- **NextAuth Config:** Created `src/lib/auth.ts` with Prisma adapter, providers (GitHub, Credentials placeholder), JWT strategy.
+- **API Handler:** Created `src/app/api/auth/[...nextauth]/route.ts`.
+- **API Route Integration:**
+  - `/api/ask`: Updated to use authenticated `userId` from session.
+  - `/api/upload`: Updated to associate uploads with authenticated `userId`.
+  - `/api/files/[fileId]`: Updated to use authenticated `userId` and added authorization check for document ownership.
+
+### In Progress
+
+- Session Management Implementation (Step 2 of `overhaul_plan.md`).
+
+### Next Steps
+
+- **Frontend Integration:** Add `SessionProvider` to `layout.tsx` or relevant component tree. Add login/logout UI elements. Update components making API calls to handle authentication state.
+- **Q&A Mode:** Implement backend logic and frontend UI for Q&A prompt suggestions.
+- **Multi-File Management UI:** Update frontend components for viewing, adding, and deleting multiple files associated with the user session.
+- **Testing:** Add comprehensive tests for session management, authorization, and related API interactions.
+
+---
+
+## 2025-04-25T23:32:32-04:00 - Frontend Session Integration Progress
+
+### Completed
+
+- **Session Provider:** Added `SessionProvider` wrapper in `src/components/Providers.tsx`.
+- **Navigation:** Added Login/Logout buttons and session status display in `src/components/Navigation.tsx`.
+- **Chat Interface:** Updated `src/components/ChatInterface.tsx` to require authentication.
+- **File Upload:** Updated `src/components/FileUpload.tsx` to require authentication.
+
+### In Progress
+
+- Frontend integration for session management.
+
+### Next Steps
+
+- **Q&A Mode:** Implement backend logic and frontend UI for Q&A prompt suggestions.
+- **Multi-File Management UI:** Update frontend components for viewing, adding, and deleting multiple files associated with the user session.
+- **Testing:** Add comprehensive tests for session management, authorization, and related API interactions.
+
+---
+
+## 2025-04-25T23:41:43-04:00 - Q&A Mode Implementation Progress
+
+### Completed
+
+- **Backend (`/api/ask/route.ts`):**
+  - Added `mode` parameter handling ('user' or 'model').
+  - Implemented logic to generate a question using `PROMPT_TEMPLATE_GENERATE_QUESTION` when `mode` is 'model'.
+  - Modified response to include `generatedQuestion` when applicable.
+- **Frontend (`ChatInterface.tsx`):**
+  - Added state to track current Q&A mode.
+  - Added a "Generate Question" button (`Sparkles` icon).
+  - Updated `handleSubmit` to send the correct `mode` and handle model-generated questions in the response.
+
+### In Progress
+
+- Q&A Mode feature implementation.
+
+### Next Steps
+
+- **Multi-File Management UI:** Update frontend components for viewing, adding, and deleting multiple files associated with the user session.
+- **Testing:** Add comprehensive tests for session management, authorization, Q&A mode, and related API interactions.
+
+---
+
+## 2025-04-25T23:49:51-04:00 - Multi-File Management UI Progress
+
+### Completed
+
+- **API Endpoint:** Created `/api/files/route.ts` (GET) to fetch user's active documents.
+- **Component:** Created `DocumentList.tsx` component to display documents and handle deletion.
+- **Integration:** Added `DocumentList.tsx` to `chat/page.tsx` under a new "Documents" tab.
+
+### In Progress
+
+- Multi-File Management UI implementation.
+
+### Next Steps
+
+- **Chat Context:** Refine the document selection logic in `ChatInterface.tsx` to use the managed documents (from `DocumentList` or similar state) instead of `localStorage`.
+- **Testing:** Add comprehensive tests for session management, authorization, Q&A mode, multi-file management, and related API interactions.
+
+---
+
+## 2025-04-25T23:55:56-04:00 - Chat Context Refinement
+
+### Completed
+
+- **Chat Interface (`ChatInterface.tsx`):** Removed `localStorage` check and `document_id` parameter from the `/api/ask` call. Backend now uses all active documents associated with the user's session.
+
+### In Progress
+
+- Refinement of chat context handling.
+
+### Next Steps
+
+- **Testing:** Add comprehensive tests for session management, authorization, Q&A mode, multi-file management, and related API interactions.

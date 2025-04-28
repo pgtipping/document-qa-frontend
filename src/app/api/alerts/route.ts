@@ -152,57 +152,75 @@ export async function POST(request: Request) {
       });
 
       // Get email transporter (Commented out as it's unused)
-      // const transporter = getEmailTransporter();
+      const transporter = getEmailTransporter();
 
-      // --- Temporarily Disable Email Sending ---
-      // if (transporter && process.env.ALERT_EMAIL_RECIPIENT) {
-      //   // Send email alert
-      //   await transporter.sendMail({
-      //     from: process.env.EMAIL_USER,
-      //     to: process.env.ALERT_EMAIL_RECIPIENT,
-      //     subject: `[Document QA${
-      //       process.env.NODE_ENV === "production" ? " PROD" : ""
-      //     }] Alert: ${alertMessage}`,
-      //     html: `
-      //       <h2>Alert Details</h2>
-      //       <p><strong>Environment:</strong> ${
-      //         process.env.NODE_ENV || "development"
-      //       }</p>
-      //       <p><strong>Type:</strong> ${data.type}</p>
-      //       <p><strong>Value:</strong> ${data.value}</p>
-      //       <p><strong>Time:</strong> ${new Date(
-      //         data.timestamp
-      //       ).toLocaleString()}</p>
-      //       ${
-      //         data.details
-      //           ? `<p><strong>Additional Details:</strong> ${JSON.stringify(
-      //               data.details,
-      //               null,
-      //               2
-      //             )}</p>`
-      //           : ""
-      //       }
-      //       <hr>
-      //       <p style="color: #666; font-size: 12px;">
-      //         Threshold: ${THRESHOLDS[data.type]}
-      //         ${
-      //           process.env.NODE_ENV === "production"
-      //             ? " (Production)"
-      //             : " (Development)"
-      //         }
-      //       </p>
-      //     `,
-      //   });
-      //
-      //   return NextResponse.json({ success: true, message: "Alert sent" });
-      // }
-      // --- End Temporarily Disable Email Sending ---
-
-      // Return success even if email sending is disabled/failed, as logging still occurs
-      return NextResponse.json({
-        success: true,
-        message: "Alert logged (email not configured)",
-      });
+      // --- Email Sending Logic ---
+      if (transporter && process.env.ALERT_EMAIL_RECIPIENT) {
+        // Send email alert
+        try {
+          await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: process.env.ALERT_EMAIL_RECIPIENT,
+            subject: `[Document QA${
+              process.env.NODE_ENV === "production" ? " PROD" : ""
+            }] Alert: ${alertMessage}`,
+            html: `
+              <h2>Alert Details</h2>
+              <p><strong>Environment:</strong> ${
+                process.env.NODE_ENV || "development"
+              }</p>
+              <p><strong>Type:</strong> ${data.type}</p>
+              <p><strong>Value:</strong> ${data.value}</p>
+              <p><strong>Time:</strong> ${new Date(
+                data.timestamp
+              ).toLocaleString()}</p>
+              ${
+                data.details
+                  ? `<p><strong>Additional Details:</strong> <pre>${JSON.stringify(
+                      data.details,
+                      null,
+                      2
+                    )}</pre></p>`
+                  : ""
+              }
+              <hr>
+              <p style="color: #666; font-size: 12px;">
+                Threshold: ${THRESHOLDS[data.type]}
+                ${
+                  process.env.NODE_ENV === "production"
+                    ? " (Production)"
+                    : " (Development)"
+                }
+              </p>
+            `,
+          });
+          console.log(
+            `Email alert sent successfully to ${process.env.ALERT_EMAIL_RECIPIENT}`
+          );
+          return NextResponse.json({ success: true, message: "Alert sent" });
+        } catch (emailError) {
+          console.error("Error sending email alert:", emailError);
+          // Log the error but still return success as the alert was logged
+          return NextResponse.json({
+            success: true,
+            message: "Alert logged (email sending failed)",
+            emailError:
+              emailError instanceof Error
+                ? emailError.message
+                : String(emailError),
+          });
+        }
+      } else {
+        // Return success if email is not configured, as logging still occurs
+        console.log(
+          "Email alert logged, but email sending is not configured or recipient is missing."
+        );
+        return NextResponse.json({
+          success: true,
+          message: "Alert logged (email not configured)",
+        });
+      }
+      // --- End Email Sending Logic ---
     }
 
     return NextResponse.json({ success: true, message: "No alert needed" });

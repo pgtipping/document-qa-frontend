@@ -29,7 +29,7 @@ try {
 const fallbackProviders = [
   {
     name: "openrouter",
-    model: "nvidia/nemotron-4-340b", // Changed default model to Neumotron 4 340B as requested
+    model: "nvidia/llama-3.1-nemotron-ultra-253b-v1:free", // Corrected to a valid model ID
     apiKey: process.env.OPENROUTER_API_KEY,
     client: null as OpenAI | null, // Client will be initialized if API key exists
     init: function () {
@@ -57,7 +57,7 @@ const fallbackProviders = [
   {
     name: "google",
     model: "gemini-2.5-flash-preview-04-17", // Model from overhaul_plan.md
-    apiKey: process.env.GOOGLE_API_KEY, // Assuming GOOGLE_API_KEY for Gemini
+    apiKey: process.env.GEMINI_API_KEY, // Assuming GEMINI_API_KEY for Gemini
     client: null as GoogleGenerativeAI | null,
     genModel: null as GenerativeModel | null, // Use the specific type
     init: function () {
@@ -102,7 +102,7 @@ const fallbackProviders = [
   },
   {
     name: "groq",
-    model: "llama-3.1-8b-instant", // Model from overhaul_plan.md
+    model: "meta-llama/llama-4-scout-17b-16e-instruct", // Model from overhaul_plan.md
     apiKey: process.env.GROQ_API_KEY,
     client: null as Groq | null,
     init: function () {
@@ -400,8 +400,8 @@ export function buildPromptWithContextLimit(
       : "[No relevant context found or fits within token limits]";
 
   const finalPrompt = basePromptTemplate
-    .replace("{context}", finalContext)
-    .replace("{question}", question);
+    .replace("{CONTEXT}", finalContext) // Corrected placeholder to uppercase
+    .replace("{QUESTION}", question); // Corrected placeholder to uppercase
 
   const finalTokenCount = countTokens(finalPrompt);
 

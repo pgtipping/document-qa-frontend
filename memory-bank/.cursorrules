@@ -1,0 +1,847 @@
+# Document Q&A Project Rules
+
+## Environment Setup Patterns
+
+1. Virtual Environment:
+
+- Always activate before running commands
+- Verify package installation
+- Check package versions
+- Use requirements.txt
+
+2. Package Management:
+
+- Install with pip
+- Verify installations
+- Check dependencies
+- Use version constraints
+
+## Configuration Patterns
+
+1. Environment Variables:
+
+- Use .env file
+- Provide .env.example
+- Type-safe parsing
+- Default values
+
+2. Settings Management:
+
+- Use pydantic-settings
+- Type-safe configuration
+- Property-based access
+- Environment validation
+
+## File Handling Patterns
+
+1. Document Validation:
+
+- Check MIME types
+- Verify extensions
+- Validate size
+- Calculate hashes
+
+2. File Operations:
+
+- Use pathlib
+- Async operations
+- Proper cleanup
+- Error handling
+
+## Error Handling Patterns
+
+1. Exception Hierarchy:
+
+- Base exceptions
+- Specific types
+- Clear messages
+- Proper chaining
+
+2. Error Recovery:
+
+- Resource cleanup
+- State recovery
+- Logging
+- User feedback
+
+## Testing Requirements
+
+1. Test Coverage:
+
+- Core functionality
+- Error cases
+- Configuration
+- API endpoints
+
+2. Test Organization:
+
+- Unit tests
+- Integration tests
+- Configuration tests
+- API tests
+
+## Code Style
+
+1. Type Safety:
+
+- Full coverage
+- No implicit any
+- Property types
+- Return types
+
+2. Documentation:
+
+- Docstrings
+- Type hints
+- Examples
+- Usage notes
+
+## Project Structure
+
+1. Module Organization:
+
+- Core logic
+- Services
+- Models
+- API routes
+
+2. Resource Management:
+
+- Virtual environment
+- Dependencies
+- Configuration
+- Documentation
+
+## Known Patterns
+
+1. Server Setup:
+
+- Activate venv
+- Install packages
+- Configure environment
+- Start server
+
+2. API Routes:
+
+- Type-safe endpoints
+- Error handling
+- Response models
+- Input validation
+
+## User Preferences
+
+1. Development Flow:
+
+- Virtual environment
+- Type checking
+- Linting
+- Testing
+
+2. Code Organization:
+
+- Clear structure
+- Type safety
+- Documentation
+- Error handling
+
+## Critical Paths
+
+1. Server Startup:
+
+- Environment setup
+- Package installation
+- Configuration
+- Health checks
+
+2. Document Processing:
+
+- Upload
+- Validation
+- Storage
+- Retrieval
+
+## Evolution Notes
+
+1. Configuration:
+
+- Added type-safe settings
+- Improved env handling
+- Enhanced validation
+- Better error messages
+
+2. Dependencies:
+
+- Updated requirements
+- Fixed conflicts
+- Added version constraints
+- Improved installation
+
+## Tool Usage
+
+1. Development:
+
+- Virtual environment
+- Package management
+- Type checking
+- Linting
+
+2. Testing:
+
+- pytest
+- Coverage
+- Async testing
+- API testing
+
+# Project Intelligence Rules
+
+## File Validation Patterns
+
+1. Gradio File Component:
+
+   - Must use `file_types` parameter exactly matching MIME types
+   - Validation occurs at component level before custom validation
+   - File type checking is case-sensitive
+
+2. Server Coordination:
+   - FastAPI server must start before UI server
+   - Port conflicts require explicit handling
+   - Server startup sequence affects file handling
+
+## Error Handling Patterns
+
+1. File Upload Errors:
+
+   - Gradio errors take precedence over custom validation
+   - MIME type validation must align with Gradio expectations
+   - Error messages should be user-friendly and actionable
+
+2. Server Errors:
+   - Port conflicts need explicit handling
+   - Server startup sequence must be documented
+   - Error propagation should be consistent
+
+## Development Patterns
+
+1. Testing:
+
+   - File upload tests must cover Gradio validation
+   - Server coordination tests needed
+   - Error handling tests required
+
+2. Documentation:
+   - Server startup sequence must be clear
+   - File validation rules must be documented
+   - Error handling patterns must be consistent
+
+## User Experience Patterns
+
+1. File Upload:
+
+   - Clear file type restrictions
+   - Immediate validation feedback
+   - Progress indication required
+
+2. Error Messages:
+   - User-friendly wording
+   - Clear action items
+   - Consistent formatting
+
+# Cursor Rules
+
+## Project Patterns
+
+### Multi-Model Integration
+
+1. Model Selection
+
+   ```typescript
+   // Always use the ModelSelector component for model selection
+   <ModelSelector onModelSelect={handleModelSelect} />;
+
+   // Handle model selection with proper typing
+   const handleModelSelect = (selection: ModelSelection) => {
+     setCurrentModel(selection);
+   };
+   ```
+
+2. Provider Configuration
+
+   ```python
+   # Initialize providers only if API key is available
+   if settings.PROVIDER_API_KEY:
+       self.clients[provider] = ProviderClient(
+           api_key=settings.PROVIDER_API_KEY
+       )
+   ```
+
+3. Error Handling
+
+   ```python
+   # Always handle provider-specific errors
+   try:
+       response = await provider_client.get_completion(...)
+   except ProviderError as e:
+       logger.error(f"Provider error: {str(e)}")
+       raise
+   ```
+
+4. Environment Variables
+
+   ```bash
+   # API keys should be in .env file
+   PROVIDER_API_KEY=your-api-key
+
+   # Never commit actual API keys
+   # Use .env.example for documentation
+   ```
+
+### Model Selection UI
+
+1. Component Structure
+
+   ```typescript
+   // Two-level selection: provider then model
+   <div className="space-y-4">
+     <ProviderSelect />
+     <ModelSelect />
+   </div>
+   ```
+
+2. Error States
+
+   ```typescript
+   // Show provider status
+   {
+     !providerAvailable && (
+       <div className="text-red-500">Provider not available</div>
+     );
+   }
+   ```
+
+3. Loading States
+   ```typescript
+   // Show loading state during model switch
+   <Button disabled={loading}>
+     {loading ? "Switching..." : "Select Model"}
+   </Button>
+   ```
+
+## LLM Integration Patterns
+
+1. Package Management:
+
+   - Verify package names and versions exactly
+   - Test imports before making changes
+   - Keep track of working imports
+   - Document version requirements
+   - Use specific versions for stability
+   - Check dependency compatibility
+
+2. API Integration:
+
+   - Different providers have varying async/sync patterns
+   - Groq uses synchronous completions
+   - Together API requires module-level API key
+   - Handle mixed async/sync operations carefully
+   - Convert response types explicitly
+   - Remove proxy configurations if causing issues
+
+3. Error Recovery:
+   - Log provider-specific errors
+   - Maintain working imports
+   - Test each provider independently
+   - Document error patterns
+   - Implement proper error handling
+   - Monitor provider status
+
+## Package Version Management
+
+1. Version Control:
+
+   - Document working package versions
+   - Test version upgrades in isolation
+   - Keep backup of working requirements.txt
+   - Specify exact versions when needed
+   - Monitor dependency conflicts
+   - Document version constraints
+
+2. Import Patterns:
+   - Document working import statements
+   - Test new import patterns in isolation
+   - Maintain provider-specific documentation
+   - Handle mixed async/sync imports
+   - Verify type compatibility
+   - Check for missing type stubs
+
+## Recent Learnings
+
+1. Groq Integration:
+
+   - Version 0.4.2 required for stability
+   - No proxy configuration support
+   - Synchronous completions only
+   - Explicit string conversion needed
+   - Specific httpx version required
+   - Type conversion important
+
+2. Error Handling:
+
+   - Provider-specific error patterns
+   - Mixed async/sync operations
+   - Type conversion requirements
+   - Response structure variations
+   - Logging importance
+   - Status monitoring needs
+
+3. Package Management:
+   - Version specificity matters
+   - Dependency conflicts possible
+   - Type stubs often missing
+   - Import patterns vary
+   - Testing crucial
+   - Documentation essential
+
+## Package Inspection Patterns
+
+1. Package Verification:
+
+   - Use `pip show <package>` to verify installed version and details
+   - Use `python -c "import package; print(dir(package))"` to inspect available classes/functions
+   - Check both official and third-party package variants (e.g., deepseek vs deepseek-ai)
+   - Verify actual module exports match documentation
+
+2. Import Debugging:
+
+   - ImportError suggests wrong class/function name or path
+   - ModuleNotFoundError indicates missing package or wrong import path
+   - Check package.**init**.py contents when imports fail
+   - Inspect available exports before changing working imports
+
+3. API Evolution:
+   - Package names may not match import paths
+   - Class names may differ from package names
+   - Multiple package variants may exist (official vs community)
+   - Maintain documentation of working imports
+
+## Recent Learnings
+
+1. Package Inspection:
+
+   - `pip show` reveals package metadata and dependencies
+   - `dir()` shows actual available exports
+   - Package name ≠ import name ≠ class name always
+   - Third-party variants may have different APIs
+
+2. Deepseek Integration:
+
+   - Correct class is `DeepSeekAPI` not `Deepseek`
+   - Found via `dir(deepseek)` inspection
+   - Package has both official and community versions
+   - Version 1.0.0 is the official package
+
+3. Debugging Steps:
+   1. Check package installation (`pip show`)
+   2. Inspect available exports (`dir()`)
+   3. Try alternative import paths
+   4. Verify against working examples
+
+## Sentry Integration Patterns [2024-02-25]
+
+1. Error Tracking:
+
+   - Use startSpan for operation tracking
+   - Add detailed request context
+   - Include environment information
+   - Capture breadcrumbs for debugging
+   - Use ErrorBoundary for component-level errors
+   - Add comprehensive error context
+   - Implement fallback UI with retry
+   - Track error recovery attempts
+
+2. Test Organization:
+
+   - Test environment configurations
+   - Verify request data capture
+   - Check performance monitoring
+   - Validate error boundaries
+   - Test error recovery flows
+   - Mock Sentry services
+   - Validate error context
+   - Check breadcrumb tracking
+
+3. Error Handling:
+
+   - Use custom error boundaries
+   - Add detailed context
+   - Include request metadata
+   - Track performance metrics
+   - Implement retry mechanisms
+   - Handle edge cases
+   - Log error patterns
+   - Monitor error rates
+
+4. Monitoring:
+
+   - Configure session replay
+   - Set up performance tracking
+   - Enable source maps
+   - Monitor error rates
+   - Track performance metrics
+   - Analyze error patterns
+   - Monitor user impact
+   - Measure error recovery
+
+5. Component Patterns:
+
+   - Wrap critical components with ErrorBoundary
+   - Provide custom fallback UIs
+   - Handle retry logic
+   - Track error states
+   - Monitor component performance
+   - Capture interaction errors
+   - Log component lifecycle
+   - Track error recovery
+
+6. Performance Monitoring:
+
+   - Use spans for operation tracking
+   - Add detailed attributes
+   - Track response times
+   - Monitor resource usage
+   - Measure component rendering
+   - Track API latency
+   - Monitor error impact
+   - Analyze performance patterns
+
+7. Testing Patterns:
+
+   - Mock Sentry services
+   - Test error boundaries
+   - Validate error tracking
+   - Check performance monitoring
+   - Test error recovery
+   - Verify context capture
+   - Validate breadcrumbs
+   - Test edge cases
+
+8. Documentation:
+   - Error tracking setup
+   - Error boundary usage
+   - Performance monitoring
+   - Testing guidelines
+   - Error patterns
+   - Recovery procedures
+   - Monitoring dashboards
+   - Best practices
+
+## AWS S3 Integration [2024-02-25]
+
+### Performance Logging Patterns
+
+1. Asynchronous Logging:
+
+   - Always use asyncio.create_task() for S3 uploads
+   - Don't wait for upload completion in request path
+   - Handle upload errors gracefully
+   - Log errors but don't fail requests
+
+2. Error Handling:
+
+   - Check AWS credentials before initializing client
+   - Implement graceful fallback when S3 is unavailable
+   - Use comprehensive try-except blocks
+   - Log all S3-related errors for debugging
+
+3. File Naming:
+
+   - Use timestamp-based naming for easy sorting
+   - Include document ID for traceability
+   - Use consistent prefix for organization
+   - Follow format: "{prefix}{timestamp}\_{document_id}.json"
+
+4. Metrics Structure:
+   - Use structured JSON format
+   - Include all relevant timing data
+   - Add percentage calculations
+   - Keep metrics granular for analysis
+
+### Best Practices
+
+1. Configuration:
+
+   - Store AWS credentials in environment variables
+   - Use region-specific endpoints
+   - Configure appropriate timeouts
+   - Set up proper IAM permissions
+
+2. Performance:
+
+   - Use asynchronous operations
+   - Implement batching for multiple logs
+   - Consider compression for large logs
+   - Monitor S3 write latency
+
+3. Security:
+
+   - Never commit AWS credentials
+   - Use IAM roles when possible
+   - Implement least privilege access
+   - Regular security audits
+
+4. Monitoring:
+   - Track S3 operation success rates
+   - Monitor storage usage
+   - Set up cost alerts
+   - Regular performance reviews
+
+# Vercel Deployment Learnings [2024-02-26]
+
+## Next.js Configuration Best Practices
+
+1. Avoid Double Exports
+
+   - Never export Next.js config multiple times
+   - When using Sentry, export once with withSentryConfig wrapper
+
+   ```javascript
+   const nextConfig = {...};
+   module.exports = withSentryConfig(nextConfig, sentryConfig);
+   ```
+
+2. Build Size Optimization
+
+   - Remove 'standalone' output for Vercel deployments
+   - Use webpack optimization for smaller chunks:
+
+   ```javascript
+   webpack: (config, { dev, isServer }) => {
+     if (!dev && !isServer) {
+       config.optimization = {
+         minimize: true,
+         splitChunks: {
+           chunks: "all",
+           minSize: 10000,
+           maxSize: 40000,
+         },
+       };
+     }
+     return config;
+   };
+   ```
+
+3. Environment Variables
+   - Use NEXT*PUBLIC* prefix for client-side variables
+   - Backend URL must be set in both vercel.json and .env.production
+   - Example: NEXT_PUBLIC_API_URL for backend connection
+
+## Vercel-Specific Rules
+
+1. Build Commands
+
+   - Keep build commands simple: "build": "next build"
+   - Avoid complex Sentry CLI commands in build scripts
+   - Use vercel.json for deployment configuration
+
+2. File Size Limits
+
+   - Vercel has 100MB limit for deployments
+   - Optimize bundle size using webpack configuration
+   - Use code splitting and dynamic imports
+
+3. API Routes in Production
+   - Handle filesystem operations carefully
+   - Return fallback data in production for file-based operations
+   - Example:
+   ```typescript
+   if (process.env.NODE_ENV === "production") {
+     return defaultResponse;
+   }
+   ```
+
+## Deployment Checklist
+
+1. Pre-deployment:
+
+   - Clean .next and node_modules
+   - Fresh npm install
+   - Local build test
+   - Check bundle size
+
+2. Configuration Files:
+
+   - Verify vercel.json
+   - Check .env.production
+   - Validate next.config.js
+   - Remove unnecessary build commands
+
+3. Post-deployment:
+   - Verify API connections
+   - Check CORS settings
+   - Monitor error logs
+   - Test all main features
+
+## Next.js Configuration Rules [2024-02-27]
+
+1. Configuration File:
+
+   - Use next.config.mjs for TypeScript projects
+   - Avoid duplicate configuration files
+   - Remove deprecated or invalid options
+   - Keep configuration minimal and focused
+
+2. Troubleshooting Steps:
+
+   - Clean .next directory when encountering build issues
+   - Check for duplicate directories that might conflict
+   - Verify environment variables are correctly set
+   - Use curl to test API endpoints and server responses
+
+3. Project Structure:
+   - Maintain clear separation between src/app and root directories
+   - Follow Next.js App Router conventions
+   - Keep middleware focused on security headers and routing
+   - Avoid empty directories that might confuse the build process
+
+## UI Enhancement Rules [2024-02-27]
+
+### Navigation Rules
+
+- Always keep navigation bar fixed/sticky
+- Use fancy font for "Synthalyst" logo text
+- Ensure theme toggle is only present in navigation bar
+- Keep metrics button in navigation bar for easy access
+
+### Page Structure Rules
+
+- Home page should focus on showcasing features and value proposition
+- Document upload and chat interface should be on a dedicated page
+- Feedback form should be accessible from the document/chat page
+
+### Styling Rules
+
+- Use gradients and typography for visual appeal instead of images
+- Maintain consistent spacing and visual hierarchy
+- Ensure all UI elements are accessible and responsive
+- Use consistent color scheme based on primary brand color
+
+### Model Reference Rules
+
+- Always refer to GPT-4O as ChatGPT in UI and documentation
+- Include performance metrics when showcasing AI models
+- Highlight Gemini 1.5 Flash as the fastest model (~0.9s response time)
+
+# Blog Content Management Patterns [2024-02-27]
+
+## Content Structure Rules
+
+1. Article Organization:
+
+   - Use clear, descriptive titles
+   - Include publication date metadata
+   - Focus on technical accuracy
+   - Include performance metrics when relevant
+   - Maintain consistent model naming (GPT-4o-mini)
+
+2. Content Types:
+
+   - Technical Comparisons
+
+     - Include real-world benchmarks
+     - Compare response times
+     - Highlight strengths/weaknesses
+     - Use consistent metrics
+
+   - Best Practices
+     - Clear, actionable advice
+     - Step-by-step guidance
+     - Real-world examples
+     - Common pitfalls
+
+3. Metadata Requirements:
+
+   - Publication date
+   - Author information
+   - Last updated date
+   - Related articles
+   - Performance metrics
+
+4. Style Guidelines:
+   - Technical but accessible
+   - Data-driven comparisons
+   - Clear code examples
+   - Consistent terminology
+   - Professional tone
+
+# Documentation and UI Rules [2024-02-28 06:45]
+
+## Icon Usage Rules
+
+1. Always use Heroicons SVG icons for consistency
+2. Header icons should be w-6 h-6
+3. Subheader icons should be w-5 h-5
+4. Icons should have text-blue-600 color
+5. Add group-hover:text-blue-800 for interactive elements
+6. Include proper accessibility attributes
+7. Use stroke="currentColor" for color inheritance
+8. Maintain consistent strokeWidth="2"
+
+## Documentation Page Rules
+
+1. Use container mx-auto px-4 py-8 max-w-4xl for page layout
+2. Implement consistent section spacing with mb-8
+3. Use shadow-md for card elevation
+4. Maintain text hierarchy:
+   - h1: text-3xl font-bold
+   - h2: text-2xl font-semibold
+   - h3: text-xl font-medium
+5. Use flex items-center for icon + text combinations
+6. Implement responsive grid with md:grid-cols-2
+7. Use text-gray-600 for secondary text
+
+## Link Styling Rules
+
+1. Use text-blue-600 hover:text-blue-800 for links
+2. Add group class for hover effects on icons
+3. Include → symbol for external links
+4. Use flex items-center for icon + text links
+5. Add target="\_blank" rel="noopener noreferrer" for external links
+
+## Tutorial Pages Structure [2024-02-28]
+
+The Document Q&A application includes a comprehensive set of tutorial pages that follow a consistent structure:
+
+### Tutorial Page Pattern
+
+1. Each tutorial page is implemented as a React component in Next.js
+2. Tutorial pages are organized in the `document-qa-frontend/src/app/tutorials/` directory
+3. Framework-specific tutorials are organized in subdirectories (e.g., `react/`, `python/`)
+4. Each tutorial page follows this structure:
+   - Overview section explaining the purpose and goals
+   - Prerequisites section listing required knowledge/setup
+   - Step-by-step implementation instructions with code examples
+   - Next steps section suggesting further learning
+
+### Code Example Pattern
+
+1. Code examples use syntax highlighting with the appropriate language
+2. Examples are presented in a progressive manner, building on previous steps
+3. Each code block is accompanied by explanatory text
+4. Complex implementations are broken down into smaller, digestible chunks
+
+### Navigation Pattern
+
+1. The main tutorials page (`/tutorials`) provides links to all tutorial categories
+2. Framework-specific tutorial pages are organized in a sequential manner
+3. Each tutorial includes links to related tutorials and resources
+4. Advanced topics are separated from basic implementation guides
+
+### Content Creation Guidelines
+
+When creating new tutorial pages:
+
+1. Follow the established structure and patterns
+2. Ensure code examples are complete and functional
+3. Include both basic and advanced implementation techniques
+4. Provide clear explanations for each implementation step
+5. Link to related tutorials and resources
+6. Include troubleshooting tips for common issues
