@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react"; // Import useCallback
 import FileUpload from "@/components/FileUpload";
 import ChatInterface from "@/components/ChatInterface";
 import DocumentList from "@/components/DocumentList"; // Import DocumentList
@@ -23,12 +23,12 @@ export default function ChatPage() {
   const [feedbackText, setFeedbackText] = useState<string>("");
   const feedbackRef = useRef<HTMLTextAreaElement>(null);
 
-  // Callback for DocumentList to update selected IDs
-  const handleSelectionChange = (selectedIds: string[]) => {
+  // Callback for DocumentList to update selected IDs, wrapped in useCallback
+  const handleSelectionChange = useCallback((selectedIds: string[]) => {
     setSelectedDocumentIds(selectedIds);
     // Optional: Log selection change for debugging
     // console.log("Selected document IDs:", selectedIds);
-  };
+  }, []); // Empty dependency array means the function reference is stable
 
   const handleChatSubmit = (e: React.FormEvent) => {
     e.preventDefault();

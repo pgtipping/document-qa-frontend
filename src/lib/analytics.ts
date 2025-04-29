@@ -41,6 +41,8 @@ type EventProperties = {
   questionLength?: number;
   answerLength?: number;
   timeTaken?: number;
+  mode?: "user" | "model"; // Added mode property
+  generatedQuestion?: boolean; // Added generatedQuestion property
 };
 
 // Base trackEvent function

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma, { Prisma } from "@/lib/prisma"; // Import Prisma client instance and types
+import prisma from "@/lib/prisma"; // Import Prisma client instance
+import { Prisma } from "@prisma/client"; // Import Prisma types directly
 import { getDocumentTextContent } from "@/lib/document-processing";
 import {
   getCompletion,

@@ -1,3 +1,19 @@
+# Active Context - 2025-04-28 23:56:31 EDT
+
+- **Task:** Debug file upload errors (React hydration, Maximum update depth exceeded).
+- **Completed:**
+  - Identified errors via browser console logs and screenshots provided by the user.
+  - Wrapped `handleSelectionChange` in `useCallback` in `chat/page.tsx`.
+  - Refactored rendering logic in `DocumentList.tsx` using `write_to_file` to address potential hydration issues and remove redundant `useEffect`.
+  - Fixed a minor ESLint error introduced by the rewrite.
+  - Verified with the user that file uploads are now successful and console errors are resolved.
+- **Next Steps:**
+  - Update `progress.md` with details of the debugging session.
+  - Stage changes and commit.
+  - Continue with planned testing or address next priority task.
+
+---
+
 # Active Context - 2025-04-28 18:31:38
 
 - **Task:** Implement multi-document selection for chat context.
@@ -20,7 +36,7 @@
 
 ---
 
-# Active Context - 2025-04-28 10:45:10 EDT
+## Active Context - 2025-04-28 10:45:10 EDT
 
 - **Task:** Refine document processing implementation within Next.js backend.
 - **Completed:**
@@ -36,7 +52,7 @@
 
 ---
 
-# Active Context - 2025-04-28T05:27:33-04:00
+## Active Context - 2025-04-28T05:27:33-04:00
 
 - **Task:** Improve PDF text extraction reliability and efficiency.
 - **Completed:**
@@ -53,7 +69,7 @@
 
 ---
 
-# Active Context - 2025-04-28T02:47:42-04:00
+## Active Context - 2025-04-28T02:47:42-04:00
 
 - **Task:** Improve PDF text extraction reliability and efficiency.
 - **Completed:**
@@ -69,7 +85,7 @@
 
 ---
 
-# Active Context - 2025-04-27T23:24:51-04:00
+## Active Context - 2025-04-27T23:24:51-04:00
 
 - **Task:** Troubleshoot incorrect `GROQ_API_KEY` loading in `document-qa-frontend`.
 - **Completed:**
@@ -89,7 +105,7 @@
 
 _Previous context entries kept for history, but the entry above reflects the current focus._
 
-# Active Context - 2025-04-27T05:50:39-04:00
+## Active Context - 2025-04-27T05:50:39-04:00
 
 - **Task:** Debug file upload errors (`ENOENT`, `EAUTH`).
 - **Completed:**
@@ -105,7 +121,7 @@ _Previous context entries kept for history, but the entry above reflects the cur
 
 ---
 
-# Active Context - 2025-04-26T23:37:27-04:00
+## Active Context - 2025-04-26T23:37:27-04:00
 
 - **Task:** Diagnose and fix the `[next-auth][error][CLIENT_FETCH_ERROR]` runtime error.
 - **Completed:**

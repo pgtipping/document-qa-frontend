@@ -99,20 +99,10 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
       setError(null);
       setIsLoading(false);
     }
-  }, [status, toast]); // Removed fetchDocuments from dependency array as it's defined outside useEffect scope now
+  }, [status, toast]);
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      fetchDocuments();
-    } else if (status === "unauthenticated") {
-      // Clear documents and selection if user logs out
-      setDocuments([]);
-      setSelectedDocuments(new Set()); // Clear selection
-      setError(null);
-      setIsLoading(false);
-    }
-    // fetchDocuments is stable and doesn't need to be in dependency array if defined outside
-  }, [status, fetchDocuments]); // Added fetchDocuments back as it's defined within the component scope
+  // Removed redundant useEffect hook below which duplicated logic from the hook above.
+  // The hook above correctly handles fetching on auth and clearing on unauth.
 
   const handleSelectDocument = (
     documentId: string,
@@ -205,14 +195,104 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
     );
   }
 
+  // Determine table body content based on state to avoid hydration issues with conditional rendering inside TableBody
+  let tableBodyContent;
+  if (isLoading && documents.length === 0) {
+    tableBodyContent = (
+      <TableRow>
+        <TableCell colSpan={5} className="h-24 text-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto" />
+        </TableCell>
+      </TableRow>
+    );
+  } else if (documents.length === 0) {
+    tableBodyContent = (
+      <TableRow>
+        <TableCell
+          colSpan={5}
+          className="h-24 text-center text-muted-foreground"
+        >
+          You haven't uploaded any documents yet.
+        </TableCell>
+      </TableRow>
+    );
+  } else {
+    tableBodyContent = documents.map((doc) => (
+      <TableRow
+        key={doc.id}
+        data-state={selectedDocuments.has(doc.id) ? "selected" : undefined}
+      >
+        <TableCell>
+          <Checkbox
+            checked={selectedDocuments.has(doc.id)}
+            onCheckedChange={(checked: boolean | "indeterminate") =>
+              handleSelectDocument(doc.id, checked)
+            }
+            aria-label={`Select document ${doc.filename}`}
+            disabled={isLoading}
+          />
+        </TableCell>
+        <TableCell className="hidden sm:table-cell">
+          <FileText className="h-5 w-5 text-muted-foreground" />
+        </TableCell>
+        <TableCell className="font-medium truncate max-w-xs">
+          {doc.filename}
+        </TableCell>
+        <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
+          {format(new Date(doc.createdAt), "PPp")}
+        </TableCell>
+        <TableCell className="text-right">
+          {status === "authenticated" && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-destructive"
+                  disabled={isLoading}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only">Delete {doc.filename}</span>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    the document{" "}
+                    <span className="font-medium">{doc.filename}</span>.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isLoading}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => handleDelete(doc.id)}
+                    disabled={isLoading}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : null}
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </TableCell>
+      </TableRow>
+    ));
+  }
+
   return (
     <div className="border rounded-lg overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-[50px]">
-              {" "}
-              {/* Checkbox column */}
               <Checkbox
                 checked={
                   documents.length > 0 &&
@@ -224,125 +304,15 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
               />
             </TableHead>
             <TableHead className="w-[60px] hidden sm:table-cell">
-              {" "}
-              {/* Icon column */}
               Icon
             </TableHead>
-            <TableHead>Filename</TableHead> {/* Filename column */}
-            <TableHead className="hidden md:table-cell">
-              Uploaded On
-            </TableHead>{" "}
-            {/* Date column */}
-            <TableHead className="text-right w-[60px]">Actions</TableHead>{" "}
-            {/* Actions column */}
+            <TableHead>Filename</TableHead>
+            <TableHead className="hidden md:table-cell">Uploaded On</TableHead>
+            <TableHead className="text-right w-[60px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {isLoading && documents.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
-                {" "}
-                {/* Adjusted colSpan */}
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto" />
-              </TableCell>
-            </TableRow>
-          ) : documents.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={5} // Adjusted colSpan
-                className="h-24 text-center text-muted-foreground"
-              >
-                You haven&apos;t uploaded any documents yet.{" "}
-                {/* Escaped apostrophe */}
-              </TableCell>
-            </TableRow>
-          ) : (
-            documents.map((doc) => (
-              <TableRow
-                key={doc.id}
-                data-state={
-                  selectedDocuments.has(doc.id) ? "selected" : undefined
-                } // Highlight selected row
-              >
-                <TableCell>
-                  {" "}
-                  {/* Checkbox cell */}
-                  <Checkbox
-                    checked={selectedDocuments.has(doc.id)}
-                    onCheckedChange={(
-                      checked: boolean | "indeterminate" // Added explicit type
-                    ) => handleSelectDocument(doc.id, checked)}
-                    aria-label={`Select document ${doc.filename}`}
-                    disabled={isLoading}
-                  />
-                </TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  {" "}
-                  {/* Icon cell */}
-                  <FileText className="h-5 w-5 text-muted-foreground" />
-                </TableCell>
-                <TableCell className="font-medium truncate max-w-xs">
-                  {" "}
-                  {/* Filename cell */}
-                  {doc.filename}
-                </TableCell>
-                <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
-                  {" "}
-                  {/* Date cell */}
-                  {format(new Date(doc.createdAt), "PPp")} {/* Format date */}
-                </TableCell>
-                <TableCell className="text-right">
-                  {" "}
-                  {/* Actions cell */}
-                  {/* Conditionally render delete button only if authenticated */}
-                  {status === "authenticated" && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-destructive"
-                          disabled={isLoading}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete {doc.filename}</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Are you absolutely sure?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete the document{" "}
-                            <span className="font-medium">{doc.filename}</span>.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel disabled={isLoading}>
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(doc.id)}
-                            disabled={isLoading}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            {isLoading ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : null}
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                      {/* Removed duplicated closing tag below */}
-                    </AlertDialog>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
+        <TableBody>{tableBodyContent}</TableBody>{" "}
+        {/* Render determined content */}
       </Table>
     </div>
   );
