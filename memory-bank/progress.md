@@ -1,3 +1,31 @@
+# 2025-04-29 2:38:42 PM EDT - Implement "How to Use" Guide Page & Navigation (Corrected Git History)
+
+### Completed - 2025-04-29 2:38:42 PM EDT
+
+- **Page Creation:** Created the guide page file at `document-qa-frontend/src/app/docs/how-to-use/page.tsx`.
+- **Content:** Added initial content structure using Accordion and Card components, explaining core features (registration, login, upload, management, Q&A) and providing usage tips.
+- **SEO:** Included the `SEO` component with appropriate title and description.
+- **Linting/Type Errors:**
+  - Fixed multiple ESLint errors by escaping quotes (`&amp;quot;`) and apostrophes (`&amp;apos;`) in JSX text content using `search_and_replace`.
+  - Resolved a TypeScript error by removing an invalid `keywords` prop from the `SEO` component.
+- **Git Conflict Resolution:**
+  - Reset local `main` branch to `origin/main` using `git reset --hard origin/main` to discard an amended commit that conflicted with the remote history.
+- **Navigation:** Re-added the link to the new page (`/docs/how-to-use`) within the "Resources" dropdown in `src/components/Navigation.tsx`.
+- **Memory Bank:** Updated `activeContext.md` with the details of this task, including the navigation link addition and git reset.
+
+### In Progress - 2025-04-29 2:38:42 PM EDT
+
+- N/A (Task complete, pending commit & push)
+
+### Next Steps - 2025-04-29 2:38:42 PM EDT
+
+- Stage changes (`git add .`).
+- Commit changes (`git commit -m "feat: add How to Use guide page and nav link"`).
+- Push changes (`git push origin main`).
+- Await user direction for the next task.
+
+---
+
 # 2025-04-29 12:49:32 EDT - Implement "How to Use" Guide Page
 
 ### Completed - 2025-04-29 12:49:32 EDT

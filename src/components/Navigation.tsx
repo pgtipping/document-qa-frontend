@@ -74,6 +74,7 @@ export default function Navigation() {
       href: "#",
       id: "resources",
       children: [
+        { name: "How to Use", href: "/docs/how-to-use" }, // Added link
         { name: "Documentation", href: "/docs" },
         { name: "API Reference", href: "/api-docs" },
         { name: "Tutorials", href: "/tutorials" },
