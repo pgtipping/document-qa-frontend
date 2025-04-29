@@ -1,3 +1,22 @@
+# Active Context - 2025-04-29 12:47:33 EDT
+
+- **Task:** Implement the "How to Use" guide page.
+- **Completed:**
+  - Created the guide page file at `document-qa-frontend/src/app/docs/how-to-use/page.tsx`.
+  - Added initial content structure using Accordion and Card components.
+  - Populated sections explaining registration, login, document upload/management, asking questions, and Q&A mode.
+  - Included a "Tips for Best Results" section.
+  - Added SEO component with title and description.
+  - Fixed ESLint errors related to unescaped quotes (`&quot;`) and apostrophes (`&apos;`) in JSX text content using `search_and_replace`.
+  - Fixed TypeScript error by removing the invalid `keywords` prop from the `SEO` component usage.
+- **Next Steps:**
+  - Update `progress.md` to reflect the completion of this task.
+  - Stage changes (`git add .`).
+  - Commit changes (`git commit -m "feat: add How to Use guide page"`).
+  - Push changes (`git push origin main`).
+
+---
+
 # Active Context - 2025-04-29 00:42:21 EDT
 
 - **Task:** Finalize file upload debugging session.
