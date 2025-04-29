@@ -43,9 +43,9 @@ const HowToUsePage: React.FC = () => {
             </AccordionTrigger>
             <AccordionContent>
               Before you can upload documents, you need an account. Click on the
-              &amp;quot;Register&amp;quot; button in the navigation bar and fill
-              out the required information. Once registered, use the
-              &amp;quot;Login&amp;quot; button to access your account.
+              &quot;Register&quot; button in the navigation bar and fill out the
+              required information. Once registered, use the &quot;Login&quot;
+              button to access your account.
             </AccordionContent>
           </AccordionItem>
 
@@ -53,17 +53,16 @@ const HowToUsePage: React.FC = () => {
             <AccordionTrigger>Step 2: Uploading Documents</AccordionTrigger>
             <AccordionContent>
               <p className="mb-2">
-                Navigate to the &amp;quot;Chat&amp;quot; page. You&amp;apos;ll
-                find the document management section, likely presented as a list
-                or tab.
+                Navigate to the &quot;Chat&quot; page. You&apos;ll find the
+                document management section, likely presented as a list or tab.
               </p>
               <p className="mb-2">
-                Click the &amp;quot;Upload&amp;quot; button or drag and drop
-                your files (PDF, DOCX, TXT) onto the designated area.
+                Click the &quot;Upload&quot; button or drag and drop your files
+                (PDF, DOCX, TXT) onto the designated area.
               </p>
               <p>
-                Your uploaded documents will appear in the
-                &amp;quot;Documents&amp;quot; list once processed.
+                Your uploaded documents will appear in the &quot;Documents&quot;
+                list once processed.
               </p>
             </AccordionContent>
           </AccordionItem>
@@ -71,12 +70,11 @@ const HowToUsePage: React.FC = () => {
           <AccordionItem value="item-3">
             <AccordionTrigger>Step 3: Managing Documents</AccordionTrigger>
             <AccordionContent>
-              In the &amp;quot;Documents&amp;quot; list on the
-              &amp;quot;Chat&amp;quot; page, you can see all your uploaded
-              files. You can select one or multiple documents using the
-              checkboxes to specify the context for your questions. You can also
-              delete documents you no longer need using the delete icon next to
-              each file.
+              In the &quot;Documents&quot; list on the &quot;Chat&quot; page,
+              you can see all your uploaded files. You can select one or
+              multiple documents using the checkboxes to specify the context for
+              your questions. You can also delete documents you no longer need
+              using the delete icon next to each file.
             </AccordionContent>
           </AccordionItem>
 
@@ -84,9 +82,9 @@ const HowToUsePage: React.FC = () => {
             <AccordionTrigger>Step 4: Asking Questions</AccordionTrigger>
             <AccordionContent>
               <p className="mb-2">
-                On the &amp;quot;Chat&amp;quot; page, ensure the documents you
-                want to query are selected in the &amp;quot;Documents&amp;quot;
-                list (or leave all unselected to use all active documents).
+                On the &quot;Chat&quot; page, ensure the documents you want to
+                query are selected in the &quot;Documents&quot; list (or leave
+                all unselected to use all active documents).
               </p>
               <p className="mb-2">
                 Type your question into the chat input field at the bottom and
@@ -102,11 +100,11 @@ const HowToUsePage: React.FC = () => {
           <AccordionItem value="item-5">
             <AccordionTrigger>Q&A Mode (Generating Questions)</AccordionTrigger>
             <AccordionContent>
-              Not sure what to ask? Use the &amp;quot;Generate
-              Question&amp;quot; feature (look for an icon like sparkles or a
-              lightbulb near the chat input). This will prompt the AI to suggest
-              a relevant question based on the selected document context. You
-              can then send this suggested question or edit it first.
+              Not sure what to ask? Use the &quot;Generate Question&quot;
+              feature (look for an icon like sparkles or a lightbulb near the
+              chat input). This will prompt the AI to suggest a relevant
+              question based on the selected document context. You can then send
+              this suggested question or edit it first.
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -125,9 +123,9 @@ const HowToUsePage: React.FC = () => {
                 to improve focus and accuracy.
               </li>
               <li>
-                Ask specific questions. Instead of &amp;quot;Tell me about the
-                project,&amp;quot; ask &amp;quot;What were the key deliverables
-                for the Q1 project?&amp;quot;
+                Ask specific questions. Instead of &quot;Tell me about the
+                project,&quot; ask &quot;What were the key deliverables for the
+                Q1 project?&quot;
               </li>
               <li>
                 If you get an unexpected answer, try rephrasing your question or

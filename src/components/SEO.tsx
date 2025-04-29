@@ -1,6 +1,8 @@
+"use client";
+
 import React from "react";
 import Head from "next/head";
-import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 
 interface SEOProps {
   title?: string;
@@ -23,11 +25,11 @@ const SEO: React.FC<SEOProps> = ({
   twitterImage = "/twitter-image.jpg",
   noindex = false,
 }) => {
-  const router = useRouter();
-  const siteUrl = "https://doc-chat-qa.vercel.app";
+  const pathname = usePathname();
+  const siteUrl = "https://doc-chat-qa.vercel.app"; // Consider making this an environment variable
   const canonicalUrl = canonical
     ? `${siteUrl}${canonical}`
-    : `${siteUrl}${router.asPath}`;
+    : `${siteUrl}${pathname}`;
 
   return (
     <Head>

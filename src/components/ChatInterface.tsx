@@ -52,11 +52,11 @@ export default function ChatInterface({
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [currentMode, setCurrentMode] = useState<"user" | "model">("user"); // Add mode state
+  const [loading, setLoading] = useState(false); // Loading state for sending messages
+  const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false); // Loading state for generating questions
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { status } = useSession(); // Ensure 'session' is removed if unused
+  const { status } = useSession();
   const isAuthenticated = status === "authenticated";
   const isLoadingSession = status === "loading";
 
@@ -68,47 +68,110 @@ export default function ChatInterface({
     scrollToBottom();
   }, [messages, loading, scrollToBottom]);
 
-  // Separate handler for generating question
+  // Handler for generating question and putting it in the input field
   const handleGenerateQuestion = async () => {
-    if (loading || !isAuthenticated) return;
-    setCurrentMode("model"); // Set mode for the upcoming request
-    // Trigger submit with empty input, API will handle generation
-    handleSubmit(new Event("submit") as unknown as React.FormEvent, "model");
+    if (isGeneratingQuestion || loading || !isAuthenticated) return;
+
+    setIsGeneratingQuestion(true);
+    trackEvent("generate_question_clicked");
+    const startTime = performance.now();
+
+    try {
+      const response = await fetch("/api/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          question: null, // Indicate question generation mode
+          documentIds: selectedDocumentIds,
+          mode: "model",
+        }),
+      });
+
+      if (!response.ok) {
+        let errorMsg = "Failed to generate question.";
+        try {
+          if (response.status === 401) {
+            errorMsg = "Authentication error. Please log in again.";
+          } else if (response.status === 403) {
+            errorMsg = "Forbidden: You don't have permission for this action.";
+          } else {
+            const errorData = await response.json();
+            errorMsg =
+              errorData.error ||
+              errorData.detail ||
+              `API Error: ${response.status}`;
+          }
+        } catch {
+          errorMsg = `API Error: ${response.status} - ${
+            response.statusText || "Failed to generate question"
+          }`;
+        }
+        throw new Error(errorMsg);
+      }
+
+      const data = await response.json();
+      const responseTime = performance.now() - startTime;
+
+      if (data.generatedQuestion) {
+        setInput(data.generatedQuestion); // Set the input field with the generated question
+        trackEvent("question_generated", {
+          responseTime,
+          questionLength: data.generatedQuestion.length,
+        });
+        toast({
+          title: "Question Generated",
+          description: "Suggested question added to input field.",
+        });
+      } else {
+        // Handle case where backend didn't return a generated question unexpectedly
+        throw new Error("Backend did not return a generated question.");
+      }
+    } catch (error) {
+      const errorTime = performance.now() - startTime;
+      console.error("Error generating question:", error);
+      trackEvent("error_occurred", {
+        errorType: "generate_question_error",
+        errorMessage:
+          error instanceof Error
+            ? error.message
+            : "Failed to generate question",
+        timeTaken: errorTime,
+      });
+      toast({
+        title: "Error Generating Question",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Could not generate a question.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingQuestion(false);
+    }
   };
 
-  const handleSubmit = async (
-    e: React.FormEvent,
-    modeOverride?: "user" | "model"
-  ) => {
+  // Handles submitting the user's question (from input field)
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (onSubmit) {
       onSubmit(e);
     }
 
-    const mode = modeOverride || currentMode; // Use override if provided (for generate button)
+    if (!input.trim() || loading || isGeneratingQuestion || !isAuthenticated)
+      return;
 
-    // Allow submission with empty input only if mode is 'model'
-    if (mode === "user" && !input.trim()) return;
-    if (loading || !isAuthenticated) return;
-
-    // Document context is now handled by the backend based on the user session.
-    // No need to check localStorage or send document_id from the client.
-
-    // Only add user message if it's user mode and input is not empty
-    if (mode === "user" && input.trim()) {
-      const userMessage: Message = { role: "user", content: input.trim() };
-      setMessages((prev) => [...prev, userMessage]);
-      setInput(""); // Clear input only for user submissions
-    } else if (mode === "model") {
-      // Optionally add a placeholder message like "Generating question..."
-      // setMessages((prev) => [...prev, { role: 'assistant', content: 'Generating question...' }]);
-    }
+    const userMessage: Message = { role: "user", content: input.trim() };
+    setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input.trim(); // Capture input before clearing
+    setInput(""); // Clear input
 
     setLoading(true);
 
     trackEvent("question_asked", {
-      questionLength: mode === "user" ? input.trim().length : 0,
-      // mode: mode, // Ensure mode is removed if causing type error
+      questionLength: currentInput.length,
+      mode: "user",
     });
 
     const startTime = performance.now();
@@ -120,23 +183,20 @@ export default function ChatInterface({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          question: mode === "user" ? input.trim() : null, // Send null question if mode is 'model'
-          documentIds: selectedDocumentIds, // Send the selected document IDs
-          mode: mode, // Send the mode
+          question: currentInput, // Send the actual user question
+          documentIds: selectedDocumentIds,
+          mode: "user", // Always user mode here
         }),
       });
 
       if (!response.ok) {
         let errorMsg = "Failed to get answer.";
         try {
-          // Check for specific auth errors first
           if (response.status === 401) {
             errorMsg = "Authentication error. Please log in again.";
-            // Optionally trigger a sign-in redirect or prompt
           } else if (response.status === 403) {
             errorMsg = "Forbidden: You don't have permission for this action.";
           } else {
-            // Try to parse other errors from the response body
             const errorData = await response.json();
             errorMsg =
               errorData.error ||
@@ -144,8 +204,6 @@ export default function ChatInterface({
               `API Error: ${response.status}`;
           }
         } catch {
-          // Removed unused jsonError variable
-          // If response is not JSON or parsing fails
           errorMsg = `API Error: ${response.status} - ${
             response.statusText || "Failed to get answer"
           }`;
@@ -156,15 +214,7 @@ export default function ChatInterface({
       const data = await response.json();
       const responseTime = performance.now() - startTime;
 
-      // Handle potential generated question
-      if (data.generatedQuestion) {
-        const generatedQMessage: Message = {
-          role: "user", // Display generated question as if user asked it
-          content: data.generatedQuestion,
-        };
-        // Add generated question first, then the answer
-        setMessages((prev) => [...prev, generatedQMessage]);
-      }
+      // No need to handle generatedQuestion here anymore
 
       const assistantMessage: Message = {
         role: "assistant",
@@ -175,22 +225,21 @@ export default function ChatInterface({
       trackEvent("answer_received", {
         responseTime,
         answerLength: data.answer.length,
-        mode: mode, // Track the mode used
-        generatedQuestion: !!data.generatedQuestion,
+        mode: "user",
       });
 
       // Trigger metrics refresh after successful response
       triggerMetricsRefresh();
     } catch (error) {
       const errorTime = performance.now() - startTime;
-      console.error(`Error asking question in mode ${mode}:`, error);
+      console.error("Error asking question:", error);
 
       trackEvent("error_occurred", {
         errorType: "question_error",
         errorMessage:
           error instanceof Error ? error.message : "Failed to get answer",
         timeTaken: errorTime,
-        mode: mode, // Track the mode used
+        mode: "user",
       });
 
       toast({
@@ -199,9 +248,10 @@ export default function ChatInterface({
           error instanceof Error ? error.message : "Failed to get answer",
         variant: "destructive",
       });
+      // Optional: Add the failed user message back to input?
+      // setInput(currentInput);
     } finally {
       setLoading(false);
-      setCurrentMode("user"); // Reset mode back to user after request finishes
     }
   };
 
@@ -283,23 +333,28 @@ export default function ChatInterface({
             />
             <Button
               type="submit"
-              disabled={loading || !input.trim() || !isAuthenticated}
+              disabled={
+                loading ||
+                isGeneratingQuestion ||
+                !input.trim() ||
+                !isAuthenticated
+              }
               variant="default"
               className="px-4"
             >
-              {loading && currentMode === "user" ? "Sending..." : "Send"}
+              {loading ? "Sending..." : "Send"}
             </Button>
             {/* Generate Question Button */}
             <Button
               type="button"
               onClick={handleGenerateQuestion}
-              disabled={loading || !isAuthenticated}
+              disabled={loading || isGeneratingQuestion || !isAuthenticated}
               variant="outline"
               size="icon"
               title="Generate question based on document"
               className="shrink-0"
             >
-              {loading && currentMode === "model" ? (
+              {isGeneratingQuestion ? (
                 <Sparkles className="h-4 w-4 animate-pulse" />
               ) : (
                 <Sparkles className="h-4 w-4" />

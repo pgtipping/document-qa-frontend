@@ -1,12 +1,35 @@
+# 2025-04-29 5:31:11 PM EDT - Refactor Generate Question Button Behavior
+
+### Completed - 2025-04-29 5:31:11 PM EDT
+
+- **Refactoring:** Modified `document-qa-frontend/src/components/ChatInterface.tsx`.
+- **Behavior Change:** The "Generate Question" button now fetches a suggested question from `/api/ask` (using `mode: "model"`) and populates the chat input field (`input` state) instead of submitting the question directly.
+- **State Management:** Introduced a separate loading state (`isGeneratingQuestion`) for the generation action and removed the no-longer-needed `currentMode` state.
+- **Simplification:** Simplified the main `handleSubmit` function to only handle user-submitted messages.
+- **Memory Bank:** Updated `activeContext.md` to reflect these changes.
+
+### In Progress - 2025-04-29 5:31:11 PM EDT
+
+- N/A (Task complete)
+
+### Next Steps - 2025-04-29 5:31:11 PM EDT
+
+- Stage changes (`git add .`).
+- Commit changes (`git commit -m "feat: update generate question button to populate input"`).
+- Push changes (`git push origin main`).
+- Await user direction for the next task.
+
+---
+
 # 2025-04-29 2:38:42 PM EDT - Implement "How to Use" Guide Page & Navigation (Corrected Git History)
 
 ### Completed - 2025-04-29 2:38:42 PM EDT
 
 - **Page Creation:** Created the guide page file at `document-qa-frontend/src/app/docs/how-to-use/page.tsx`.
-- **Content:** Added initial content structure using Accordion and Card components, explaining core features (registration, login, upload, management, Q&A) and providing usage tips.
-- **SEO:** Included the `SEO` component with appropriate title and description.
+- **Content:** Added initial content structure using Accordion and Card components, explaining core features (registration, login, upload, management, Q&A) and providing usage tips. (Note: User manually fixed HTML entity issues).
+- **SEO:** Included the `SEO` component with appropriate title and description. Fixed `next/router` import error by switching to `next/navigation` and adding `"use client";`.
 - **Linting/Type Errors:**
-  - Fixed multiple ESLint errors by escaping quotes (`&amp;quot;`) and apostrophes (`&amp;apos;`) in JSX text content using `search_and_replace`.
+  - Fixed multiple ESLint errors by escaping quotes (`"`) and apostrophes (`'`) in JSX text content using `search_and_replace`.
   - Resolved a TypeScript error by removing an invalid `keywords` prop from the `SEO` component.
 - **Git Conflict Resolution:**
   - Reset local `main` branch to `origin/main` using `git reset --hard origin/main` to discard an amended commit that conflicted with the remote history.
@@ -34,7 +57,7 @@
 - **Content:** Added initial content structure using Accordion and Card components, explaining core features (registration, login, upload, management, Q&A) and providing usage tips.
 - **SEO:** Included the `SEO` component with appropriate title and description.
 - **Linting/Type Errors:**
-  - Fixed multiple ESLint errors by escaping quotes (`&quot;`) and apostrophes (`&apos;`) in JSX text content using `search_and_replace`. Encountered and resolved issues with tool application (incorrect line targeting, overly broad replacement).
+  - Fixed multiple ESLint errors by escaping quotes (`"`) and apostrophes (`'`) in JSX text content using `search_and_replace`. Encountered and resolved issues with tool application (incorrect line targeting, overly broad replacement).
   - Resolved a TypeScript error by removing an invalid `keywords` prop from the `SEO` component after inspecting its definition in `SEO.tsx`.
 - **Memory Bank:** Updated `activeContext.md` with the details of this task.
 
@@ -502,8 +525,8 @@
 
 ### Next Steps - 2025-04-25T23:49:51-04:00
 
-- **Chat Context:** Refine the document selection logic in `ChatInterface.tsx` to use the managed documents (from `DocumentList` or similar state) instead of `localStorage`.
-- **Testing:** Add comprehensive tests for session management, authorization, Q&A mode, multi-file management, and related API interactions.
+- Refine the document selection logic in `ChatInterface.tsx` to use the managed documents instead of `localStorage`.
+- Add comprehensive tests for session management, authorization, Q&A mode, multi-file management, and related API interactions.
 
 ---
 
@@ -511,12 +534,12 @@
 
 ### Completed - 2025-04-25T23:55:56-04:00
 
-- **Chat Interface (`ChatInterface.tsx`):** Removed `localStorage` check and `document_id` parameter from the `/api/ask` call. Backend now uses all active documents associated with the user's session.
+- Removed `localStorage` check and `document_id` parameter from the `/api/ask` call in `ChatInterface.tsx`. Backend now uses all active documents from the user's session for context.
 
 ### In Progress - 2025-04-25T23:55:56-04:00
 
-- Refinement of chat context handling.
+- Backend migration and feature implementation.
 
 ### Next Steps - 2025-04-25T23:55:56-04:00
 
-- **Testing:** Add comprehensive tests for session management, authorization, Q&A mode, multi-file management, and related API interactions.
+- Add comprehensive tests for session management, authorization, Q&A mode, multi-file management, and related API interactions.

@@ -1,14 +1,32 @@
+# Active Context - 2025-04-29 5:28:42 PM EDT
+
+- **Task:** Modify "Generate Question" button behavior.
+- **Completed:**
+  - Refactored `ChatInterface.tsx` to change the "Generate Question" button's action.
+  - Instead of submitting the generated question directly, the button now fetches the question from `/api/ask` (using `mode: "model"`) and populates the chat input field (`input` state) with the result.
+  - Introduced a separate loading state (`isGeneratingQuestion`) for this action.
+  - Simplified the main `handleSubmit` function to only handle user-submitted messages.
+  - Removed the `currentMode` state.
+- **Next Steps:**
+  - Update `progress.md` to reflect this change.
+  - Stage changes (`git add .`).
+  - Commit changes (`git commit -m "feat: update generate question button to populate input"`).
+  - Push changes (`git push origin main`).
+
+---
+
 # Active Context - 2025-04-29 2:36:41 PM EDT
 
 - **Task:** Implement the "How to Use" guide page and add navigation link.
 - **Completed:**
   - Created the guide page file at `document-qa-frontend/src/app/docs/how-to-use/page.tsx`.
   - Added initial content structure using Accordion and Card components.
-  - Populated sections explaining registration, login, document upload/management, asking questions, and Q&amp;A mode.
+  - Populated sections explaining registration, login, document upload/management, asking questions, and Q&A mode.
   - Included a "Tips for Best Results" section.
   - Added SEO component with title and description.
-  - Fixed ESLint errors related to unescaped quotes (`&amp;quot;`) and apostrophes (`&amp;apos;`) in JSX text content using `search_and_replace`.
+  - Fixed ESLint errors related to unescaped quotes (`"`) and apostrophes (`'`) in JSX text content using `search_and_replace`. (Note: User manually fixed remaining issues).
   - Fixed TypeScript error by removing the invalid `keywords` prop from the `SEO` component usage.
+  - Fixed `SEO.tsx` component error by changing `next/router` import to `next/navigation` and adding `"use client";`.
   - Added a link to the new page (`/docs/how-to-use`) within the "Resources" dropdown in `src/components/Navigation.tsx`.
   - Reset local `main` branch to `origin/main` using `git reset --hard origin/main` to resolve push conflict caused by amending an already-pushed commit.
   - Re-applied the addition of the navigation link to `src/components/Navigation.tsx`.
@@ -29,7 +47,7 @@
   - Populated sections explaining registration, login, document upload/management, asking questions, and Q&A mode.
   - Included a "Tips for Best Results" section.
   - Added SEO component with title and description.
-  - Fixed ESLint errors related to unescaped quotes (`&quot;`) and apostrophes (`&apos;`) in JSX text content using `search_and_replace`.
+  - Fixed ESLint errors related to unescaped quotes (`"`) and apostrophes (`'`) in JSX text content using `search_and_replace`.
   - Fixed TypeScript error by removing the invalid `keywords` prop from the `SEO` component usage.
 - **Next Steps:**
   - Update `progress.md` to reflect the completion of this task.
