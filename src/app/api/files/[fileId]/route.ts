@@ -19,9 +19,9 @@ const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 // DELETE /api/files/[fileId]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { fileId: string } }
+  context: { params: { fileId: string } } // Type the context object
 ) {
-  const fileId = params.fileId;
+  const { fileId } = context.params; // Destructure params here
   console.log(`Attempting to delete document with ID: ${fileId}`);
 
   try {

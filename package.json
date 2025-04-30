@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "preinstall": "yum update -y && yum install -y gcc gcc-c++ make cairo-devel pango-devel pixman-devel libjpeg-turbo-devel giflib-devel librsvg2-devel || echo 'Yum not found, assuming dependencies are pre-installed or apt.txt will be used.'",
     "dev": "next dev -p 3004",
     "build": "next build",
     "vercel-build": "next build",
