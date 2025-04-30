@@ -2,7 +2,7 @@
   "version": 2,
   "buildCommand": "npm run build && npm run sitemap",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "installCommand": "apt-get update && apt-get install -y build-essential libcairo2-dev libpango1.0-dev libpixman-1-dev libjpeg-dev libgif-dev librsvg2-dev && npm install",
   "framework": "nextjs",
   "outputDirectory": ".next",
   "env": {

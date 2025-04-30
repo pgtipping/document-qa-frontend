@@ -12,7 +12,7 @@ import {
 import { getPineconeIndex } from "@/lib/pinecone-client"; // Import Pinecone index getter
 import { getAuthSession } from "@/lib/auth"; // Import session helper
 // Remove unused import: import { type ScoredPineconeRecord } from "@pinecone-database/pinecone";
-import { type Filter } from "@pinecone-database/pinecone"; // Import Filter type
+// Removed Filter import as it's not exported; type will be inferred or use a generic type if needed.
 
 // --- Configuration ---
 // Base template can still be defined here or imported if shared
@@ -202,6 +202,11 @@ export async function POST(request: NextRequest) {
     }
 
     // --- Vector Search for Relevant Context ---
+    // Define a specific type for the Pinecone filter
+    interface PineconeQueryFilter {
+      userId: string;
+      documentId?: { $in: string[] };
+    }
     let relevantChunks: string[] = [];
     try {
       console.log(`Generating embedding for question: "${finalQuestion}"`);
@@ -215,7 +220,7 @@ export async function POST(request: NextRequest) {
       const pineconeIndex = await getPineconeIndex();
 
       // Construct filter based on user and selected documents
-      const queryFilter: Filter = { userId: userId }; // Use specific Filter type
+      const queryFilter: PineconeQueryFilter = { userId: userId }; // Use the specific interface
       if (Array.isArray(documentIds) && documentIds.length > 0) {
         // Filter results to only include chunks from the selected document IDs
         queryFilter.documentId = { $in: documentIds };
