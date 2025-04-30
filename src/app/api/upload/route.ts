@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import prisma from "@/lib/prisma"; // Import Prisma client instance
-import { getDocumentTextContent } from "@/lib/document-processing"; // Import main processing function
+import { getDocumentTextContent } from "@/lib/document-processing";
+import { splitIntoChunks, generateEmbedding } from "@/lib/llm-service"; // Import chunking and embedding
+import { getPineconeIndex } from "@/lib/pinecone-client"; // Import Pinecone index getter
 import { getAuthSession } from "@/lib/auth"; // Import session helper
 import { randomUUID } from "crypto"; // Import for generating unique IDs
+import { type PineconeRecord } from "@pinecone-database/pinecone"; // Correct type import
 
 // Configure S3 Client
 // Ensure these environment variables are set in your .env.local or environment
@@ -104,21 +107,100 @@ export async function POST(request: NextRequest) {
       }
       // --- Prisma Integration End ---
 
-      // --- Trigger Initial Processing/Caching ---
+      // --- Process, Embed, and Store in Pinecone ---
       try {
-        // Call getDocumentTextContent to trigger processing and caching.
-        // We await it here to ensure processing starts, but don't need the result immediately.
-        // Errors are caught so they don't fail the upload response.
-        await getDocumentTextContent(s3Key);
-        console.log(`Triggered initial processing/caching for ${s3Key}`);
-      } catch (processingError) {
-        console.error(
-          `Failed to trigger initial processing for ${s3Key}:`,
-          processingError
+        console.log(
+          `Starting embedding process for ${s3Key} (DB ID: ${dbDocument.id})`
         );
-        // Decide if this should be a fatal error for the upload or just logged
+        // 1. Get Text Content
+        const textContent = await getDocumentTextContent(s3Key); // Reuse existing function
+
+        if (!textContent) {
+          console.warn(
+            `No text content extracted for ${s3Key}, skipping embedding.`
+          );
+        } else {
+          console.log(
+            `Extracted text content (length: ${textContent.length}) for ${s3Key}.`
+          );
+          // 2. Split into Chunks
+          const chunks = splitIntoChunks(textContent); // Use default chunk size
+          console.log(
+            `Split content into ${chunks.length} chunks for ${s3Key}.`
+          );
+
+          if (chunks.length > 0) {
+            // 3. Get Pinecone Index
+            const pineconeIndex = await getPineconeIndex();
+
+            // 4. Generate Embeddings and Prepare Vectors (in batches for efficiency)
+            const batchSize = 100; // Process chunks in batches (Pinecone recommends batches)
+            for (let i = 0; i < chunks.length; i += batchSize) {
+              const chunkBatch = chunks.slice(i, i + batchSize);
+              console.log(
+                `Processing batch ${i / batchSize + 1} for ${s3Key} (size: ${
+                  chunkBatch.length
+                })`
+              );
+
+              const vectors: PineconeRecord[] = []; // Use correct type
+              for (let j = 0; j < chunkBatch.length; j++) {
+                const chunk = chunkBatch[j];
+                const chunkIndex = i + j;
+
+                // Generate embedding
+                const embedding = await generateEmbedding(chunk);
+
+                if (embedding) {
+                  const vectorId = `${dbDocument.id}_chunk${chunkIndex}`; // Unique ID for the vector
+                  vectors.push({
+                    id: vectorId,
+                    values: embedding,
+                    metadata: {
+                      // Ensure metadata values are compatible types (string, number, boolean, array of strings)
+                      documentId: dbDocument.id,
+                      userId: userId,
+                      s3Key: s3Key,
+                      filename: filename,
+                      chunkIndex: chunkIndex,
+                      text: chunk, // Store the original chunk text
+                    },
+                  });
+                } else {
+                  console.warn(
+                    `Failed to generate embedding for chunk ${chunkIndex} of ${s3Key}`
+                  );
+                }
+              }
+
+              // 5. Upsert Batch to Pinecone
+              if (vectors.length > 0) {
+                console.log(
+                  `Upserting ${vectors.length} vectors to Pinecone for ${s3Key}...`
+                );
+                await pineconeIndex.upsert(vectors);
+                console.log(`Successfully upserted batch for ${s3Key}.`);
+              } else {
+                console.log(
+                  `No vectors generated for batch ${
+                    i / batchSize + 1
+                  } of ${s3Key}.`
+                );
+              }
+            }
+          } else {
+            console.log(`No chunks generated for ${s3Key}.`);
+          }
+        }
+      } catch (embeddingError) {
+        console.error(
+          `Error during embedding/upsert process for ${s3Key}:`,
+          embeddingError
+        );
+        // Log the error but don't fail the entire upload response
       }
-      // --- End Trigger ---
+      // --- End Embedding Process ---
+
       // Construct URL after successful DB entry
       const url = `https://${S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
 

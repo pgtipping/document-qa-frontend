@@ -1,8 +1,15 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  ChangeEvent,
+  KeyboardEvent,
+} from "react"; // Add ChangeEvent, KeyboardEvent
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { triggerMetricsRefresh } from "@/hooks/useMetrics";
@@ -10,31 +17,7 @@ import { trackEvent } from "@/lib/analytics";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Sparkles } from "lucide-react"; // Import Sparkles icon
-
-// Function to format message content with proper styling
-const formatMessageContent = (content: string) => {
-  // Split content into paragraphs
-  const paragraphs = content.split("\n\n");
-
-  return paragraphs.map((paragraph, i) => {
-    // Check if paragraph is a bullet point list
-    if (paragraph.includes("\n- ")) {
-      const items = paragraph.split("\n- ");
-      return (
-        <div key={i} className="space-y-1">
-          {items[0] && <p>{items[0]}</p>}
-          <ul className="list-disc list-inside space-y-1">
-            {items.slice(1).map((item, j) => (
-              <li key={j}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      );
-    }
-    // Regular paragraph
-    return <p key={i}>{paragraph}</p>;
-  });
-};
+import ReactMarkdown from "react-markdown"; // Import ReactMarkdown
 
 interface Message {
   role: "user" | "assistant";
@@ -59,6 +42,16 @@ export default function ChatInterface({
   const { status } = useSession();
   const isAuthenticated = status === "authenticated";
   const isLoadingSession = status === "loading";
+  const textareaRef = useRef<HTMLTextAreaElement>(null); // Define textareaRef
+
+  // Function to adjust textarea height
+  const adjustTextareaHeight = useCallback(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"; // Reset height
+      // Set height based on scrollHeight, ensuring it doesn't collapse below initial size
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -67,6 +60,11 @@ export default function ChatInterface({
   useEffect(() => {
     scrollToBottom();
   }, [messages, loading, scrollToBottom]);
+
+  // Adjust height whenever input changes
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [input, adjustTextareaHeight]); // Add adjustTextareaHeight dependency
 
   // Handler for generating question and putting it in the input field
   const handleGenerateQuestion = async () => {
@@ -116,6 +114,7 @@ export default function ChatInterface({
 
       if (data.generatedQuestion) {
         setInput(data.generatedQuestion); // Set the input field with the generated question
+        // No need to manually call adjustTextareaHeight here, useEffect will handle it
         trackEvent("question_generated", {
           responseTime,
           questionLength: data.generatedQuestion.length,
@@ -166,7 +165,14 @@ export default function ChatInterface({
     setMessages((prev) => [...prev, userMessage]);
     const currentInput = input.trim(); // Capture input before clearing
     setInput(""); // Clear input
-
+    // Reset height after clearing
+    // Reset height after clearing
+    requestAnimationFrame(() => {
+      // Use requestAnimationFrame to ensure DOM update before height reset
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+    });
     setLoading(true);
 
     trackEvent("question_asked", {
@@ -286,8 +292,27 @@ export default function ChatInterface({
                       : "bg-muted"
                   )}
                 >
-                  <div className="text-[15px] leading-relaxed space-y-2">
-                    {formatMessageContent(message.content)}
+                  <div className="text-[15px] leading-relaxed space-y-2 prose prose-sm dark:prose-invert max-w-none">
+                    <ReactMarkdown
+                      components={{
+                        // Remove unused 'node' prop from parameters
+                        p: ({ ...props }) => (
+                          <p className="mb-2 last:mb-0" {...props} />
+                        ),
+                        ul: ({ ...props }) => (
+                          <ul
+                            className="list-disc list-inside space-y-1 my-2"
+                            {...props}
+                          />
+                        ),
+                        li: ({ ...props }) => <li {...props} />,
+                        strong: ({ ...props }) => (
+                          <strong className="font-semibold" {...props} />
+                        ),
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
                   </div>
                 </div>
               </div>
@@ -323,13 +348,27 @@ export default function ChatInterface({
       ) : (
         <form onSubmit={handleSubmit} className="p-4 border-t">
           <div className="flex space-x-2">
-            <Input
-              type="text"
+            <Textarea
+              ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                setInput(e.target.value)
+              } // Add type
               placeholder="Ask a question about your document..."
               disabled={loading || !isAuthenticated}
-              className="flex-1 bg-background"
+              className="flex-1 bg-background resize-none overflow-y-hidden min-h-[40px] py-2 px-3" // Add padding like input
+              rows={1} // Start with one row
+              onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
+                // Add type
+                // Submit on Enter unless Shift is pressed
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault(); // Prevent newline
+                  // Check if input is not just whitespace before submitting
+                  if (input.trim()) {
+                    handleSubmit(e as unknown as React.FormEvent); // Trigger submit
+                  }
+                }
+              }}
             />
             <Button
               type="submit"

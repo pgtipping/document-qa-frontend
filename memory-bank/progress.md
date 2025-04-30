@@ -1,3 +1,48 @@
+# 2025-04-30 3:52:10 AM EDT - Implement Vector Similarity Search
+
+### Completed - 2025-04-30 3:52:10 AM EDT
+
+- **Feature:** Implemented vector similarity search using Pinecone and OpenAI embeddings to replace keyword-based context retrieval.
+- **Technology Choices:**
+  - Vector Database: Pinecone (Managed Service)
+  - Embedding Model: OpenAI `text-embedding-3-small` (1536 dimensions)
+- **Dependencies:** Added `@pinecone-database/pinecone` and `openai` npm packages.
+- **Configuration:**
+  - Added `PINECONE_API_KEY`, `PINECONE_ENVIRONMENT`, `PINECONE_INDEX_NAME` to `.env.example`.
+  - User configured these variables in `.env.local`.
+- **Backend Implementation:**
+  - Created `src/lib/pinecone-client.ts` for Pinecone client initialization.
+  - Added `generateEmbedding` function to `src/lib/llm-service.ts`.
+  - Modified `/api/upload/route.ts`:
+    - Extracts text content upon upload.
+    - Splits content into chunks (`splitIntoChunks`).
+    - Generates embedding for each chunk (`generateEmbedding`).
+    - Upserts chunk text and embedding vector to Pinecone index in batches.
+  - Modified `/api/ask/route.ts`:
+    - Generates embedding for the user's question (`generateEmbedding`).
+    - Queries Pinecone index using the question embedding and filters (user ID, optional document IDs).
+    - Extracts text from Pinecone metadata to use as context for the LLM prompt.
+    - Removed old keyword-based `getRelevantChunks` logic.
+- **Debugging:** Resolved a 500 Internal Server Error during document deletion (`/api/files/[fileId]/route.ts`) caused by an incorrect proxy rewrite rule in `next.config.mjs`.
+- **Testing:**
+  - Successfully deleted old documents via UI.
+  - Successfully re-uploaded test documents (DOCX, PDF), observing embedding/upsert logs in the terminal.
+  - Successfully tested question-answering, confirming relevant context retrieval via Pinecone vector search.
+- **Memory Bank:** Updated `activeContext.md`.
+
+### In Progress - 2025-04-30 3:52:10 AM EDT
+
+- Updating remaining Memory Bank files (`progress.md`, `systemPatterns.md`, `techContext.md`).
+
+### Next Steps - 2025-04-30 3:52:10 AM EDT
+
+- Complete Memory Bank updates.
+- Stage changes (`git add .`).
+- Commit changes (`git commit -m "feat: implement vector search with Pinecone and OpenAI"`).
+- Push changes (`git push origin main`).
+
+---
+
 # 2025-04-29 5:31:11 PM EDT - Refactor Generate Question Button Behavior
 
 ### Completed - 2025-04-29 5:31:11 PM EDT

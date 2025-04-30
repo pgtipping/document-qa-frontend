@@ -9,6 +9,20 @@ import {
 import Groq from "groq-sdk";
 import { encoding_for_model } from "tiktoken"; // For token counting
 
+// --- OpenAI Client for Embeddings ---
+// Separate client instance specifically for embeddings, using the standard OpenAI endpoint
+const openaiApiKey = process.env.OPENAI_API_KEY;
+let openaiClient: OpenAI | null = null;
+if (openaiApiKey) {
+  openaiClient = new OpenAI({ apiKey: openaiApiKey });
+  console.log("OpenAI client initialized for embeddings.");
+} else {
+  console.warn(
+    "OpenAI API key not found (OPENAI_API_KEY). Embedding generation will fail."
+  );
+}
+const EMBEDDING_MODEL = "text-embedding-3-small";
+
 // --- Configuration ---
 
 // TODO: Consider making this configurable
@@ -233,6 +247,56 @@ export async function getExtractionFallback(
       `Error calling ${googleProvider.name} for extraction fallback:`,
       error instanceof Error ? error.message : error
     );
+    return null;
+  }
+}
+
+/**
+ * Generates a vector embedding for the given text using the configured OpenAI model.
+ * @param text The text to generate an embedding for.
+ * @returns A promise that resolves to an array of numbers (the embedding) or null if an error occurs.
+ */
+export async function generateEmbedding(
+  text: string
+): Promise<number[] | null> {
+  if (!openaiClient) {
+    console.error("OpenAI client not initialized. Cannot generate embedding.");
+    return null;
+  }
+  if (!text || typeof text !== "string") {
+    console.error("Invalid input text provided for embedding generation.");
+    return null;
+  }
+
+  // Replace newlines, which can negatively affect performance.
+  const inputText = text.replace(/\n/g, " ");
+
+  try {
+    console.log(
+      `Generating embedding for text snippet (length: ${inputText.length})...`
+    );
+    const embeddingResponse = await openaiClient.embeddings.create({
+      model: EMBEDDING_MODEL,
+      input: inputText,
+    });
+
+    if (
+      embeddingResponse &&
+      embeddingResponse.data &&
+      embeddingResponse.data[0] &&
+      embeddingResponse.data[0].embedding
+    ) {
+      console.log("Embedding generated successfully.");
+      return embeddingResponse.data[0].embedding;
+    } else {
+      console.error(
+        "Invalid response structure received from OpenAI embedding API:",
+        embeddingResponse
+      );
+      return null;
+    }
+  } catch (error) {
+    console.error("Error generating embedding from OpenAI:", error);
     return null;
   }
 }

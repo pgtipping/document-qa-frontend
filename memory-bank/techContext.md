@@ -46,6 +46,26 @@
 4. Updated security configuration
 5. Enhanced error handling
 
+## Vector Search Implementation [2025-04-30 3:54:00 AM EDT]
+
+- **Purpose:** Implemented semantic search for context retrieval.
+- **Vector Database:**
+  - **Service:** Pinecone (Managed Service)
+  - **Client Library:** `@pinecone-database/pinecone`
+  - **Initialization:** `src/lib/pinecone-client.ts`
+  - **Configuration:** Requires `PINECONE_API_KEY`, `PINECONE_ENVIRONMENT`, `PINECONE_INDEX_NAME` environment variables.
+- **Embedding Model:**
+  - **Service:** OpenAI API
+  - **Model:** `text-embedding-3-small` (1536 dimensions)
+  - **Client Library:** `openai`
+  - **Implementation:** `generateEmbedding` function in `src/lib/llm-service.ts`.
+  - **Configuration:** Requires `OPENAI_API_KEY` environment variable.
+- **Integration:**
+  - `/api/upload/route.ts`: Chunks, embeds, and upserts document content to Pinecone.
+  - `/api/ask/route.ts`: Embeds question, queries Pinecone for similar chunks, uses results for context.
+
+---
+
 ## Updates [2024-02-22]
 
 - Backend setup completed and verified

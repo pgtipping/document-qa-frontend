@@ -38,6 +38,30 @@
 3. Enhanced Strategy Pattern for model selection
 4. Updated Observer Pattern for progress tracking
 
+## Vector Search Pattern [2025-04-30 3:53:00 AM EDT]
+
+- **Purpose:** Improve context relevance for Q&A by using semantic similarity instead of keyword matching.
+- **Components:**
+  - **Embedding Model:** OpenAI `text-embedding-3-small` used via `src/lib/llm-service.ts` (`generateEmbedding` function) to convert text chunks and questions into 1536-dimension vectors.
+  - **Vector Database:** Pinecone (managed service) used to store and query text chunk vectors. Client initialized in `src/lib/pinecone-client.ts`.
+- **Workflow:**
+  - **Indexing (on Upload - `/api/upload/route.ts`):**
+    1. Extract text content from the uploaded document.
+    2. Split text into overlapping chunks (`splitIntoChunks`).
+    3. Generate an embedding vector for each chunk (`generateEmbedding`).
+    4. Upsert vectors into Pinecone index, including metadata (document ID, user ID, chunk index, original text). Vectors are batched for efficiency.
+  - **Querying (on Ask - `/api/ask/route.ts`):**
+    1. Generate an embedding vector for the user's question (`generateEmbedding`).
+    2. Query the Pinecone index using the question vector (`pineconeIndex.query`).
+    3. Apply filters to the query based on `userId` and optionally `documentIds`.
+    4. Retrieve the `topK` most similar vectors, including their metadata.
+    5. Extract the original text from the metadata of the retrieved vectors.
+    6. Use this extracted text as the context for the LLM prompt (`buildPromptWithContextLimit`).
+- **Benefits:** Provides more semantically relevant context to the LLM, leading to potentially more accurate and helpful answers compared to simple keyword matching.
+- **Considerations:** Introduces dependencies on external services (OpenAI, Pinecone) and associated costs/latency. Requires careful management of the vector index.
+
+---
+
 ## Architecture Overview
 
 ### API-First Design

@@ -1,3 +1,24 @@
+# Active Context - 2025-04-30 3:51:15 AM EDT
+
+- **Task:** Implement and test vector similarity search for context retrieval.
+- **Completed:**
+  - Selected Pinecone (Vector DB) and OpenAI `text-embedding-3-small` (Embedding Model).
+  - Installed dependencies (`@pinecone-database/pinecone`, `openai`).
+  - Updated `.env.example` with Pinecone/OpenAI variables.
+  - Configured Pinecone client (`src/lib/pinecone-client.ts`).
+  - Implemented embedding generation (`generateEmbedding` in `src/lib/llm-service.ts`).
+  - Modified upload route (`/api/upload/route.ts`) to chunk, embed, and upsert vectors to Pinecone.
+  - Modified ask route (`/api/ask/route.ts`) to generate question embedding, query Pinecone (replacing keyword search), and use results for context.
+  - Debugged and fixed document deletion error (500) caused by incorrect proxy rewrite in `next.config.mjs`.
+  - Successfully tested document deletion, re-upload (with embedding), and question-answering using vector search.
+- **Next Steps:**
+  - Update `progress.md`, `systemPatterns.md`, and `techContext.md` with details of the vector search implementation.
+  - Stage changes (`git add .`).
+  - Commit changes (`git commit -m "feat: implement vector search with Pinecone and OpenAI"`).
+  - Push changes (`git push origin main`).
+
+---
+
 # Active Context - 2025-04-29 5:28:42 PM EDT
 
 - **Task:** Modify "Generate Question" button behavior.

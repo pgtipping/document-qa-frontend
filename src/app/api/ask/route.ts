@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma"; // Import Prisma client instance
 import { Prisma } from "@prisma/client"; // Import Prisma types directly
-import { getDocumentTextContent } from "@/lib/document-processing";
+import { getDocumentTextContent } from "@/lib/document-processing"; // Keep for now, might be needed if re-processing is triggered
 import {
   getCompletion,
-  splitIntoChunks,
-  getRelevantChunks,
+  splitIntoChunks, // Re-add missing import needed for 'model' mode
+  // getRelevantChunks, // No longer needed here
+  generateEmbedding, // Import embedding function
   buildPromptWithContextLimit,
-  // MAX_CONTEXT_TOKENS is defined in llm-service
 } from "@/lib/llm-service";
+import { getPineconeIndex } from "@/lib/pinecone-client"; // Import Pinecone index getter
 import { getAuthSession } from "@/lib/auth"; // Import session helper
+// Remove unused import: import { type ScoredPineconeRecord } from "@pinecone-database/pinecone";
+import { type Filter } from "@pinecone-database/pinecone"; // Import Filter type
 
 // --- Configuration ---
 // Base template can still be defined here or imported if shared
@@ -101,11 +104,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // --- Detailed Logging Removed ---
+    // console.log(...) // Removed document finding log
+    // --- End Detailed Logging ---
+
     if (!documentsToProcess || documentsToProcess.length === 0) {
       const message =
         Array.isArray(documentIds) && documentIds.length > 0
           ? "None of the selected documents were found or are active."
           : "No active documents found for this user to provide context.";
+      // console.log(`[Ask API Debug] ${message}`); // Removed log
       return NextResponse.json(
         { answer: message },
         { status: 200 } // Not an error, just no context available
@@ -119,60 +127,151 @@ export async function POST(request: NextRequest) {
     );
     // --- End Prisma Integration ---
 
-    // 1. Fetch and extract content for the selected/active documents concurrently
-    const contentPromises = s3KeysToProcess.map(
-      (
-        key: string // Add type for key
-      ) =>
-        getDocumentTextContent(key).catch((err) => {
-          console.error(`Failed to get content for key ${key}:`, err);
-          return null; // Return null on error for individual file
-        })
-    );
-    const allContents = (await Promise.all(contentPromises)) as (
-      | string
-      | null
-    )[]; // Type assertion
-    const validContents = allContents.filter(
-      (content: string | null): content is string => content !== null // Type guard for filter
-    );
+    // --- Determine the final question (user's or generated) ---
+    let finalQuestion = userQuestion;
+    let generatedQuestionForResponse: string | undefined = undefined;
 
-    if (validContents.length === 0) {
+    if (mode === "model") {
+      // If mode is 'model', we need *some* context to generate a question.
+      // Fetching *all* content just to generate a question might be too slow/expensive.
+      // Strategy: Use the first document's content or a subset for question generation.
+      // For simplicity now, let's just use the first document found.
+      // A better approach might involve fetching titles/summaries or using a smaller context.
+      console.log("Mode is 'model', attempting to generate question...");
+      if (documentsToProcess && documentsToProcess.length > 0) {
+        const firstDocKey = documentsToProcess[0].s3Key;
+        console.log(
+          `Using first document (${documentsToProcess[0].filename}) for question generation context.`
+        );
+        const questionGenContent = await getDocumentTextContent(firstDocKey);
+        if (questionGenContent) {
+          const questionGenChunks = splitIntoChunks(
+            questionGenContent,
+            1000,
+            100
+          ); // Smaller chunks for question gen
+          const questionGenPrompt = buildPromptWithContextLimit(
+            questionGenChunks.slice(0, 5), // Limit context for question gen
+            "",
+            PROMPT_TEMPLATE_GENERATE_QUESTION
+          );
+          const generatedQ = await getCompletion(questionGenPrompt);
+          if (generatedQ) {
+            finalQuestion = generatedQ.trim();
+            generatedQuestionForResponse = finalQuestion; // Store for response payload
+            console.log(`Generated question: "${finalQuestion}"`);
+          } else {
+            console.error(
+              "Failed to generate question from LLM for 'model' mode."
+            );
+            // Fallback: Ask a generic question or return error? For now, return error.
+            return NextResponse.json(
+              { error: "Failed to generate a question for Q&A mode." },
+              { status: 503 }
+            );
+          }
+        } else {
+          console.error(
+            "Failed to get content for question generation in 'model' mode."
+          );
+          return NextResponse.json(
+            { error: "Failed to get context for question generation." },
+            { status: 500 }
+          );
+        }
+      } else {
+        // This case is already handled above, but added for clarity
+        console.error(
+          "No documents available to generate question in 'model' mode."
+        );
+        return NextResponse.json(
+          { error: "No documents available for question generation." },
+          { status: 400 }
+        );
+      }
+    }
+    // --- End Q&A Mode Logic / Determine Final Question ---
+
+    if (!finalQuestion) {
+      // Should not happen if mode is 'user' due to earlier check, but safety first
+      console.error("No final question available to proceed.");
       return NextResponse.json(
-        { error: "Failed to process any of the provided documents." },
+        { error: "Internal error: Question not available." },
         { status: 500 }
       );
     }
 
-    // 2. Chunk all valid contents
-    let allChunks: string[] = [];
-    validContents.forEach((content, index) => {
-      console.log(`Chunking document ${index + 1}/${validContents.length}...`);
-      const chunks = splitIntoChunks(content); // Use default chunk size/overlap from llm-service
-      allChunks = allChunks.concat(chunks);
-    });
-    console.log(
-      `Total chunks generated from ${validContents.length} documents: ${allChunks.length}`
-    );
+    // --- Vector Search for Relevant Context ---
+    let relevantChunks: string[] = [];
+    try {
+      console.log(`Generating embedding for question: "${finalQuestion}"`);
+      const questionEmbedding = await generateEmbedding(finalQuestion);
 
-    // 3. Select relevant chunks (using placeholder logic for now)
-    // For model-generated questions, we might want a different relevance strategy,
-    // but for now, we'll use the same context chunks for both modes.
-    // If mode is 'model', we don't have a user question yet for relevance,
-    // so we might just take the first few chunks or implement a different strategy.
-    // For simplicity here, we'll select chunks based on the *entire* content if mode is 'model'.
-    const relevanceQuery =
-      mode === "user" ? userQuestion : validContents.join("\n");
-    const relevantChunks = getRelevantChunks(allChunks, relevanceQuery); // Use default maxChunks from llm-service
-    console.log(
-      `Selected ${relevantChunks.length} relevant chunks (using ${
-        mode === "user" ? "user question" : "full content"
-      } for relevance).`
-    );
+      if (!questionEmbedding) {
+        throw new Error("Failed to generate embedding for the question.");
+      }
 
-    let finalQuestion = userQuestion;
+      console.log("Querying Pinecone index...");
+      const pineconeIndex = await getPineconeIndex();
 
-    // --- Q&A Mode Logic ---
+      // Construct filter based on user and selected documents
+      const queryFilter: Filter = { userId: userId }; // Use specific Filter type
+      if (Array.isArray(documentIds) && documentIds.length > 0) {
+        // Filter results to only include chunks from the selected document IDs
+        queryFilter.documentId = { $in: documentIds };
+        console.log(`Applying Pinecone filter for document IDs:`, documentIds);
+      } else {
+        console.log(
+          `No document ID filter applied, searching all user's indexed chunks.`
+        );
+      }
+
+      const queryResponse = await pineconeIndex.query({
+        vector: questionEmbedding,
+        topK: 10, // Retrieve more chunks initially
+        filter: queryFilter,
+        includeMetadata: true, // Crucial to get the text back
+      });
+
+      console.log(
+        `Pinecone query returned ${queryResponse.matches?.length ?? 0} matches.`
+      );
+
+      if (queryResponse.matches && queryResponse.matches.length > 0) {
+        // Extract the text from metadata
+        relevantChunks = queryResponse.matches
+          .map((match) => {
+            // Type guard for metadata and text property
+            if (
+              match.metadata &&
+              typeof match.metadata === "object" &&
+              "text" in match.metadata &&
+              typeof match.metadata.text === "string"
+            ) {
+              return match.metadata.text;
+            }
+            console.warn(`Match ${match.id} missing text metadata.`);
+            return null;
+          })
+          .filter((text): text is string => text !== null); // Filter out nulls
+
+        console.log(
+          `Extracted text from ${relevantChunks.length} Pinecone matches.`
+        );
+      } else {
+        console.log("No relevant chunks found via vector search.");
+      }
+    } catch (vectorSearchError) {
+      console.error("Error during vector search:", vectorSearchError);
+      // Decide how to handle: fallback to keyword? Return error? For now, return error.
+      return NextResponse.json(
+        { error: "Failed to retrieve relevant context via vector search." },
+        { status: 500 }
+      );
+    }
+    // --- End Vector Search ---
+
+    // --- Build Prompt and Get Completion ---
     if (mode === "model") {
       console.log("Mode is 'model', generating question...");
       // Build prompt to generate a question based on context
@@ -234,8 +333,9 @@ export async function POST(request: NextRequest) {
     const responsePayload: { answer: string; generatedQuestion?: string } = {
       answer,
     };
-    if (mode === "model") {
-      responsePayload.generatedQuestion = finalQuestion; // Include the generated question in the response
+    // Use the stored generated question if mode was 'model'
+    if (mode === "model" && generatedQuestionForResponse) {
+      responsePayload.generatedQuestion = generatedQuestionForResponse;
     }
     return NextResponse.json(responsePayload);
   } catch (error) {

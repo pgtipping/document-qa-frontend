@@ -6,7 +6,7 @@ const nextConfig = {
     return [
       // Proxy all API routes EXCEPT /api/auth/* to the backend
       {
-        source: "/api/((?!auth/).*)", // Use negative lookahead to exclude /api/auth/
+        source: "/api/((?!auth/|files/).*)", // Use negative lookahead to exclude /api/auth/ and /api/files/
         destination: `${
           process.env.BACKEND_URL || "http://localhost:8001"
         }/api/:path*`,
