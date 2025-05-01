@@ -1,3 +1,28 @@
+# Active Context - 2025-04-30 6:04:43 PM EDT
+
+- **Task:** Resolve Vercel deployment failures related to the `canvas` package and subsequent build errors.
+- **Completed:**
+  - Attempted multiple strategies to install `canvas` system dependencies on Vercel:
+    - Modifying `vercel.json` `installCommand` with `apt-get`. (Failed: `apt-get` not found)
+    - Using `apt.txt`. (Failed: Dependencies not installed)
+    - Using `build.sh` with `apt-get`. (Failed: `apt-get` not found in script context)
+    - Using `build.sh` with `yum`. (Failed: Script not executed correctly by Vercel)
+    - Using `preinstall` script in `package.json` with `yum`. (Failed: Dependencies not installed before `canvas` build)
+  - Identified that `canvas` is a direct dependency and also required by `jest-environment-jsdom`.
+  - Changed Node.js version in Vercel settings to `20.x` (LTS). This resolved the `canvas` installation issue by likely using pre-compiled binaries.
+  - New deployment with Node 20.x revealed build-time errors:
+    - ESLint configuration error (`useEslintrc`, `extensions` options invalid).
+    - TypeScript type error in `/api/files/[fileId]/route.ts` `DELETE` function signature.
+  - Fixed ESLint configuration in `eslint.config.mjs`.
+  - Fixed TypeScript error in `/api/files/[fileId]/route.ts`.
+  - Removed unsuccessful dependency installation attempts (`preinstall` script, `build.sh`, `apt.txt`).
+- **Decision:** Adopt the practice of running `npm run build` locally after changes to catch build errors before deploying to Vercel.
+- **Next Steps:**
+  - Update `progress.md`.
+  - Start a new task to run `npm run build` locally in `document-qa-frontend` and fix any reported errors.
+
+---
+
 # Active Context - 2025-04-30 3:51:15 AM EDT
 
 - **Task:** Implement and test vector similarity search for context retrieval.

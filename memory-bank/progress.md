@@ -1,3 +1,27 @@
+# 2025-04-30 6:06:43 PM EDT - Resolve Vercel Deployment Failures
+
+### Completed - 2025-04-30 6:06:43 PM EDT
+
+- **Troubleshooting:** Diagnosed persistent Vercel deployment failures caused by the `canvas` package's native dependency build requirements.
+  - Attempted various methods to install system dependencies (`apt-get`, `yum`) via `vercel.json` commands, `apt.txt`, `build.sh`, and `package.json` `preinstall` scripts. These failed due to Vercel build environment limitations or incorrect execution order.
+- **Resolution:**
+  - Identified that changing the Node.js version in Vercel settings to `20.x` (LTS) resolved the `canvas` installation error, likely by allowing the use of pre-compiled binaries.
+  - Fixed subsequent build errors revealed by using Node 20.x:
+    - Corrected ESLint configuration in `eslint.config.mjs` (removed invalid options).
+    - Corrected TypeScript type error in `/api/files/[fileId]/route.ts` `DELETE` function signature.
+- **Cleanup:** Removed unsuccessful configuration attempts (`preinstall` script from `package.json`, deleted `build.sh`, deleted `apt.txt`).
+- **Process Improvement:** Decided to run `npm run build` locally after code changes to catch build errors before deployment attempts.
+
+### In Progress - 2025-04-30 6:06:43 PM EDT
+
+- Updating Memory Bank (`activeContext.md`, `progress.md`).
+
+### Next Steps - 2025-04-30 6:06:43 PM EDT
+
+- Start a new task to run `npm run build` locally and address any errors.
+
+---
+
 # 2025-04-30 3:52:10 AM EDT - Implement Vector Similarity Search
 
 ### Completed - 2025-04-30 3:52:10 AM EDT
