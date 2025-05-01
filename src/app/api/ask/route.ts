@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { performance } from "perf_hooks"; // Import performance for timing
 import prisma from "@/lib/prisma"; // Import Prisma client instance
-// Removed unused Prisma import
+import { Prisma } from "@prisma/client"; // Import Prisma namespace for types like JsonNull
+// Removed unused Prisma import comment as Prisma is now used
 import { getDocumentTextContent } from "@/lib/document-processing"; // Keep for now, might be needed if re-processing is triggered
 import {
   getCompletion,
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
   let vectorSearchTime: number | null = null;
   let llmCompletionTime: number | null = null;
   let docProcessingTimeModelMode: number | null = null;
-  let llmQuestionGenTimeModelMode: number | null = null;
+  // Removed unused variable: let llmQuestionGenTimeModelMode: number | null = null;
 
   try {
     // --- Authentication Check ---
@@ -184,10 +185,9 @@ export async function POST(request: NextRequest) {
             "",
             PROMPT_TEMPLATE_GENERATE_QUESTION
           );
-          const llmQGStartTime = performance.now();
+          // Removed unused variable: const llmQGStartTime = performance.now();
           const generatedQ = await getCompletion(questionGenPrompt);
-          llmQuestionGenTimeModelMode =
-            (performance.now() - llmQGStartTime) / 1000; // seconds
+          // Removed assignment to unused variable: llmQuestionGenTimeModelMode = (performance.now() - llmQGStartTime) / 1000; // seconds
 
           if (generatedQ) {
             finalQuestion = generatedQ.trim();
@@ -314,28 +314,8 @@ export async function POST(request: NextRequest) {
     // --- End Vector Search ---
 
     // --- Build Prompt and Get Completion ---
-    if (mode === "model") {
-      console.log("Mode is 'model', generating question...");
-      // Build prompt to generate a question based on context
-      const generateQuestionPrompt = buildPromptWithContextLimit(
-        relevantChunks, // Use the same relevant chunks for question generation context
-        "", // No user question needed here
-        PROMPT_TEMPLATE_GENERATE_QUESTION
-      );
-
-      const generatedQuestion = await getCompletion(generateQuestionPrompt);
-
-      if (!generatedQuestion) {
-        console.error("Failed to generate question from LLM.");
-        return NextResponse.json(
-          { error: "Failed to generate a question for Q&A mode." },
-          { status: 503 }
-        );
-      }
-      finalQuestion = generatedQuestion.trim();
-      console.log(`Generated question: "${finalQuestion}"`);
-    }
-    // --- End Q&A Mode Logic ---
+    // Removed redundant 'model' mode question generation block here.
+    // The finalQuestion is already determined before vector search.
 
     if (!finalQuestion) {
       // Should not happen if mode is 'user' due to earlier check, but safety first
@@ -398,13 +378,12 @@ export async function POST(request: NextRequest) {
           vectorSearchTime: vectorSearchTime,
           llmCompletionTime: llmCompletionTime,
           docProcessingTime: docProcessingTimeModelMode, // Only relevant for model mode currently
-          // Rename llmQuestionGenTime to match schema
-          llmQuestionGenTime: llmQuestionGenTimeModelMode, // Only relevant for model mode currently
+          // llmQuestionGenTime field does not exist in the schema, removing assignment
           totalTime: totalTime,
           // Placeholders for detailed breakdowns - need implementation in services
-          llmTimingBreakdown: null,
-          docTimingBreakdown: null,
-          docMetricsJson: null,
+          llmTimingBreakdown: Prisma.JsonNull,
+          docTimingBreakdown: Prisma.JsonNull,
+          docMetricsJson: Prisma.JsonNull,
         },
       });
       console.log(
