@@ -58,7 +58,6 @@ export async function POST(request: Request) {
 
     // 5. Return success response (excluding password)
     // Important: Never return the password hash in the response
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userWithoutPassword } = newUser;
     return NextResponse.json(userWithoutPassword, { status: 201 }); // 201 Created
   } catch (error) {

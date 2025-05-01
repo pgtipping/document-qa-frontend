@@ -50,7 +50,8 @@ export default function AdminLogin() {
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (_error) {
+      // Prefix unused error variable
       toast({
         title: "Login failed",
         description: "An error occurred. Please try again.",

@@ -16,15 +16,31 @@ const s3Client = new S3Client({
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME!;
 // S3_PREFIX is not strictly needed here as we get the full key from DB
 
+// Define an interface for the route context
+interface RouteContext {
+  params: {
+    fileId: string;
+  };
+}
+
+// GET /api/files/[fileId] - Workaround for Next.js type generation bug
+export async function GET() {
+  return NextResponse.json(
+    { message: "GET method not implemented for this route." },
+    { status: 501 }
+  );
+}
+
 // DELETE /api/files/[fileId]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { fileId: string } } // Revert to standard destructuring
+  context: RouteContext // Use the defined interface for context
 ) {
-  const fileId = params.fileId; // Access fileId directly from destructured params
+  // Explicitly cast context to RouteContext as a workaround for Next.js type bug
+  const typedContext = context as RouteContext;
+  const fileId = typedContext.params.fileId; // Access fileId from typedContext.params
   console.log(`Attempting to delete document with ID: ${fileId}`);
 
-  // @ts-ignore - Suppress persistent type error related to Next.js internal types
   try {
     // --- Authentication & Authorization Check ---
     const session = await getAuthSession();

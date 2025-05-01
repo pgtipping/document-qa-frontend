@@ -2,7 +2,7 @@
 
 import { useMetrics } from "@/hooks/useMetrics";
 import PerformanceMetrics from "@/components/PerformanceMetrics";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// Removed unused Card components: import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // Removed useEffect and useRouter imports as they are no longer needed here
 
 export default function AdminMetrics() {

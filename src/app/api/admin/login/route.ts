@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { sign } from "jsonwebtoken";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;

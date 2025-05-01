@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { performance } from "perf_hooks"; // Import performance for timing
 import prisma from "@/lib/prisma"; // Import Prisma client instance
 import { Prisma } from "@prisma/client"; // Import Prisma types directly
 import { getDocumentTextContent } from "@/lib/document-processing"; // Keep for now, might be needed if re-processing is triggered
@@ -21,6 +22,13 @@ const PROMPT_TEMPLATE_GENERATE_QUESTION = `Based on the following context, gener
 
 // --- API Route Handler ---
 export async function POST(request: NextRequest) {
+  const startTime = performance.now(); // Start timing the request
+  let embeddingTime: number | null = null;
+  let vectorSearchTime: number | null = null;
+  let llmCompletionTime: number | null = null;
+  let docProcessingTimeModelMode: number | null = null;
+  let llmQuestionGenTimeModelMode: number | null = null;
+
   try {
     // --- Authentication Check ---
     const session = await getAuthSession();
@@ -141,9 +149,14 @@ export async function POST(request: NextRequest) {
       if (documentsToProcess && documentsToProcess.length > 0) {
         const firstDocKey = documentsToProcess[0].s3Key;
         console.log(
+          // Restore console.log call
           `Using first document (${documentsToProcess[0].filename}) for question generation context.`
         );
+        const docProcStartTime = performance.now();
         const questionGenContent = await getDocumentTextContent(firstDocKey);
+        docProcessingTimeModelMode =
+          (performance.now() - docProcStartTime) / 1000; // seconds
+
         if (questionGenContent) {
           const questionGenChunks = splitIntoChunks(
             questionGenContent,
@@ -155,7 +168,11 @@ export async function POST(request: NextRequest) {
             "",
             PROMPT_TEMPLATE_GENERATE_QUESTION
           );
+          const llmQGStartTime = performance.now();
           const generatedQ = await getCompletion(questionGenPrompt);
+          llmQuestionGenTimeModelMode =
+            (performance.now() - llmQGStartTime) / 1000; // seconds
+
           if (generatedQ) {
             finalQuestion = generatedQ.trim();
             generatedQuestionForResponse = finalQuestion; // Store for response payload
@@ -210,7 +227,9 @@ export async function POST(request: NextRequest) {
     let relevantChunks: string[] = [];
     try {
       console.log(`Generating embedding for question: "${finalQuestion}"`);
+      const embeddingStartTime = performance.now();
       const questionEmbedding = await generateEmbedding(finalQuestion);
+      embeddingTime = (performance.now() - embeddingStartTime) / 1000; // seconds
 
       if (!questionEmbedding) {
         throw new Error("Failed to generate embedding for the question.");
@@ -231,12 +250,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      const vectorSearchStartTime = performance.now();
       const queryResponse = await pineconeIndex.query({
         vector: questionEmbedding,
         topK: 10, // Retrieve more chunks initially
         filter: queryFilter,
         includeMetadata: true, // Crucial to get the text back
       });
+      vectorSearchTime = (performance.now() - vectorSearchStartTime) / 1000; // seconds
 
       console.log(
         `Pinecone query returned ${queryResponse.matches?.length ?? 0} matches.`
@@ -322,9 +343,12 @@ export async function POST(request: NextRequest) {
     console.log("Sending final answer prompt to LLM service...");
 
     // 5. Get completion (the answer) using the LLM service with fallback
+    const llmCompletionStartTime = performance.now();
     const answer = await getCompletion(finalAnswerPrompt);
+    llmCompletionTime = (performance.now() - llmCompletionStartTime) / 1000; // seconds
 
     if (answer === null) {
+      // Log failure before returning? Maybe not, keep logs for successful requests.
       return NextResponse.json(
         { error: "Failed to get answer from LLM providers after retries." },
         { status: 503 }
@@ -342,6 +366,42 @@ export async function POST(request: NextRequest) {
     if (mode === "model" && generatedQuestionForResponse) {
       responsePayload.generatedQuestion = generatedQuestionForResponse;
     }
+
+    // --- Performance Logging ---
+    const endTime = performance.now();
+    const totalTime = (endTime - startTime) / 1000; // seconds
+
+    try {
+      await prisma.performanceLog.create({
+        data: {
+          userId: userId,
+          mode: mode,
+          question: finalQuestion, // Log the final question used
+          documentIds: documentsToProcess.map((doc) => doc.id), // Log actual DB IDs
+          embeddingTime: embeddingTime,
+          vectorSearchTime: vectorSearchTime,
+          llmCompletionTime: llmCompletionTime,
+          docProcessingTime: docProcessingTimeModelMode, // Only relevant for model mode currently
+          // Rename llmQuestionGenTime to match schema
+          llmQuestionGenTime: llmQuestionGenTimeModelMode, // Only relevant for model mode currently
+          totalTime: totalTime,
+          // Placeholders for detailed breakdowns - need implementation in services
+          llmTimingBreakdown: Prisma.JsonNull,
+          docTimingBreakdown: Prisma.JsonNull,
+          docMetricsJson: Prisma.JsonNull, // Placeholder - need doc metrics logic
+        },
+      });
+      console.log(
+        `Performance log saved for user ${userId}. Total time: ${totalTime.toFixed(
+          2
+        )}s`
+      );
+    } catch (logError) {
+      console.error("Failed to save performance log:", logError);
+      // Do not fail the request if logging fails, just log the error
+    }
+    // --- End Performance Logging ---
+
     return NextResponse.json(responsePayload);
   } catch (error) {
     console.error("Ask API error:", error);

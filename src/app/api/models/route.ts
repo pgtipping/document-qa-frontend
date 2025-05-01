@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
+  // Prefix unused parameter with _
   try {
     // Forward the request to our backend
     const response = await fetch(

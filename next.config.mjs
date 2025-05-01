@@ -17,17 +17,12 @@ const nextConfig = {
   experimental: {
     largePageDataBytes: 128 * 100000, // Increase size limit for large responses
   },
-  eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     // !! WARN !!
     // Dangerously allow production builds to successfully complete even if
     // your project has type errors.
     // !! WARN !!
-    ignoreBuildErrors: true,
+    // Ensure type errors are resolved before enabling production builds without this flag.
   },
 };
 

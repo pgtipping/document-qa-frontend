@@ -1,3 +1,34 @@
+# Active Context - 2025-05-01 2:36:20 AM EDT
+
+- **Task:** Coordinate the resolution of remaining build errors (ESLint and TypeScript) and adapt the performance metrics dashboard.
+- **Completed:**
+  - Orchestrator mode successfully coordinated the fixing of all remaining ESLint and TypeScript build errors.
+  - The performance metrics dashboard (`src/components/PerformanceMetrics.tsx`, `/api/performance-logs/route.ts`, `useMetrics` hook) was adapted to fetch and display data from the new backend architecture using the `PerformanceLog` database table.
+  - Local build (`npm run build`) now completes successfully.
+  - Vercel deployments are unblocked.
+- **Next Steps:**
+  - Update `progress.md`.
+  - Stage, commit, and push the successful changes.
+
+---
+
+# Active Context - 2025-05-01 12:37:30 AM EDT
+
+- **Task:** Investigate and fix underlying ESLint and TypeScript build errors.
+- **Completed:**
+  - Removed error suppression from `next.config.mjs` and `@ts-ignore` from `/api/files/[fileId]/route.ts`.
+  - Updated ESLint packages (`eslint`, `eslint-config-next`) and installed required plugins (`@next/eslint-plugin-next`, `@typescript-eslint/parser`, `@typescript-eslint/eslint-plugin`).
+  - Refined `eslint.config.mjs` to use flat config format correctly, resolving initial configuration errors ("Invalid Options", "whitespace").
+  - Configured `@typescript-eslint/no-unused-vars` rule to ignore identifiers prefixed with `_`.
+  - Fixed several ESLint errors (`no-unused-vars`, `no-explicit-any`, `no-namespace`) in various files (`admin/login/page.tsx`, `api/files/route.ts`, `api/models/route.ts`, `api/sentry-example-api/route.ts`, `app/page.tsx`, `test-email/page.tsx`).
+- **Current Status:** Build still fails locally due to remaining ESLint errors (mostly `no-unused-vars`, `no-explicit-any`) and the persistent TypeScript type error (`ParamCheck<RouteContext>`) in `/api/files/[fileId]/route.ts`. Vercel deployments remain blocked. Performance metrics need adaptation.
+- **Decision:** Switch to Orchestrator mode for a structured approach to fix remaining build errors and adapt performance metrics.
+- **Next Steps:**
+  - Update `progress.md`.
+  - Start a new task in Orchestrator mode.
+
+---
+
 # Active Context - 2025-04-30 6:04:43 PM EDT
 
 - **Task:** Resolve Vercel deployment failures related to the `canvas` package and subsequent build errors.

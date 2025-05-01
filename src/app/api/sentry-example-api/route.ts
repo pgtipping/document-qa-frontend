@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     async () => {
       try {
         const requestDetails = request ? getRequestDetails(request) : null;
-        const requestId = request?.headers.get("x-request-id") || "unknown";
+        // Removed unused requestId declaration here; it's declared and used in the catch block
 
         // Set detailed context
         Sentry.setContext("test", {

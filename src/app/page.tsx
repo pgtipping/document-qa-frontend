@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ThemeToggle } from "@/components/ThemeToggle";
+// Removed unused import: import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Card,
   CardContent,
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Loader2,
+  // Removed unused import: Loader2,
   ArrowRight,
   FileText,
   Zap,
@@ -31,19 +31,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      main: React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement>,
-        HTMLElement
-      >;
-    }
-  }
-}
+// Removed 'declare global { namespace JSX { ... } }' block to resolve no-namespace lint error.
+// If specific type augmentation is needed, it should be handled in a .d.ts file.
 
 export default function Home() {
-  const [showMetrics, setShowMetrics] = useState(false);
+  const [showMetrics, _setShowMetrics] = useState(false); // Prefix unused state setter
   const metricsRef = useRef<HTMLDivElement>(null);
   const { hasMetrics, isLoading, data, error } = useMetrics(); // Always check for metrics
 

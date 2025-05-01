@@ -10,9 +10,22 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 
+// Define a type for the expected API response
+interface TestEmailResult {
+  message?: string;
+  info?: unknown; // Use unknown for safety if structure varies
+  error?: string;
+  config?: {
+    service?: boolean;
+    user?: boolean;
+    pass?: boolean;
+    recipient?: boolean;
+  };
+}
+
 export default function TestEmailPage() {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<TestEmailResult | null>(null); // Use specific type
   const [error, setError] = useState<string | null>(null);
   const [responseStatus, setResponseStatus] = useState<number | null>(null);
 

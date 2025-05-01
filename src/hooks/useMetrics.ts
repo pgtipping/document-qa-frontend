@@ -21,8 +21,14 @@ interface ProcessingTime {
   doc_time: number;
 }
 
+interface LogEntry {
+  total_llm_time?: number;
+  total_doc_time?: number;
+  // Add other properties as needed based on actual log structure
+}
+
 interface ChartData {
-  logs: any[];
+  logs: LogEntry[];
   documentMetrics: DocumentMetrics[];
   processingTimes: ProcessingTime[];
   latestTimings: {
@@ -46,7 +52,7 @@ export function useMetrics({
   enabled = true,
   onNewMetrics,
 }: UseMetricsOptions = {}) {
-  const { data: session, status: sessionStatus } = useSession();
+  const { data: _session, status: sessionStatus } = useSession();
   const [data, setData] = useState<ChartData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -77,7 +83,7 @@ export function useMetrics({
           try {
             const errorData = await response.json();
             errorMsg = errorData.error || errorMsg;
-          } catch (jsonError) {
+          } catch (_jsonError) {
             // Ignore if response is not JSON
           }
         }

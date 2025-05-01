@@ -35,8 +35,14 @@ interface ProcessingTime {
   doc_time: number;
 }
 
+interface LogEntry {
+  total_llm_time?: number;
+  total_doc_time?: number;
+  // Add other properties as needed based on actual log structure
+}
+
 interface ChartData {
-  logs: any[];
+  logs: LogEntry[];
   documentMetrics: DocumentMetrics[];
   processingTimes: ProcessingTime[];
   latestTimings: {
@@ -204,7 +210,7 @@ export default function PerformanceMetrics({
                         <Tooltip
                           formatter={(value: number, name: string) => {
                             const percent = (
-                              (value / latestLog.total_llm_time) *
+                              (value / (latestLog.total_llm_time ?? 0)) *
                               100
                             ).toFixed(1);
                             const descriptions: { [key: string]: string } = {
@@ -293,7 +299,7 @@ export default function PerformanceMetrics({
                         <Tooltip
                           formatter={(value: number, name: string) => {
                             const percent = (
-                              (value / latestLog.total_doc_time) *
+                              (value / (latestLog.total_doc_time ?? 0)) *
                               100
                             ).toFixed(1);
                             const descriptions: { [key: string]: string } = {
