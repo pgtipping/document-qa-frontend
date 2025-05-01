@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { performance } from "perf_hooks"; // Import performance for timing
 import prisma from "@/lib/prisma"; // Import Prisma client instance
-import { Prisma } from "@prisma/client"; // Import Prisma types directly
+// Removed unused Prisma import
 import { getDocumentTextContent } from "@/lib/document-processing"; // Keep for now, might be needed if re-processing is triggered
 import {
   getCompletion,
@@ -14,6 +14,13 @@ import { getPineconeIndex } from "@/lib/pinecone-client"; // Import Pinecone ind
 import { getAuthSession } from "@/lib/auth"; // Import session helper
 // Remove unused import: import { type ScoredPineconeRecord } from "@pinecone-database/pinecone";
 // Removed Filter import as it's not exported; type will be inferred or use a generic type if needed.
+
+// Define type for the result of the document query
+interface DocumentInfo {
+  id: string;
+  s3Key: string;
+  filename: string;
+}
 
 // --- Configuration ---
 // Base template can still be defined here or imported if shared
@@ -68,8 +75,15 @@ export async function POST(request: NextRequest) {
     // --- Prisma Integration: Fetch documents based on selection or all active ---
     let documentsToProcess;
     try {
-      // Define the base where clause with proper typing
-      const whereClause: Prisma.DocumentWhereInput = {
+      // Define a type for the where clause to allow optional 'id'
+      type DocumentWhereClause = {
+        userId: string;
+        status: "active";
+        id?: { in: string[] }; // Make id optional
+      };
+
+      // Define the base where clause with the specific type
+      const whereClause: DocumentWhereClause = {
         userId: userId, // Always filter by user
         status: "active", // Always fetch active documents
       };
@@ -128,10 +142,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const s3KeysToProcess = documentsToProcess.map((doc) => doc.s3Key);
+    const s3KeysToProcess = documentsToProcess.map(
+      (doc: DocumentInfo) => doc.s3Key
+    ); // Add type to doc
     console.log(
       `Processing ${s3KeysToProcess.length} documents for user ${userId}:`,
-      documentsToProcess.map((d) => d.filename)
+      documentsToProcess.map((d: DocumentInfo) => d.filename) // Add type to d
     );
     // --- End Prisma Integration ---
 
@@ -358,7 +374,7 @@ export async function POST(request: NextRequest) {
     // 6. Return the answer
     console.log("Received answer from LLM service.");
     // 6. Return the answer (and the generated question if applicable)
-    console.log("Received answer from LLM service.");
+    // Removed duplicate console.log
     const responsePayload: { answer: string; generatedQuestion?: string } = {
       answer,
     };
@@ -377,7 +393,7 @@ export async function POST(request: NextRequest) {
           userId: userId,
           mode: mode,
           question: finalQuestion, // Log the final question used
-          documentIds: documentsToProcess.map((doc) => doc.id), // Log actual DB IDs
+          documentIds: documentsToProcess.map((doc: DocumentInfo) => doc.id), // Add type to doc
           embeddingTime: embeddingTime,
           vectorSearchTime: vectorSearchTime,
           llmCompletionTime: llmCompletionTime,
@@ -386,9 +402,9 @@ export async function POST(request: NextRequest) {
           llmQuestionGenTime: llmQuestionGenTimeModelMode, // Only relevant for model mode currently
           totalTime: totalTime,
           // Placeholders for detailed breakdowns - need implementation in services
-          llmTimingBreakdown: Prisma.JsonNull,
-          docTimingBreakdown: Prisma.JsonNull,
-          docMetricsJson: Prisma.JsonNull, // Placeholder - need doc metrics logic
+          llmTimingBreakdown: null,
+          docTimingBreakdown: null,
+          docMetricsJson: null,
         },
       });
       console.log(

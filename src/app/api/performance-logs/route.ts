@@ -41,6 +41,19 @@ interface ChartData {
   };
 }
 
+// Define a minimal interface for the DB log structure based on usage
+interface DbPerformanceLog {
+  timestamp: Date;
+  llmCompletionTime: number | null;
+  docProcessingTime: number | null;
+  embeddingTime: number | null;
+  vectorSearchTime: number | null;
+  totalTime: number;
+  llmTimingBreakdown: unknown | null; // Use unknown for safety
+  docTimingBreakdown: unknown | null; // Use unknown for safety
+  docMetricsJson: unknown | null; // Use unknown for safety
+}
+
 // Helper function to safely parse JSON from Prisma
 // Use 'unknown' instead of 'any' or 'Prisma.JsonValue' due to type resolution issues
 function safeParseJson<T>(
@@ -78,10 +91,12 @@ function safeParseJson<T>(
   return defaultValue;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
+  // Prefix unused req
   // Use the withAdminAuth wrapper to ensure only authenticated admins can access
   // Prefix session with _ as it's provided by wrapper but not used directly here
-  return withAdminAuth(req, async (_session) => {
+  return withAdminAuth(_req, async (_session) => {
+    // Corrected req to _req
     try {
       // Fetch all performance logs from the database, ordered by timestamp
       // Use lowercase 'performanceLog' as defined in the schema
@@ -108,8 +123,8 @@ export async function GET(req: NextRequest) {
       }
 
       // Transform the database logs into the ChartData structure
-      // Remove explicit 'any' type for log parameter
-      const logs: LogEntry[] = dbLogs.map((log) => ({
+      const logs: LogEntry[] = dbLogs.map((log: DbPerformanceLog) => ({
+        // Add type DbPerformanceLog
         total_llm_time: log.llmCompletionTime, // Map from llmCompletionTime
         total_doc_time:
           log.docProcessingTime ??
@@ -119,22 +134,27 @@ export async function GET(req: NextRequest) {
             (log.vectorSearchTime ?? 0), // Approximate doc time if not directly logged
       }));
 
-      // Remove explicit 'any' type for log parameter
       const documentMetrics: DocumentMetrics[] = dbLogs
-        .map((log) =>
-          safeParseJson<DocumentMetrics | null>(log.docMetricsJson, null)
+        .map(
+          (
+            log: DbPerformanceLog // Add type DbPerformanceLog
+          ) => safeParseJson<DocumentMetrics | null>(log.docMetricsJson, null)
         )
-        // Remove explicit 'any' type for metrics parameter
-        .filter((metrics): metrics is DocumentMetrics => metrics !== null); // Filter out nulls
+        .filter(
+          (metrics: DocumentMetrics | null): metrics is DocumentMetrics =>
+            metrics !== null // Add type DocumentMetrics | null
+        ); // Filter out nulls
 
-      // Remove explicit 'any' type for log parameter
-      const processingTimes: ProcessingTime[] = dbLogs.map((log) => ({
-        timestamp: log.timestamp.toISOString().split("T")[0], // Format as YYYY-MM-DD for chart axis
-        llm_time: log.llmCompletionTime ?? 0, // Use LLM completion time
-        doc_time:
-          log.docProcessingTime ??
-          (log.embeddingTime ?? 0) + (log.vectorSearchTime ?? 0), // Combine embedding and search for doc time if specific doc time absent
-      }));
+      const processingTimes: ProcessingTime[] = dbLogs.map(
+        (log: DbPerformanceLog) => ({
+          // Add type DbPerformanceLog
+          timestamp: log.timestamp.toISOString().split("T")[0], // Format as YYYY-MM-DD for chart axis
+          llm_time: log.llmCompletionTime ?? 0, // Use LLM completion time
+          doc_time:
+            log.docProcessingTime ??
+            (log.embeddingTime ?? 0) + (log.vectorSearchTime ?? 0), // Combine embedding and search for doc time if specific doc time absent
+        })
+      );
 
       const latestLog = dbLogs[dbLogs.length - 1];
       const latestTimings = {

@@ -1,3 +1,16 @@
+# Active Context - 2025-05-01 2:58:48 AM EDT
+
+- **Task:** Fix linting errors in `ask/route.ts` and `performance-logs/route.ts`.
+- **Completed:**
+  - Fixed duplicate `console.log` in `ask/route.ts`.
+  - Resolved TypeScript errors in `ask/route.ts` related to `Prisma.DocumentWhereInput`, implicit `any` types in `.map()`, and `Prisma.JsonNull` by removing unused imports, defining local types (`DocumentInfo`, `DocumentWhereClause`), and using `null` instead of `Prisma.JsonNull`.
+  - Resolved TypeScript errors in `performance-logs/route.ts` related to unused `req` parameter and implicit `any` types in `.map()` by prefixing the parameter with `_` and applying the `DbPerformanceLog` type annotation.
+- **Next Steps:**
+  - Update `progress.md`.
+  - Stage, commit, and push the changes.
+
+---
+
 # Active Context - 2025-05-01 2:36:20 AM EDT
 
 - **Task:** Coordinate the resolution of remaining build errors (ESLint and TypeScript) and adapt the performance metrics dashboard.

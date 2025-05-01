@@ -1,3 +1,27 @@
+# 2025-05-01 2:58:48 AM EDT - API Route Linting Fixes
+
+### Completed - 2025-05-01 2:58:48 AM EDT
+
+- **Task:** Fix linting errors in `ask/route.ts` and `performance-logs/route.ts`.
+- **Actions:**
+  - Fixed duplicate `console.log` in `ask/route.ts`.
+  - Resolved TypeScript errors in `ask/route.ts` (unused imports, type definitions for `whereClause`, implicit `any`, `Prisma.JsonNull` usage).
+  - Resolved TypeScript errors in `performance-logs/route.ts` (unused `req` parameter, implicit `any` types).
+- **Outcome:** Linting and type errors in the specified API routes are resolved.
+
+### In Progress - 2025-05-01 2:58:48 AM EDT
+
+- Updating Memory Bank (`activeContext.md`, `progress.md`).
+
+### Next Steps - 2025-05-01 2:58:48 AM EDT
+
+- Stage changes (`git add .`).
+- Commit changes (`git commit -m "fix: resolve linting and type errors in API routes"`).
+- Push changes (`git push origin main`).
+- Attempt completion.
+
+---
+
 # 2025-05-01 2:36:20 AM EDT - Build Errors Resolved & Metrics Adapted
 
 ### Completed - 2025-05-01 2:36:20 AM EDT
