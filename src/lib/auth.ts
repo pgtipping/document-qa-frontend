@@ -1,17 +1,10 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { AuthOptions, getServerSession, User } from "next-auth";
-import GithubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "./prisma"; // Use the singleton Prisma client instance
 import bcrypt from "bcrypt"; // Import bcrypt for password hashing
 
 // Ensure environment variables are set
-if (!process.env.GITHUB_ID) {
-  console.warn("Missing GITHUB_ID environment variable for GitHub OAuth.");
-}
-if (!process.env.GITHUB_SECRET) {
-  console.warn("Missing GITHUB_SECRET environment variable for GitHub OAuth.");
-}
 if (!process.env.NEXTAUTH_SECRET) {
   console.error("FATAL: Missing NEXTAUTH_SECRET environment variable.");
   // In a real app, you might throw an error or prevent startup
@@ -20,16 +13,7 @@ if (!process.env.NEXTAUTH_SECRET) {
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-    // Example GitHub Provider
-    ...(process.env.GITHUB_ID && process.env.GITHUB_SECRET
-      ? [
-          GithubProvider({
-            clientId: process.env.GITHUB_ID,
-            clientSecret: process.env.GITHUB_SECRET,
-          }),
-        ]
-      : []),
-    // Example Credentials Provider (implement authorization logic as needed)
+    // Credentials Provider (implement authorization logic as needed)
     CredentialsProvider({
       name: "Credentials",
       credentials: {
