@@ -4,11 +4,26 @@ import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { Loader2, BarChart4, Menu, X, LogIn, LogOut } from "lucide-react";
+import {
+  Loader2,
+  BarChart4,
+  Menu,
+  X,
+  LogIn,
+  LogOut,
+  HelpCircle,
+  BookOpen,
+} from "lucide-react";
 import { useMetrics } from "@/hooks/useMetrics";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Navigation() {
   const [showMetrics, setShowMetrics] = useState(false);
@@ -74,7 +89,8 @@ export default function Navigation() {
       href: "#",
       id: "resources",
       children: [
-        { name: "How to Use", href: "/docs/how-to-use" }, // Added link
+        { name: "How to Use", href: "/docs/how-to-use" },
+        { name: "Quiz Mode", href: "/quiz/new" },
         { name: "Documentation", href: "/docs" },
         { name: "API Reference", href: "/api-docs" },
         { name: "Tutorials", href: "/tutorials" },

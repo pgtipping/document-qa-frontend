@@ -1439,3 +1439,35 @@ const DocumentationPage = () => {
   <Card />
 </div>
 ```
+
+## Quiz Creation Mode Pattern [2025-05-02 18:02:22]
+
+- **Purpose:** Enable users to create and take quizzes generated from their documents to test understanding and knowledge retention.
+- **Components:**
+  - **Quiz Generator:** Creates quizzes from document content using LLM integration via `QuizGenerator.tsx` and `/api/quiz/generate`.
+  - **Quiz Display:** Renders quizzes with different question types via `QuizDisplay.tsx` and `/api/quiz/[quizId]`.
+  - **Quiz Results:** Shows performance with detailed feedback via `QuizResults.tsx` and `/api/quiz/[quizId]/results`.
+- **Database Schema:**
+  - **Quiz Model:** Stores quiz metadata (title, description, difficulty, etc.)
+  - **QuizQuestion Model:** Stores individual questions with multiple types (multiple choice, true/false, short answer)
+  - **QuizResponse Model:** Records user answers to questions
+  - **QuizResult Model:** Stores overall performance data with sharing capabilities
+- **Workflow:**
+  - **Quiz Creation:**
+    1. User selects a document and quiz parameters (size, difficulty)
+    2. Backend extracts document content
+    3. LLM generates a title and appropriate questions based on content
+    4. Questions are stored in the database with correct answers
+    5. User is directed to take the quiz immediately or view it later
+  - **Quiz Taking:**
+    1. User navigates to a specific quiz
+    2. Frontend loads questions without revealing answers
+    3. User submits answers for each question
+    4. Backend grades answers (exact matching for multiple choice, LLM evaluation for short answers)
+    5. Results are calculated and stored
+  - **Quiz Results:**
+    1. User views detailed performance breakdown
+    2. Results can be shared via unique links with optional privacy controls
+    3. Explanations for correct answers are provided
+- **Benefits:** Enhances learning and knowledge retention through interactive testing, provides objective measurement of document understanding.
+- **Integration Points:** Connected to document storage system, user authentication, and LLM services.

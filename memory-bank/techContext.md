@@ -2083,3 +2083,54 @@ If tests fail:
      // ... other metadata
    };
    ```
+
+## Quiz Creation Mode Implementation [2025-05-02 18:02:22]
+
+### Database Schema
+
+- **Database Service:** PostgreSQL
+- **ORM:** Prisma (prisma-client-js)
+- **Schema Location:** `document-qa-frontend/prisma/schema.prisma`
+- **Models Added:**
+  - `Quiz`: Stores quiz metadata (title, description, difficulty, etc.) with relations to User and Document
+  - `QuizQuestion`: Stores individual questions of different types with correct answers
+  - `QuizResponse`: Records user answers to individual questions
+  - `QuizResult`: Stores quiz completion data including score and sharing options
+
+### API Routes
+
+- **Framework:** Next.js API Routes (App Router)
+- **Authentication:** NextAuth.js with Prisma adapter
+- **Routes Implemented:**
+  - `/api/quiz/generate` [POST]: LLM-based quiz generation from document content
+  - `/api/quiz/[quizId]` [GET]: Retrieves quiz and questions
+  - `/api/quiz/[quizId]` [POST]: Submits answers and processes grading
+  - `/api/quiz/[quizId]/results` [GET]: Retrieves quiz results
+  - `/api/quiz/[quizId]/results` [POST]: Updates sharing settings
+  - `/api/quiz` [GET]: Lists all quizzes for the user
+
+### Frontend Components
+
+- **Framework:** React (with Next.js)
+- **UI Library:** shadcn/ui components
+- **Components:**
+  - `QuizGenerator.tsx`: Creates quizzes with document selection and parameters
+  - `QuizDisplay.tsx`: Renders quiz questions with multiple answer types
+  - `QuizResults.tsx`: Shows detailed performance with sharing controls
+- **Pages:**
+  - `/quiz/new`: Quiz creation interface
+  - `/quiz/[quizId]`: Quiz taking interface
+  - `/quiz/[quizId]/results`: Results viewing interface
+
+### LLM Integration
+
+- **Service:** Uses the existing LLM fallback system
+- **Prompt Engineering:**
+  - Quiz generation prompt templates in `/api/quiz/generate/route.ts`
+  - Answer evaluation prompt templates in `/api/quiz/[quizId]/route.ts`
+- **Token Handling:** Manages token limits for document content when generating questions
+
+### Navigation
+
+- Added "Quiz Mode" link to the Resources dropdown in `Navigation.tsx`
+- Integrated with existing authorization flow to ensure authenticated access

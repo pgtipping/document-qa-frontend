@@ -445,3 +445,48 @@ _Previous context entries kept for history, but the entry above reflects the cur
   - Removed `localStorage` check and `document_id` parameter from the `/api/ask` call in `ChatInterface.tsx`. Backend now uses all active documents from the user's session for context.
 - **Next Steps:**
   - Add comprehensive tests for session management, authorization, Q&A mode, multi-file management, and related API interactions.
+
+# active context - Work in Progress
+
+## 2025-05-02 18:02:22 - Quiz Creation Mode Implementation
+
+The Quiz Creation Mode feature has been implemented according to the project brief requirements. This includes:
+
+### Database Schema
+
+- Created Quiz, QuizQuestion, QuizResponse, and QuizResult models in the Prisma schema
+- Established proper relationships with User and Document models
+- Database migrations have been run successfully
+
+### Backend APIs
+
+- `/api/quiz/generate` - Creates quizzes from document content with LLM integration
+- `/api/quiz/[quizId]` - Handles quiz retrieval and answer submission
+- `/api/quiz/[quizId]/results` - Manages result viewing and sharing
+- `/api/quiz` - Lists all quizzes for the user
+
+### Frontend Components
+
+- `QuizGenerator.tsx` - Interface for creating quizzes from documents
+- `QuizDisplay.tsx` - Renders questions and captures answers
+- `QuizResults.tsx` - Shows performance with detailed feedback
+
+### Pages
+
+- `/quiz/new` - Quiz creation page
+- `/quiz/[quizId]` - Quiz taking page
+- `/quiz/[quizId]/results` - Results viewing page
+
+### Navigation
+
+- Added "Quiz Mode" to the Resources dropdown in Navigation component
+
+### Features Implemented
+
+- Quiz generation from document content using LLMs
+- Multiple question types (multiple choice, true/false, short answer)
+- Automatic grading with LLM evaluation for short answers
+- Result sharing with unique links
+- Performance statistics and feedback
+
+The Quiz Creation Mode implementation satisfies the requirements specified in the project brief and addresses one of the major gaps identified in the gap analysis.
