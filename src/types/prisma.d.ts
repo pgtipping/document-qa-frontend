@@ -20,6 +20,16 @@ declare module "@prisma/client" {
   interface PrismaClient {
     quiz: PrismaClient.QuizClient;
   }
+
+  // Add proper JSON handling types for Prisma
+  type NullableJsonNullValueInput = { JsonNull: true } | null;
+  type InputJsonValue =
+    | string
+    | number
+    | boolean
+    | { [key: string]: InputJsonValue }
+    | InputJsonValue[]
+    | null;
 }
 
 export {};
