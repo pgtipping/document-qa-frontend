@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create quiz in database
-    // @ts-expect-error - Prisma type issue in deployment environment
+    // @ts-expect-error - Property 'quiz' does not exist on PrismaClient type but exists at runtime
     const quiz = await prisma.quiz.create({
       data: {
         title: quizTitle || `Quiz on ${document.filename}`,
