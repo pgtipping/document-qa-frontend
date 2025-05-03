@@ -129,7 +129,6 @@ export async function POST(request: NextRequest) {
         userId: userId,
         documentId: documentId,
         questions: {
-          // @ts-expect-error - Prisma type issue with options field in deployment environment
           create: questions.map((q) => ({
             questionText: q.questionText,
             answerType: q.answerType,
@@ -151,7 +150,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       id: quiz.id,
       title: quiz.title,
-      questionCount: quiz.questions.length,
+      questionCount: questions.length,
       difficulty: quiz.difficulty,
       processingTime: totalTime,
     });
