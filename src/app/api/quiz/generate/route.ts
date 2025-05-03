@@ -4,6 +4,15 @@ import prisma from "@/lib/prisma";
 import { getDocumentTextContent } from "@/lib/document-processing";
 import { getCompletion } from "@/lib/llm-service";
 
+// Define the type for the question object returned from the LLM
+interface LLMQuizQuestion {
+  questionText: string;
+  answerType: string;
+  options: string[] | null;
+  correctAnswer: string;
+  explanation: string | null;
+}
+
 // Constants for quiz generation
 const DEFAULT_QUIZ_SIZE = 5; // Default number of questions
 const QUIZ_TITLE_PROMPT = `Create a short but descriptive title for a quiz about the following document content. The title should be at most 7 words:`;
@@ -103,7 +112,7 @@ export async function POST(request: NextRequest) {
     const questionsResponse = await getCompletion(questionsPrompt);
 
     // Parse the JSON response from the LLM
-    let questions;
+    let questions: LLMQuizQuestion[];
     try {
       if (!questionsResponse) {
         throw new Error("No response received from LLM");
@@ -120,6 +129,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create the quiz questions data for Prisma
+    const questionsData = questions.map((q: LLMQuizQuestion) => {
+      return {
+        questionText: q.questionText,
+        answerType: q.answerType,
+        options: q.options ? JSON.stringify(q.options) : null,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation || null,
+      };
+    });
+
     // Create quiz in database
     const quiz = await prisma.quiz.create({
       data: {
@@ -129,13 +149,7 @@ export async function POST(request: NextRequest) {
         userId: userId,
         documentId: documentId,
         questions: {
-          create: questions.map((q) => ({
-            questionText: q.questionText,
-            answerType: q.answerType,
-            options: q.options ? JSON.stringify(q.options) : null,
-            correctAnswer: q.correctAnswer,
-            explanation: q.explanation || null,
-          })),
+          create: questionsData,
         },
       },
       include: {
