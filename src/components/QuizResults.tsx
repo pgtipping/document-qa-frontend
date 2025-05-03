@@ -13,16 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import {
-  ClipboardCopy,
-  Download,
-  Share2,
-  Check,
-  X,
-  Clock,
-  Award,
-} from "lucide-react";
+import { ClipboardCopy, Share2, Check, X, Clock, Award } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,6 +59,7 @@ interface QuizResultData {
     title: string;
     description: string;
     document: {
+      id: string;
       filename: string;
     };
   };
@@ -325,7 +317,7 @@ export default function QuizResults({ quizId, resultId }: QuizResultsProps) {
                   <AccordionTrigger className="hover:no-underline py-4">
                     <div className="flex items-center gap-3 text-left">
                       <Badge
-                        variant={response.isCorrect ? "success" : "destructive"}
+                        variant={response.isCorrect ? "default" : "destructive"}
                         className="shrink-0"
                       >
                         {response.isCorrect ? "Correct" : "Incorrect"}

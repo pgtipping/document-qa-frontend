@@ -3,6 +3,7 @@ import { getAuthSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { getDocumentTextContent } from "@/lib/document-processing";
 import { getCompletion } from "@/lib/llm-service";
+import { Prisma } from "@prisma/client";
 
 // Define the type for the question object returned from the LLM
 interface LLMQuizQuestion {
@@ -129,14 +130,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create the quiz questions data for Prisma
+    // Create the quiz questions data for Prisma - proper null handling for JSON fields
     const questionsData = questions.map((q: LLMQuizQuestion) => {
       return {
         questionText: q.questionText,
         answerType: q.answerType,
-        options: q.options ? JSON.stringify(q.options) : null,
+        options: q.options === null ? Prisma.JsonNull : q.options,
         correctAnswer: q.correctAnswer,
-        explanation: q.explanation || null,
+        explanation: q.explanation ?? null,
       };
     });
 
