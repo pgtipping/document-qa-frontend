@@ -8,6 +8,18 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************
 
+// Define a Quiz interface to ensure proper typing
+interface Quiz {
+  id: string;
+  title?: string;
+  questions: {
+    id: string;
+    type: string;
+    correctAnswer?: string;
+    correctAnswerIndex?: number;
+  }[];
+}
+
 declare global {
   namespace Cypress {
     interface Chainable {
@@ -73,8 +85,8 @@ Cypress.Commands.add("mockDocumentList", () => {
 
 // Mock quiz generation
 Cypress.Commands.add("mockQuizGeneration", (documentId, responseQuizId) => {
-  cy.fixture("quizzes.json").then((quizzes) => {
-    const quiz = quizzes.find((q) => q.id === responseQuizId);
+  cy.fixture("quizzes.json").then((quizzes: Quiz[]) => {
+    const quiz = quizzes.find((q: Quiz) => q.id === responseQuizId);
 
     cy.intercept("POST", "/api/quiz/generate", {
       statusCode: 200,
@@ -101,8 +113,8 @@ Cypress.Commands.add("mockQuizSubmission", (quizId) => {
 
 // Mock quiz results
 Cypress.Commands.add("mockQuizResults", (quizId) => {
-  cy.fixture("quizzes.json").then((quizzes) => {
-    const quiz = quizzes.find((q) => q.id === quizId);
+  cy.fixture("quizzes.json").then((quizzes: Quiz[]) => {
+    const quiz = quizzes.find((q: Quiz) => q.id === quizId);
     if (!quiz) {
       throw new Error(`Quiz with ID ${quizId} not found in fixtures`);
     }
