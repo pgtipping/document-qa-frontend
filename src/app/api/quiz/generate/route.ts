@@ -15,12 +15,27 @@ interface LLMQuizQuestion {
   difficulty: string;
 }
 
+// Define template information structure
+interface TemplateInfoType {
+  name: string;
+  focusAreas: string[];
+  questionTypes: {
+    multipleChoice: number;
+    trueFalse: number;
+    shortAnswer: number;
+  };
+  promptModifier: string;
+}
+
 // Constants for quiz generation
 const DEFAULT_QUIZ_SIZE = 5; // Default number of questions
 const QUIZ_TITLE_PROMPT = `Create a short but descriptive title for a quiz about the following document content. The title should be at most 7 words:`;
+
+// Base prompt for quiz generation - will be modified based on template
 const QUIZ_QUESTIONS_PROMPT = `You are an expert education specialist creating a quiz for students to test their knowledge.
 Based on the following document content, generate {quizSize} quiz questions with difficulty level: {difficulty}.
 Each question should test understanding of key concepts in the document.
+{templateInstructions}
 
 Guidelines for difficulty levels:
 - Easy: Basic recall and simple comprehension questions
@@ -34,6 +49,8 @@ For each question, include:
 4. The correct answer
 5. A brief explanation of why the answer is correct
 6. The difficulty level (easy, medium, hard) - assign a mix of difficulties matching the overall quiz difficulty level
+
+{questionTypeDistribution}
 
 Format your response exactly as JSON with the following structure:
 [
@@ -71,6 +88,8 @@ export async function POST(request: NextRequest) {
       documentId,
       quizSize = DEFAULT_QUIZ_SIZE,
       difficulty = "medium",
+      templateId = "general",
+      templateInfo = null,
     } = body;
 
     if (!documentId) {
@@ -112,12 +131,43 @@ export async function POST(request: NextRequest) {
     )}`;
     const quizTitle = await getCompletion(titlePrompt);
 
-    // Generate quiz questions
+    // Generate template-specific instructions for the prompt
+    let templateInstructions = "";
+    let questionTypeDistribution = "";
+
+    if (templateInfo) {
+      // Add template focus areas
+      if (templateInfo.focusAreas && templateInfo.focusAreas.length > 0) {
+        templateInstructions += `\nFocus on these specific areas in the document:\n`;
+        templateInfo.focusAreas.forEach((area: string) => {
+          templateInstructions += `- ${area}\n`;
+        });
+      }
+
+      // Add template-specific prompt modifier
+      if (templateInfo.promptModifier) {
+        templateInstructions += `\n${templateInfo.promptModifier}\n`;
+      }
+
+      // Add question type distribution guidance
+      if (templateInfo.questionTypes) {
+        const { multipleChoice, trueFalse, shortAnswer } =
+          templateInfo.questionTypes;
+        questionTypeDistribution = `\nDistribute question types approximately as follows:
+- Multiple choice questions: ${multipleChoice}%
+- True/False questions: ${trueFalse}%
+- Short answer questions: ${shortAnswer}%\n`;
+      }
+    }
+
+    // Generate quiz questions with template customization
     let adjustedPrompt = QUIZ_QUESTIONS_PROMPT.replace(
       "{quizSize}",
       quizSize.toString()
-    );
-    adjustedPrompt = adjustedPrompt.replace("{difficulty}", difficulty);
+    )
+      .replace("{difficulty}", difficulty)
+      .replace("{templateInstructions}", templateInstructions)
+      .replace("{questionTypeDistribution}", questionTypeDistribution);
 
     const questionsPrompt = `${adjustedPrompt}\n\nDocument content:\n${documentContent}`;
     const questionsResponse = await getCompletion(questionsPrompt);
@@ -152,12 +202,14 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    // Create quiz in database
+    // Create quiz in database with template info
     const quiz = await prisma.quiz.create({
       data: {
         title: quizTitle || `Quiz on ${document.filename}`,
         description: `Quiz generated from ${document.filename}`,
         difficulty: difficulty,
+        templateId: templateId,
+        templateInfo: templateInfo ? templateInfo : Prisma.JsonNull,
         userId: userId,
         documentId: documentId,
         questions: {
@@ -178,6 +230,7 @@ export async function POST(request: NextRequest) {
       title: quiz.title,
       questionCount: questions.length,
       difficulty: quiz.difficulty,
+      template: templateId, // Use template property instead of templateId
       processingTime: totalTime,
     });
   } catch (error) {

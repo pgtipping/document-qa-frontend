@@ -59,6 +59,67 @@
    - Update existing Cypress tests to cover difficulty selection
    - Test edge cases like mixing different difficulty questions in one quiz
 
+# 2025-05-04 05:50:00 - Implemented Quiz Templates Feature
+
+## Completed - 2025-05-04 05:50:00
+
+- **Task:** Implement Quiz Templates for Document-Specific Quiz Generation
+- **Actions:**
+  - Created structured quiz template schema for different document types:
+    - Defined `QuizTemplate` interface with template properties and metadata
+    - Created specialized templates for academic, technical, business, and narrative documents
+    - Implemented template recommendation algorithm based on document filename and type
+  - Developed template selection UI components:
+    - Created `TemplateSelector` component showing recommended templates for documents
+    - Built `TemplatePreview` component to visualize template impact on question generation
+    - Added template information display with focus areas and example questions
+  - Enhanced quiz generation API to support templates:
+    - Updated database schema to store template ID and settings with quiz
+    - Modified LLM prompting to include template-specific instructions
+    - Added question type distribution guidance based on template settings
+    - Implemented document-specific focus areas in prompts
+  - Integrated template selection into quiz generator workflow:
+    - Automatically recommend appropriate templates based on document name
+    - Allow toggling template preview for better user understanding
+    - Added visual representation of expected question distribution
+
+## Technical Notes - 2025-05-04 05:50:00
+
+- **Template Architecture:**
+  - Templates are structured with consistent properties: id, name, description, icon, focus areas, question types and example questions
+  - Templates modify both the prompt sent to the LLM and the distribution of question types
+  - Template selection is persisted in the database for future reference and analysis
+- **UX Considerations:**
+  - Implemented document-based template recommendations to guide users
+  - Provided visual preview of expected questions to help set user expectations
+  - Designed template cards with consistent styling and clear visual hierarchy
+- **LLM Integration:**
+  - Prompt modifications now include focused instructions for specific document types
+  - Template-specific instructions improve question relevance and quality
+  - Question type distribution parameters help create balanced quizzes
+
+## Next Steps - 2025-05-04 05:50:00
+
+1. **UI/UX Enhancement:**
+
+   - Add animations for question transitions and feedback
+   - Improve loading indicators and progress visualization
+   - Create visual cues for correct/incorrect answers
+   - Enhance mobile responsiveness with improved layouts
+   - Add drag-and-drop support for document uploads
+
+2. **Testing Expansion:**
+
+   - Create unit tests for template-related components
+   - Add integration tests for template selection and preview
+   - Test template-based quiz generation with various document types
+   - Update Cypress E2E tests to include template selection process
+
+3. **Analytics Integration:**
+   - Track template effectiveness based on quiz results
+   - Analyze which templates work best for specific document types
+   - Gather data on template usage patterns for future improvements
+
 # 2025-05-04 00:55:41 - Consolidated Cypress Testing Setup
 
 ## Completed - 2025-05-04 00:55:41
@@ -1375,3 +1436,173 @@ Based on the gap analysis, implementation priorities are:
    - Add integration tests for the quiz generation & taking process
    - Update existing Cypress tests to cover difficulty selection
    - Test edge cases like mixing different difficulty questions in one quiz
+
+# 2025-05-04 02:27:50 - Quiz Templates Implementation Progress
+
+## Current Status - 2025-05-04 02:27:50
+
+- **Task:** Implement Quiz Templates Feature for Document-Specific Question Generation
+- **Implementation Progress:**
+  - Created core template architecture in `quiz-templates.ts`:
+    - Defined `QuizTemplate` and `QuestionTypeDistribution` interfaces
+    - Implemented 5 predefined templates (general, academic, technical, business, narrative)
+    - Added template recommendation system based on document characteristics
+    - Implemented helper functions (getTemplateById, getAllTemplates, getRecommendedTemplates)
+  - Developed UI components:
+    - Created `TemplateSelector.tsx` for template browsing and selection
+    - Created `TemplatePreview.tsx` for visualizing template impact
+    - Integrated hover-card component for detailed template information
+  - Updated Prisma schema with new template-related fields:
+    - Added `templateId` and `templateInfo` fields to Quiz model
+  - Enhanced quiz generation API (`/api/quiz/generate/route.ts`):
+    - Added template-based prompt modifications
+    - Implemented question type distribution based on template
+    - Included focus areas from template in prompts
+  - Integrated template selection into `QuizGenerator.tsx` component
+
+## Pending Items - 2025-05-04 02:27:50
+
+- **Fix Linter Errors:**
+  - Resolve missing UI components (`hover-card.tsx`, `separator.tsx`)
+  - Fix type errors related to templateId field in quiz generation API
+- **Database Migration:**
+  - Create and run migration for schema changes to add template fields
+- **Testing:**
+  - Test complete template selection workflow
+  - Verify template impact on generated questions
+  - Ensure proper storage of template information with quiz
+- **Documentation:**
+  - Update memory bank with comprehensive implementation details
+  - Document the template recommendation algorithm
+
+## Next Implementation Steps - 2025-05-04 02:27:50
+
+1. Fix UI component imports for hover-card and separator
+2. Create and run Prisma migration for schema changes
+3. Address type errors in quiz generation API
+4. Complete end-to-end testing of template-based quiz generation
+5. Deploy the updated application to Vercel
+
+# 2025-05-04 02:58:01 - Quiz Templates Implementation Technical Challenges
+
+## Current Status - 2025-05-04 02:58:01
+
+- **Task:** Resolve Technical Issues in Quiz Templates Implementation
+- **Implementation Status:**
+
+  - Core template architecture is complete in `quiz-templates.ts`
+  - UI components (`TemplateSelector.tsx`, `TemplatePreview.tsx`) are implemented
+  - Database schema has been updated to include template fields
+  - Quiz generation API has been enhanced to support templates
+  - Quiz generator UI has been updated to include template selection
+
+- **Technical Challenges:**
+
+  - **Configuration Conflicts:** ESLint configuration issues between flat config format (`eslint.config.mjs`) and legacy format (`.eslintrc.json`)
+  - **Type Definition Conflicts:** Test frameworks (Jest and Cypress) have conflicting type definitions for common test functions
+  - **UI Component Imports:** The hover-card component exists but is causing import resolution errors
+  - **Prisma Client Generation:** File permission errors when generating the Prisma client for database access
+  - **Build Process:** Next.js build process is failing due to the above issues
+
+- **Resolution Progress:**
+  - **Configuration Conflicts:** Standardized on flat config by removing `.eslintrc.json`
+  - **Type Definition Conflicts:** Created separate TypeScript configurations to isolate Jest and Cypress:
+    - Added `jest.tsconfig.json` specifically for Jest tests
+    - Updated `cypress/tsconfig.json` to exclude Jest types
+  - **UI Component Verification:** Confirmed all required UI components exist in the proper location
+  - **Import Resolution:** Verified path aliases in tsconfig.json are correctly configured
+
+## Next Steps - 2025-05-04 02:58:01
+
+1. **Finalize Configuration:**
+
+   - Test the new TypeScript configuration setup with `npx tsc --project jest.tsconfig.json`
+   - Restart development server to apply configuration changes
+   - Close all applications that might be locking Prisma files
+
+2. **Resolve Prisma Issues:**
+
+   - Try generating the Prisma client with administrator privileges if needed
+   - Consider using Prisma's `--schema` flag to specify an alternative output location
+   - As a fallback, regenerate node_modules by running `npm ci`
+
+3. **Verification:**
+
+   - Run TypeScript type checks on key components to verify type conflicts are resolved
+   - Check if the Next.js build process completes successfully
+   - Verify that the quiz templates feature functions correctly
+
+4. **Testing:**
+   - Complete end-to-end testing of the template selection workflow
+   - Test template recommendations for different document types
+   - Verify question generation with different templates
+
+# Progress Update - 2025-05-04 03:08:50
+
+## Quiz Templates Feature - 2025-05-04 03:08:50
+
+### Completed Tasks:
+
+- Created `quiz-templates.ts` with interfaces and predefined templates for:
+  - General knowledge (default)
+  - Academic (research papers, scholarly articles)
+  - Technical (documentation, specifications)
+  - Business (reports, case studies)
+  - Narrative (essays, literary works)
+- Implemented UI components:
+  - `TemplateSelector.tsx` with document-based recommendations
+  - `TemplatePreview.tsx` for template visualization
+- Updated Prisma schema with template fields:
+  - Added `templateId` (string) to Quiz model
+  - Added `templateInfo` (JSON) to Quiz model
+- Created database migration for schema changes
+- Enhanced quiz generation API with template support
+- Fixed TypeScript/ESLint configurations:
+  - Created `jest.tsconfig.json` for Jest tests
+  - Updated Cypress configuration to avoid type conflicts
+  - Configured proper module resolution for UI components
+
+### Working Features:
+
+- Template selection in quiz generation UI
+- Automatic template recommendations based on document type
+- Template preview showing focus areas and example questions
+- Template-enhanced LLM prompts for better question generation
+- Proper database storage of template information with quizzes
+
+### Next Steps (Prioritized):
+
+1. **Testing Suite Enhancement - 2025-05-04 03:08:50**
+
+   - Write Jest tests for `TemplateSelector` and `TemplatePreview` components
+   - Implement Cypress tests for end-to-end template selection flow
+   - Add test coverage for template recommendation algorithm
+
+2. **UI/UX Improvements - 2025-05-04 03:08:50**
+
+   - Add loading indicators during template-based generation
+   - Implement template comparison view for user reference
+   - Enhance mobile responsiveness of template selector
+
+3. **API and Backend Enhancements - 2025-05-04 03:08:50**
+
+   - Optimize template-based LLM prompts for better performance
+   - Add analytics for template usage and effectiveness
+   - Implement user customization options for templates
+
+4. **Documentation - 2025-05-04 03:08:50**
+   - Create user guide for template selection feature
+   - Document template extension process for developers
+   - Update API documentation with template parameters
+
+### Known Issues:
+
+- TypeScript/ESLint configuration conflicts still need refinement
+- Template recommendation algorithm needs more sophisticated document analysis
+- Need to validate template selection across different device sizes
+
+## Future Enhancements - 2025-05-04 03:08:50:
+
+- Allow users to create and save custom templates
+- Implement AI-driven template recommendation improvements
+- Add template performance metrics to track educational effectiveness

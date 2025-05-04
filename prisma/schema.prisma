@@ -37,6 +37,8 @@ model Quiz {
   description String?     // Optional description
   difficulty  String?     // Optional difficulty level (easy, medium, hard)
   timeLimit   Int?        // Optional time limit in minutes
+  templateId  String?     // ID of the template used for generation
+  templateInfo Json?      // Additional template settings used (stored as JSON)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   

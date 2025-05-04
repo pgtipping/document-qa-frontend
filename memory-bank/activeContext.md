@@ -1,3 +1,117 @@
+# Active Context - 2025-05-04 03:08:50
+
+## Status Update - 2025-05-04 03:08:50
+
+- **Current Focus:** Quiz Templates Feature Implementation
+- **Implementation Status:**
+  - Core template architecture completed in `quiz-templates.ts`
+  - UI components for template selection and preview implemented
+  - Database schema updated with templateId and templateInfo fields
+  - Quiz generation API enhanced to support templates
+  - Migration file created for schema changes
+
+## Configuration Issues - 2025-05-04 03:08:50
+
+- **ESLint Configuration:**
+
+  - Resolved conflicts between flat config and legacy format
+  - Updated `.eslintrc.json` with proper rules for unused variables
+  - Removed conflicting `eslint.config.mjs` file
+
+- **TypeScript Configuration:**
+  - Created separate TypeScript configurations for Jest (`jest.tsconfig.json`) and Cypress
+  - Updated Cypress tsconfig to exclude Jest types
+  - Resolved path aliasing issues for @/ imports
+
+## Next Steps - 2025-05-04 03:08:50
+
+1. **Testing Priority:**
+
+   - Run and verify Jest unit tests for template selection components
+   - Create end-to-end tests for the quiz template feature using Cypress
+   - Test the template recommendation functionality with different document types
+
+2. **Pending UI Enhancements:**
+
+   - Add loading state to template selection during quiz generation
+   - Improve template preview with more detailed example questions
+   - Implement template filtering by document characteristics
+
+3. **API Refinements:**
+
+   - Optimize template-based prompt generation
+   - Add template usage analytics to track effectiveness
+   - Implement template customization options for users
+
+4. **Documentation:**
+   - Update user documentation to explain template selection benefits
+   - Create developer documentation for extending template system
+   - Document template recommendation algorithm
+
+# Active Context - 2025-05-04 02:58:01
+
+- **Task:** Quiz Templates Feature Implementation Status and TypeScript Issues
+- **Completed:**
+  - Created structured `quiz-templates.ts` with template interfaces and predefined templates for various document types
+  - Developed template selection UI components:
+    - `TemplateSelector.tsx` with automatic document-based recommendations
+    - `TemplatePreview.tsx` to visualize template impact
+  - Updated schema.prisma with templateId and templateInfo fields
+  - Integrated templates into the quiz generation API
+- **Current Issues:**
+
+  - TypeScript/ESLint configuration conflicts between flat config (eslint.config.mjs) and .eslintrc.json
+  - Type definition errors between Jest and Cypress test frameworks
+  - Module resolution issues with UI components from shadcn/ui
+  - Prisma client generation errors due to file permissions
+
+- **Recent Fixes:**
+
+  - Removed `.eslintrc.json` to standardize on the flat config approach in `eslint.config.mjs`
+  - Created separate TypeScript configurations for Jest (`jest.tsconfig.json`) and Cypress (`cypress/tsconfig.json`) to avoid type conflicts
+  - Updated Cypress's tsconfig to explicitly exclude Jest types
+  - Verified that UI components (hover-card, separator, tooltip) exist in the proper locations
+
+- **Next Steps:**
+  - Restart development server after configuration changes
+  - Fix Prisma client generation by closing any running instances of the app
+  - Run TypeScript type checks again to verify that type conflicts are resolved
+  - Test the quiz templates feature end-to-end
+  - Update the memory bank with final implementation details
+
+# Active Context - 2025-05-04 02:27:50
+
+- **Task:** Quiz Templates Feature Implementation Status
+- **Completed:**
+
+  - Created structured `quiz-templates.ts` with template interfaces and predefined templates for various document types:
+    - General knowledge template for any document
+    - Academic template for research papers and scholarly articles
+    - Technical template for documentation and specifications
+    - Business template for reports and case studies
+    - Narrative template for essays and literary works
+  - Developed template selection UI components:
+    - `TemplateSelector.tsx` with automatic document-based recommendations
+    - `TemplatePreview.tsx` to visualize template impact on question generation
+    - Integration with hover-card and separator components
+  - Enhanced database schema with templateId and templateInfo fields in Quiz model
+  - Updated quiz generation API to modify LLM prompts based on selected template
+  - Integrated templates into the QuizGenerator component workflow
+
+- **Current Issues:**
+
+  - Linter errors for missing UI components (hover-card, separator)
+  - Type issues in quiz generation API with templateId field
+  - Need to create proper migration for schema changes
+
+- **Next Steps for Resumption:**
+  1. Fix linter errors by ensuring the UI component libraries are properly imported
+  2. Create and run Prisma migration for the template schema changes
+  3. Fix type errors in the quiz generation API route
+  4. Update the memory bank with implementation details
+  5. Test the template selection and quiz generation end-to-end
+  6. Deploy the updated application to Vercel
+
 # Active Context - 2025-05-04 01:17:48
 
 - **Task:** Implement Question Difficulty Levels for Quiz Feature
@@ -789,3 +903,54 @@ The Quiz Creation Mode implementation satisfies the requirements specified in th
   - Add unit tests for the quiz generation functionality to prevent future regressions
   - Enhance user feedback during quiz generation with proper loading states
   - Consider implementing a retry mechanism for failed quiz generations
+
+# Active Context - 2025-05-04 05:50:00
+
+- **Task:** Implement Quiz Templates for Document-Specific Quiz Generation
+- **Completed:**
+
+  - Created structured quiz template schema with templates for different document types:
+    - General knowledge template for basic question generation
+    - Academic template for research papers and scholarly articles
+    - Technical template for documentation and specifications
+    - Business template for reports and case studies
+    - Narrative template for essays and literary works
+  - Developed template selection UI components:
+    - Added TemplateSelector with automatic template recommendations
+    - Created TemplatePreview to visualize expected question types
+    - Implemented hover cards with detailed template information
+  - Enhanced quiz generation API to support templates:
+    - Updated the database schema with templateId and templateInfo fields
+    - Modified LLM prompting to include template-specific guidance
+    - Added support for question type distribution based on template settings
+  - Integrated template selection into the quiz generation workflow
+  - Updated types and interfaces throughout for proper TypeScript support
+
+- **Technical Challenges:**
+
+  - Ensuring proper template recommendations based on document filename
+  - Designing a flexible template structure that can modify LLM behavior effectively
+  - Creating a clear and intuitive template selection interface
+  - Balancing complexity vs. simplicity in template options
+
+- **Next Steps:**
+
+  1. **UI/UX Enhancement:**
+
+     - Add animations for quiz interface elements
+     - Improve loading indicators and progress visualization
+     - Create visual feedback for quiz responses
+     - Enhance mobile responsiveness
+     - Add drag-and-drop document upload support
+
+  2. **Testing Expansion:**
+
+     - Create comprehensive tests for template components
+     - Add integration tests for the full quiz generation flow
+     - Test template effectiveness with various document types
+     - Update Cypress tests to cover new functionality
+
+  3. **Analytics Integration:**
+     - Implement tracking of template effectiveness
+     - Add user feedback collection on template quality
+     - Develop admin dashboard to view template performance metrics

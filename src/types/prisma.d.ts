@@ -1,6 +1,18 @@
 // Type augmentations for Prisma Client
 import { Prisma, Quiz } from "@prisma/client";
 
+// Define a type for template info instead of using 'any'
+interface TemplateInfo {
+  name: string;
+  focusAreas: string[];
+  questionTypes: {
+    multipleChoice: number;
+    trueFalse: number;
+    shortAnswer: number;
+  };
+  promptModifier?: string;
+}
+
 declare global {
   // Augment PrismaClient
   namespace PrismaClient {
@@ -41,6 +53,18 @@ declare global {
       count: <T extends Prisma.QuizCountArgs>(args: T) => Promise<number>;
     }
   }
+
+  namespace PrismaJson {
+    interface QuizCreateInput extends Prisma.QuizCreateInput {
+      templateId?: string;
+      templateInfo?: TemplateInfo | Prisma.JsonNull;
+    }
+
+    interface QuizUncheckedCreateInput extends Prisma.QuizUncheckedCreateInput {
+      templateId?: string;
+      templateInfo?: TemplateInfo | Prisma.JsonNull;
+    }
+  }
 }
 
 // Augment the PrismaClient instance
@@ -58,6 +82,18 @@ declare module "@prisma/client" {
     | { [key: string]: InputJsonValue }
     | InputJsonValue[]
     | null;
+
+  interface Prisma {
+    QuizCreateInput: Prisma.QuizCreateInput & {
+      templateId?: string;
+      templateInfo?: TemplateInfo | Prisma.JsonNull;
+    };
+
+    QuizUncheckedCreateInput: Prisma.QuizUncheckedCreateInput & {
+      templateId?: string;
+      templateInfo?: TemplateInfo | Prisma.JsonNull;
+    };
+  }
 }
 
 export {};
