@@ -67,6 +67,7 @@ model QuizQuestion {
   options     Json?     // For multiple choice, contains options as JSON array
   correctAnswer String   @db.Text // The correct answer
   points      Int       @default(1) // Points for this question
+  difficulty  String    @default("medium") // Difficulty level (easy, medium, hard)
   explanation String?   @db.Text // Optional explanation of the answer
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

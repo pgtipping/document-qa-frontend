@@ -18,7 +18,8 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Flag } from "lucide-react";
 import { CountdownTimer } from "@/ui/CountdownTimer";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Zap, Trophy, Badge as BadgeIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 // Define types
 interface Question {
@@ -27,6 +28,7 @@ interface Question {
   answerType: "multiple_choice" | "true_false" | "short_answer";
   options: string[] | null;
   points: number;
+  difficulty: string;
 }
 
 interface QuizData {
@@ -63,6 +65,32 @@ export default function QuizDisplay({ quizId, onComplete }: QuizDisplayProps) {
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [submitting, setSubmitting] = useState(false);
   const [showTimeWarning, setShowTimeWarning] = useState(false);
+
+  // Helper function to get difficulty badge styles and icon
+  const getDifficultyBadge = (difficulty: string) => {
+    let color = "";
+    let icon = null;
+
+    switch (difficulty) {
+      case "easy":
+        color = "bg-green-100 text-green-700 hover:bg-green-100";
+        icon = <Zap className="h-3 w-3 mr-1" />;
+        break;
+      case "medium":
+        color = "bg-amber-100 text-amber-700 hover:bg-amber-100";
+        icon = <BadgeIcon className="h-3 w-3 mr-1" />;
+        break;
+      case "hard":
+        color = "bg-red-100 text-red-700 hover:bg-red-100";
+        icon = <Trophy className="h-3 w-3 mr-1" />;
+        break;
+      default:
+        color = "bg-slate-100 text-slate-700";
+        break;
+    }
+
+    return { color, icon };
+  };
 
   // Fetch quiz data
   useEffect(() => {
@@ -271,16 +299,33 @@ export default function QuizDisplay({ quizId, onComplete }: QuizDisplayProps) {
           <h3 className="text-lg font-medium">
             {currentQuestion.questionText}
           </h3>
-          <p className="text-sm text-muted-foreground">
-            {currentQuestion.points} point
-            {currentQuestion.points !== 1 ? "s" : ""}
-            {" • "}
-            {currentQuestion.answerType === "multiple_choice"
-              ? "Choose one option"
-              : currentQuestion.answerType === "true_false"
-              ? "Select True or False"
-              : "Enter your answer"}
-          </p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>
+              {currentQuestion.points} point
+              {currentQuestion.points !== 1 ? "s" : ""}
+            </span>
+            <span>•</span>
+            <span>
+              {currentQuestion.answerType === "multiple_choice"
+                ? "Choose one option"
+                : currentQuestion.answerType === "true_false"
+                ? "Select True or False"
+                : "Enter your answer"}
+            </span>
+            <span>•</span>
+            {currentQuestion.difficulty && (
+              <Badge
+                variant="outline"
+                className={`${
+                  getDifficultyBadge(currentQuestion.difficulty).color
+                } flex items-center`}
+              >
+                {getDifficultyBadge(currentQuestion.difficulty).icon}
+                {currentQuestion.difficulty.charAt(0).toUpperCase() +
+                  currentQuestion.difficulty.slice(1)}
+              </Badge>
+            )}
+          </div>
         </div>
 
         {/* Answer Input */}

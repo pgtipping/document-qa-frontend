@@ -21,8 +21,26 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  BadgeHelp,
+  Zap,
+  Trophy,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { Badge } from "@/components/ui/badge";
 
 type Document = {
   id: string;
@@ -106,6 +124,33 @@ export default function QuizGenerator({
     }
   };
 
+  // Get color and icon for difficulty
+  const getDifficultyColor = (diff: string) => {
+    switch (diff) {
+      case "easy":
+        return "bg-green-100 text-green-700 hover:bg-green-200";
+      case "medium":
+        return "bg-amber-100 text-amber-700 hover:bg-amber-200";
+      case "hard":
+        return "bg-red-100 text-red-700 hover:bg-red-200";
+      default:
+        return "";
+    }
+  };
+
+  const getDifficultyIcon = (diff: string) => {
+    switch (diff) {
+      case "easy":
+        return <Zap className="h-4 w-4 mr-2" />;
+      case "medium":
+        return <Badge className="h-4 w-4 mr-2" />;
+      case "hard":
+        return <Trophy className="h-4 w-4 mr-2" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -161,21 +206,106 @@ export default function QuizGenerator({
 
         {/* Difficulty */}
         <div className="space-y-2">
-          <Label htmlFor="difficulty-select">Difficulty</Label>
-          <Select
-            value={difficulty}
-            onValueChange={setDifficulty}
-            disabled={isGenerating}
-          >
-            <SelectTrigger id="difficulty-select">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="easy">Easy</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="hard">Hard</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center">
+            <Label htmlFor="difficulty-select" className="mr-2">
+              Difficulty
+            </Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <BadgeHelp className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="w-[220px] text-sm">
+                    Select the overall difficulty of your quiz. The AI will
+                    generate questions matching this level.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={`flex justify-start items-center ${
+                    difficulty === "easy" ? getDifficultyColor("easy") : ""
+                  } ${
+                    difficulty === "easy" ? "border-2 border-green-500" : ""
+                  }`}
+                  onClick={() => setDifficulty("easy")}
+                  disabled={isGenerating}
+                >
+                  {getDifficultyIcon("easy")}
+                  Easy
+                </Button>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">Easy Difficulty</h4>
+                  <p className="text-sm">
+                    Basic recall and comprehension questions. Ideal for
+                    beginners or initial assessment of document understanding.
+                  </p>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={`flex justify-start items-center ${
+                    difficulty === "medium" ? getDifficultyColor("medium") : ""
+                  } ${
+                    difficulty === "medium" ? "border-2 border-amber-500" : ""
+                  }`}
+                  onClick={() => setDifficulty("medium")}
+                  disabled={isGenerating}
+                >
+                  {getDifficultyIcon("medium")}
+                  Medium
+                </Button>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">Medium Difficulty</h4>
+                  <p className="text-sm">
+                    Application and analysis questions requiring deeper
+                    understanding of concepts covered in the document.
+                  </p>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={`flex justify-start items-center ${
+                    difficulty === "hard" ? getDifficultyColor("hard") : ""
+                  } ${difficulty === "hard" ? "border-2 border-red-500" : ""}`}
+                  onClick={() => setDifficulty("hard")}
+                  disabled={isGenerating}
+                >
+                  {getDifficultyIcon("hard")}
+                  Hard
+                </Button>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">Hard Difficulty</h4>
+                  <p className="text-sm">
+                    Evaluation and synthesis questions requiring deep
+                    understanding and connection between concepts in the
+                    document.
+                  </p>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
+          </div>
         </div>
 
         {/* Error Alert */}

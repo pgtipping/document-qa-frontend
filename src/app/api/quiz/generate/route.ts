@@ -12,14 +12,20 @@ interface LLMQuizQuestion {
   options: string[] | null;
   correctAnswer: string;
   explanation: string | null;
+  difficulty: string;
 }
 
 // Constants for quiz generation
 const DEFAULT_QUIZ_SIZE = 5; // Default number of questions
 const QUIZ_TITLE_PROMPT = `Create a short but descriptive title for a quiz about the following document content. The title should be at most 7 words:`;
 const QUIZ_QUESTIONS_PROMPT = `You are an expert education specialist creating a quiz for students to test their knowledge.
-Based on the following document content, generate {quizSize} quiz questions.
+Based on the following document content, generate {quizSize} quiz questions with difficulty level: {difficulty}.
 Each question should test understanding of key concepts in the document.
+
+Guidelines for difficulty levels:
+- Easy: Basic recall and simple comprehension questions
+- Medium: Application and analysis questions requiring understanding of concepts
+- Hard: Evaluation and synthesis questions requiring deep understanding and connection between concepts
 
 For each question, include:
 1. A clear, concise question
@@ -27,6 +33,7 @@ For each question, include:
 3. For multiple_choice: 4 possible answer options labeled A, B, C, D
 4. The correct answer
 5. A brief explanation of why the answer is correct
+6. The difficulty level (easy, medium, hard) - assign a mix of difficulties matching the overall quiz difficulty level
 
 Format your response exactly as JSON with the following structure:
 [
@@ -35,7 +42,8 @@ Format your response exactly as JSON with the following structure:
     "answerType": "multiple_choice", 
     "options": ["Option A", "Option B", "Option C", "Option D"],
     "correctAnswer": "Option A",
-    "explanation": "Explanation of why Option A is correct"
+    "explanation": "Explanation of why Option A is correct",
+    "difficulty": "medium"
   },
   ...
 ]
@@ -105,10 +113,12 @@ export async function POST(request: NextRequest) {
     const quizTitle = await getCompletion(titlePrompt);
 
     // Generate quiz questions
-    const adjustedPrompt = QUIZ_QUESTIONS_PROMPT.replace(
+    let adjustedPrompt = QUIZ_QUESTIONS_PROMPT.replace(
       "{quizSize}",
       quizSize.toString()
     );
+    adjustedPrompt = adjustedPrompt.replace("{difficulty}", difficulty);
+
     const questionsPrompt = `${adjustedPrompt}\n\nDocument content:\n${documentContent}`;
     const questionsResponse = await getCompletion(questionsPrompt);
 
@@ -138,6 +148,7 @@ export async function POST(request: NextRequest) {
         options: q.options === null ? Prisma.JsonNull : q.options,
         correctAnswer: q.correctAnswer,
         explanation: q.explanation ?? null,
+        difficulty: q.difficulty || difficulty, // Default to overall quiz difficulty if not specified
       };
     });
 

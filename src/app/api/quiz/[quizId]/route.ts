@@ -11,6 +11,7 @@ interface QuizQuestionType {
   options: any;
   correctAnswer: string;
   points: number;
+  difficulty: string;
 }
 
 // GET: Retrieve quiz by ID
@@ -65,6 +66,7 @@ export async function GET(
       questionText: question.questionText,
       answerType: question.answerType,
       points: question.points,
+      difficulty: question.difficulty,
       options: question.options ? JSON.parse(question.options as string) : null,
     }));
 
@@ -138,7 +140,18 @@ export async function POST(
 
     // @ts-ignore - We know the structure matches QuizQuestionType
     const questionMap = new Map<string, QuizQuestionType>(
-      quiz.questions.map((q) => [q.id, q])
+      quiz.questions.map((q) => [
+        q.id,
+        {
+          id: q.id,
+          questionText: q.questionText,
+          answerType: q.answerType,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          points: q.points,
+          difficulty: q.difficulty || "medium", // Default to medium if not set
+        },
+      ])
     );
 
     // Create quiz result

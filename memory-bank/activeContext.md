@@ -1,3 +1,98 @@
+# Active Context - 2025-05-04 01:17:48
+
+- **Task:** Implement Question Difficulty Levels for Quiz Feature
+- **Completed:**
+
+  - Added `difficulty` field to the `QuizQuestion` model in the Prisma schema with a default value of "medium"
+  - Created a migration to update the database schema
+  - Enhanced the quiz generation API to support per-question difficulty:
+    - Updated LLM prompt to generate questions with varied difficulty levels
+    - Added guidelines for each difficulty level in the prompt
+    - Modified the question data structure to include difficulty field
+  - Improved the quiz creation UI:
+    - Replaced dropdown select with interactive difficulty buttons
+    - Added visual indicators (colors and icons) for each difficulty level
+    - Implemented tooltips and hover cards with detailed explanations
+  - Enhanced the quiz display to show question difficulty levels:
+    - Added difficulty badges with appropriate colors and icons
+    - Positioned badge alongside question points and type information
+    - Ensured mobile-friendly responsive layout
+  - Successfully tested end-to-end functionality from creation to display
+
+- **Technical Challenges:**
+
+  - Ensuring proper TypeScript interfaces for quiz questions with the new difficulty field
+  - Handling default difficulty values when older questions might not have the field
+  - Making sure the API properly carries difficulty information between frontend and backend
+
+- **Next Steps:**
+
+  1. **Quiz Templates Development:** (Next priority)
+
+     - Define data structures for quiz templates (JSON schema)
+     - Create UI for template selection in quiz creation form
+     - Build backend logic to apply templates to question generation
+     - Support specialized templates for common document formats
+     - Implement template preview functionality
+     - Test template-based quiz generation with various document types
+
+  2. **UI/UX Enhancements:** (Following priority)
+
+     - Add smooth animations for question transitions
+     - Implement better progress indicators for multi-step processes
+     - Create visual cues for correct/incorrect answers
+     - Enhance mobile responsiveness with improved layouts
+     - Add drag-and-drop support for document uploads
+
+  3. **Testing Expansion:**
+     - Create unit tests for difficulty-related components
+     - Create integration tests for the quiz generation & taking process
+     - Update existing Cypress tests to cover difficulty selection
+
+# Active Context - 2025-05-04 05:15:00
+
+- **Task:** Implement Question Difficulty Levels for Quiz Feature
+- **Completed:**
+
+  - Added `difficulty` field to the `QuizQuestion` model in the Prisma schema with a default value of "medium"
+  - Created a migration to update the database schema
+  - Enhanced the quiz generation API to support per-question difficulty:
+    - Updated LLM prompt to generate questions with varied difficulty levels
+    - Added guidelines for each difficulty level in the prompt
+    - Modified the question data structure to include difficulty field
+  - Improved the quiz creation UI:
+    - Replaced dropdown select with interactive difficulty buttons
+    - Added visual indicators (colors and icons) for each difficulty level
+    - Implemented tooltips and hover cards with detailed explanations
+  - Enhanced the quiz display to show question difficulty levels:
+    - Added difficulty badges with appropriate colors and icons
+    - Positioned badge alongside question points and type information
+    - Ensured mobile-friendly responsive layout
+  - Successfully tested end-to-end functionality from creation to display
+
+- **Technical Challenges:**
+
+  - Ensuring proper TypeScript interfaces for quiz questions with the new difficulty field
+  - Handling default difficulty values when older questions might not have the field
+  - Making sure the API properly carries difficulty information between frontend and backend
+
+- **Next Steps:**
+
+  1. **Quiz Templates:**
+
+     - Define template structure for different document types
+     - Create template selection UI in quiz generation form
+     - Implement preview functionality for template selection
+     - Add template-specific question generation logic
+     - Support common document formats with specialized templates
+
+  2. **UI/UX Enhancements:**
+     - Add smooth animations for question transitions
+     - Implement better progress indicators for multi-step processes
+     - Create visual cues for correct/incorrect answers
+     - Enhance mobile responsiveness with improved layouts
+     - Add drag-and-drop support for document uploads
+
 # Active Context - 2025-05-04 00:55:41
 
 - **Task:** Consolidate and Organize Cypress Testing Setup

@@ -23,7 +23,7 @@ export function CountdownTimer({
   showIcon = true,
 }: CountdownTimerProps) {
   const [secondsRemaining, setSecondsRemaining] = useState(initialSeconds);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused, _setIsPaused] = useState(false);
   const [warningTriggered, setWarningTriggered] = useState(false);
 
   // Format seconds as mm:ss
