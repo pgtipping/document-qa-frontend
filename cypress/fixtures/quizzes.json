@@ -1,0 +1,78 @@
+[
+  {
+    "id": "quiz-1",
+    "title": "Sample Quiz 1",
+    "documentId": "doc-1",
+    "userId": "user-1",
+    "numQuestions": 3,
+    "difficulty": "medium",
+    "timeLimit": 10,
+    "createdAt": "2023-05-20T15:30:00Z",
+    "questions": [
+      {
+        "id": "q-1",
+        "text": "What is the capital of France?",
+        "type": "multiple_choice",
+        "options": ["London", "Berlin", "Paris", "Madrid"],
+        "correctAnswerIndex": 2
+      },
+      {
+        "id": "q-2",
+        "text": "Is the Eiffel Tower located in Paris?",
+        "type": "true_false",
+        "correctAnswer": true
+      },
+      {
+        "id": "q-3",
+        "text": "Who painted the Mona Lisa?",
+        "type": "short_answer",
+        "correctAnswer": "Leonardo da Vinci"
+      }
+    ]
+  },
+  {
+    "id": "quiz-2",
+    "title": "Sample Quiz 2",
+    "documentId": "doc-2",
+    "userId": "user-1",
+    "numQuestions": 5,
+    "difficulty": "hard",
+    "timeLimit": 15,
+    "createdAt": "2023-05-21T10:45:00Z",
+    "questions": [
+      {
+        "id": "q-4",
+        "text": "Which year did World War II end?",
+        "type": "multiple_choice",
+        "options": ["1943", "1944", "1945", "1946"],
+        "correctAnswerIndex": 2
+      },
+      {
+        "id": "q-5",
+        "text": "Was the Declaration of Independence signed in 1776?",
+        "type": "true_false",
+        "correctAnswer": true
+      },
+      {
+        "id": "q-6",
+        "text": "Who was the first President of the United States?",
+        "type": "short_answer",
+        "correctAnswer": "George Washington"
+      },
+      {
+        "id": "q-7",
+        "text": "Which of these countries was NOT part of the Allied Powers in WWII?",
+        "type": "multiple_choice",
+        "options": ["United States", "Soviet Union", "Japan", "United Kingdom"],
+        "correctAnswerIndex": 2
+      },
+      {
+        "id": "q-8",
+        "text": "In which year did the Berlin Wall fall?",
+        "type": "multiple_choice",
+        "options": ["1985", "1987", "1989", "1991"],
+        "correctAnswerIndex": 2
+      }
+    ]
+  }
+]

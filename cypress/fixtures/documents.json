@@ -1,0 +1,35 @@
+[
+  {
+    "id": "doc-1",
+    "title": "Sample Document 1",
+    "description": "A sample document about world capitals",
+    "fileName": "world-capitals.pdf",
+    "contentType": "application/pdf",
+    "createdAt": "2023-05-15T10:00:00Z",
+    "updatedAt": "2023-05-15T10:00:00Z",
+    "userId": "user-1",
+    "size": 1034567
+  },
+  {
+    "id": "doc-2",
+    "title": "Sample Document 2",
+    "description": "A sample document about historical events",
+    "fileName": "history-events.pdf",
+    "contentType": "application/pdf",
+    "createdAt": "2023-05-16T14:30:00Z",
+    "updatedAt": "2023-05-16T14:30:00Z",
+    "userId": "user-1",
+    "size": 2043890
+  },
+  {
+    "id": "doc-3",
+    "title": "Sample Document 3",
+    "description": "A sample document about art history",
+    "fileName": "art-history.pdf",
+    "contentType": "application/pdf",
+    "createdAt": "2023-05-17T09:45:00Z",
+    "updatedAt": "2023-05-17T09:45:00Z",
+    "userId": "user-1",
+    "size": 3089245
+  }
+]

@@ -15,7 +15,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Clock, ArrowLeft, ArrowRight, Flag } from "lucide-react";
+import { ArrowLeft, ArrowRight, Flag } from "lucide-react";
+import { CountdownTimer } from "@/ui/CountdownTimer";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 // Define types
 interface Question {
@@ -59,6 +62,7 @@ export default function QuizDisplay({ quizId, onComplete }: QuizDisplayProps) {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [submitting, setSubmitting] = useState(false);
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
 
   // Fetch quiz data
   useEffect(() => {
@@ -94,23 +98,16 @@ export default function QuizDisplay({ quizId, onComplete }: QuizDisplayProps) {
     fetchQuiz();
   }, [quizId]);
 
-  // Timer effect
-  useEffect(() => {
-    if (!timeRemaining) return;
+  // Handle timer completion
+  const handleTimerComplete = () => {
+    submitQuiz();
+  };
 
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev === null || prev <= 0) {
-          clearInterval(timer);
-          submitQuiz();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeRemaining]);
+  // Handle time warning
+  const handleTimeWarning = () => {
+    setShowTimeWarning(true);
+    setTimeout(() => setShowTimeWarning(false), 5000); // Hide after 5 seconds
+  };
 
   // Handle answer change
   const handleAnswerChange = (answer: string) => {
@@ -139,7 +136,7 @@ export default function QuizDisplay({ quizId, onComplete }: QuizDisplayProps) {
 
   // Submit quiz
   const submitQuiz = async () => {
-    if (!quiz) return;
+    if (!quiz || submitting) return;
 
     setSubmitting(true);
 
@@ -179,13 +176,6 @@ export default function QuizDisplay({ quizId, onComplete }: QuizDisplayProps) {
       );
       setSubmitting(false);
     }
-  };
-
-  // Format time remaining
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
   // Loading state
@@ -240,13 +230,28 @@ export default function QuizDisplay({ quizId, onComplete }: QuizDisplayProps) {
         <div className="flex justify-between items-center">
           <CardTitle>{quiz.title}</CardTitle>
           {timeRemaining !== null && (
-            <div className="flex items-center text-amber-600">
-              <Clock className="h-4 w-4 mr-1" />
-              <span className="font-mono">{formatTime(timeRemaining)}</span>
-            </div>
+            <CountdownTimer
+              initialSeconds={timeRemaining}
+              onComplete={handleTimerComplete}
+              warningThreshold={120} // 2 minutes warning
+              dangerThreshold={60} // 1 minute danger
+              size="lg"
+              onWarningThreshold={() => handleTimeWarning()}
+            />
           )}
         </div>
         <CardDescription>{quiz.description}</CardDescription>
+
+        {/* Time Warning Alert */}
+        {showTimeWarning && (
+          <Alert className="mt-2 bg-amber-50 text-amber-800 border-amber-200">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Time is running out!</AlertTitle>
+            <AlertDescription>
+              You have less than 2 minutes remaining to complete this quiz.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Progress */}
         <div className="pt-2">

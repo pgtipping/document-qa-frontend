@@ -1,3 +1,99 @@
+# Active Context - 2025-05-04 00:55:41
+
+- **Task:** Consolidate and Organize Cypress Testing Setup
+- **Completed:**
+  - Identified duplicate Cypress test structure:
+    - Root `/cypress` directory with test files, fixtures, and support files
+    - `/document-qa-frontend/cypress` directory structure but missing implementation files
+  - Consolidated all Cypress tests into the correct project directory:
+    - Moved all test files from root `/cypress/e2e/` to `/document-qa-frontend/cypress/e2e/`
+    - Copied all fixture files from root to `/document-qa-frontend/cypress/fixtures/`
+    - Copied all support files from root to `/document-qa-frontend/cypress/support/`
+    - Ensured existing JavaScript-based Cypress configuration was in the frontend directory
+  - Removed redundant root `/cypress` directory to clean up project structure
+  - Verified Cypress configuration and tests work correctly:
+    - Successfully ran `npx cypress verify` in the frontend directory
+    - Confirmed Cypress could open and detect the properly configured tests
+- **Next Steps:**
+
+  1. **Implement Question Difficulty Levels:**
+
+     - Extend quiz question model with `difficulty` field (easy, medium, hard)
+     - Update LLM prompts to generate varied difficulty questions
+     - Create difficulty selection UI in quiz generation form
+     - Implement weighted scoring based on question difficulty
+     - Add visual difficulty indicators in the quiz UI
+
+  2. **Create Quiz Templates:**
+
+     - Define template structure for different document types
+     - Create template selection UI in quiz generation form
+     - Implement preview functionality for template selection
+     - Add template-specific question generation logic
+     - Support common document formats with specialized templates
+
+  3. **Enhance UI/UX:**
+     - Add smooth animations for question transitions
+     - Implement better progress indicators for multi-step processes
+     - Create visual cues for correct/incorrect answers
+     - Enhance mobile responsiveness with improved layouts
+     - Add drag-and-drop support for document uploads
+
+# Active Context - 2025-05-04 00:30:38
+
+- **Task:** Fix Cypress Configuration and TypeScript Linter Errors
+- **Completed:**
+  - Resolved TypeScript linter errors in Cypress configuration:
+    - Converted `cypress.config.ts` to JavaScript-based `cypress.config.js` to avoid type declaration issues
+    - Configured cypress/tsconfig.json with proper type references for Cypress and testing-library
+    - Installed required packages in the correct directory: `@testing-library/cypress`, `@types/cypress`, `@types/node`
+    - Verified Cypress installation with `npx cypress verify`
+  - Ensured proper TypeScript support for E2E tests:
+    - Added proper type references in the Cypress TypeScript configuration
+    - Set up module resolution settings for consistent imports
+    - Configured file exclusions to prevent duplicate type declarations
+  - Maintained existing end-to-end test structure and functionality:
+    - Preserved existing test files and commands
+    - Maintained fixture files for test data simulation
+    - Ensured API mocking capabilities remain intact
+- **Next Steps:**
+
+  1. **Question Difficulty Levels (Priority: MEDIUM)**
+
+     - **Implementation Steps:**
+       - Extend quiz question model with `difficulty` field (easy, medium, hard)
+       - Update LLM prompts to generate varied difficulty questions
+       - Create difficulty selection UI in quiz generation form
+       - Implement weighted scoring based on question difficulty
+       - Add visual difficulty indicators in the quiz UI
+
+  2. **Quiz Templates (Priority: MEDIUM)**
+
+     - **Implementation Steps:**
+       - Define template structure for different document types
+       - Create template selection UI in quiz generation form
+       - Implement preview functionality for template selection
+       - Add template-specific question generation logic
+       - Support common document formats with specialized templates
+
+  3. **UI/UX Enhancements (Priority: MEDIUM)**
+
+     - **Implementation Steps:**
+       - Add smooth animations for question transitions
+       - Implement better progress indicators for multi-step processes
+       - Create visual cues for correct/incorrect answers
+       - Enhance mobile responsiveness with improved layouts
+       - Add drag-and-drop support for document uploads
+
+  4. **Test Documentation (Priority: LOW)**
+     - **Implementation Steps:**
+       - Create comprehensive testing strategy document at `/docs/testing-strategy.md`
+       - Document component testing patterns and best practices
+       - Establish guidelines for component testability
+       - Create developer guide for adding new tests
+
+---
+
 # Active Context - 2025-05-07 16:15:00 EDT
 
 - **Task:** Fix multiple TypeScript errors causing Vercel deployment failure
