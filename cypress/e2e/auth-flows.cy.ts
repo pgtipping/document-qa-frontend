@@ -4,6 +4,11 @@ describe("Authentication Flows", () => {
     cy.visit("/");
     cy.clearLocalStorage();
     cy.clearCookies();
+
+    // Reset any mocks between tests
+    cy.intercept("/api/auth/session", { body: { user: null } }).as(
+      "sessionCheck"
+    );
   });
 
   it("should allow login with valid credentials", () => {
@@ -158,5 +163,78 @@ describe("Authentication Flows", () => {
 
     // Verify login button is now visible
     cy.contains("Login");
+  });
+
+  it("Should allow a user to log in with valid credentials", () => {
+    // Test with mocked authentication
+    cy.login("test@example.com", "testpassword123");
+
+    // Verify the user is redirected to the documents page
+    cy.url().should("include", "/docs");
+
+    // Verify user-specific UI elements are displayed
+    cy.contains("Test User").should("be.visible");
+  });
+
+  it("Should display error message with invalid credentials", () => {
+    // Visit the login page
+    cy.visit("/auth/signin");
+
+    // Intercept the login request and return an error
+    cy.intercept("POST", "/api/auth/callback/credentials", {
+      statusCode: 401,
+      body: {
+        error: "Invalid credentials",
+      },
+    }).as("failedLogin");
+
+    // Submit invalid credentials
+    cy.get('input[name="email"]').type("wrong@example.com");
+    cy.get('input[name="password"]').type("wrongpassword");
+    cy.get("form").submit();
+
+    // Wait for the request to complete
+    cy.wait("@failedLogin");
+
+    // Verify error message is displayed
+    cy.contains("Invalid credentials").should("be.visible");
+
+    // Verify we're still on the login page
+    cy.url().should("include", "/auth/signin");
+  });
+
+  it("Should allow a user to log out", () => {
+    // Log in first
+    cy.login("test@example.com", "testpassword123");
+
+    // Intercept the logout request
+    cy.intercept("POST", "/api/auth/signout", {
+      statusCode: 200,
+      body: {},
+    }).as("logoutRequest");
+
+    // Click the logout button (adjust the selector based on your UI)
+    cy.get('[data-testid="user-menu-button"]').click();
+    cy.contains("Sign out").click();
+
+    // Wait for the logout request
+    cy.wait("@logoutRequest");
+
+    // Verify redirect to login page
+    cy.url().should("include", "/auth/signin");
+  });
+
+  it("Should redirect unauthenticated users to login page", () => {
+    // Ensure no user is authenticated
+    cy.intercept("/api/auth/session", {
+      statusCode: 200,
+      body: { user: null },
+    }).as("noSession");
+
+    // Try to access a protected page
+    cy.visit("/docs");
+
+    // Should be redirected to login
+    cy.url().should("include", "/auth/signin");
   });
 });

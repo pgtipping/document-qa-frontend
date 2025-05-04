@@ -1,77 +1,60 @@
 [
   {
-    "id": "quiz-1",
-    "title": "Sample Quiz 1",
-    "documentId": "doc-1",
-    "userId": "user-1",
-    "numQuestions": 3,
-    "difficulty": "medium",
-    "timeLimit": 10,
-    "createdAt": "2023-05-20T15:30:00Z",
+    "id": "test-quiz-1",
+    "title": "Test Quiz 1",
+    "documentId": "test-doc-1",
+    "createdAt": "2025-06-10T12:00:00.000Z",
     "questions": [
       {
-        "id": "q-1",
-        "text": "What is the capital of France?",
+        "id": "test-question-1",
         "type": "multiple_choice",
-        "options": ["London", "Berlin", "Paris", "Madrid"],
-        "correctAnswerIndex": 2
+        "content": "What is the capital of France?",
+        "options": ["London", "Paris", "Berlin", "Madrid"],
+        "correctAnswer": "Paris",
+        "correctAnswerIndex": 1,
+        "explanation": "Paris is the capital of France."
       },
       {
-        "id": "q-2",
-        "text": "Is the Eiffel Tower located in Paris?",
+        "id": "test-question-2",
         "type": "true_false",
-        "correctAnswer": true
+        "content": "The Earth is flat.",
+        "options": ["True", "False"],
+        "correctAnswer": "False",
+        "correctAnswerIndex": 1,
+        "explanation": "The Earth is approximately spherical."
       },
       {
-        "id": "q-3",
-        "text": "Who painted the Mona Lisa?",
+        "id": "test-question-3",
         "type": "short_answer",
-        "correctAnswer": "Leonardo da Vinci"
+        "content": "What is the chemical symbol for water?",
+        "correctAnswer": "H2O",
+        "explanation": "H2O is the chemical formula for water."
       }
     ]
   },
   {
-    "id": "quiz-2",
-    "title": "Sample Quiz 2",
-    "documentId": "doc-2",
-    "userId": "user-1",
-    "numQuestions": 5,
-    "difficulty": "hard",
-    "timeLimit": 15,
-    "createdAt": "2023-05-21T10:45:00Z",
+    "id": "test-quiz-2",
+    "title": "Test Quiz 2",
+    "documentId": "test-doc-2",
+    "createdAt": "2025-06-11T12:00:00.000Z",
     "questions": [
       {
-        "id": "q-4",
-        "text": "Which year did World War II end?",
+        "id": "test-question-4",
         "type": "multiple_choice",
-        "options": ["1943", "1944", "1945", "1946"],
-        "correctAnswerIndex": 2
+        "content": "Which of the following is not a programming language?",
+        "options": ["Python", "Java", "Banana", "JavaScript"],
+        "correctAnswer": "Banana",
+        "correctAnswerIndex": 2,
+        "explanation": "Banana is a fruit, not a programming language."
       },
       {
-        "id": "q-5",
-        "text": "Was the Declaration of Independence signed in 1776?",
+        "id": "test-question-5",
         "type": "true_false",
-        "correctAnswer": true
-      },
-      {
-        "id": "q-6",
-        "text": "Who was the first President of the United States?",
-        "type": "short_answer",
-        "correctAnswer": "George Washington"
-      },
-      {
-        "id": "q-7",
-        "text": "Which of these countries was NOT part of the Allied Powers in WWII?",
-        "type": "multiple_choice",
-        "options": ["United States", "Soviet Union", "Japan", "United Kingdom"],
-        "correctAnswerIndex": 2
-      },
-      {
-        "id": "q-8",
-        "text": "In which year did the Berlin Wall fall?",
-        "type": "multiple_choice",
-        "options": ["1985", "1987", "1989", "1991"],
-        "correctAnswerIndex": 2
+        "content": "TypeScript is a superset of JavaScript.",
+        "options": ["True", "False"],
+        "correctAnswer": "True",
+        "correctAnswerIndex": 0,
+        "explanation": "TypeScript is indeed a superset of JavaScript."
       }
     ]
   }

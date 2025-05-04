@@ -1,0 +1,88 @@
+[
+  {
+    "id": "quiz-difficulty-test",
+    "title": "Difficulty Test Quiz",
+    "documentId": "doc-1",
+    "createdAt": "2025-06-15T12:00:00.000Z",
+    "templateId": "general",
+    "questions": [
+      {
+        "id": "easy-question-1",
+        "type": "multiple_choice",
+        "content": "What is the capital of France?",
+        "options": ["London", "Paris", "Berlin", "Madrid"],
+        "correctAnswer": "Paris",
+        "correctAnswerIndex": 1,
+        "explanation": "Paris is the capital of France.",
+        "difficulty": "easy"
+      },
+      {
+        "id": "medium-question-1",
+        "type": "multiple_choice",
+        "content": "Which planet is known as the Red Planet?",
+        "options": ["Venus", "Mars", "Jupiter", "Saturn"],
+        "correctAnswer": "Mars",
+        "correctAnswerIndex": 1,
+        "explanation": "Mars is called the Red Planet due to its reddish appearance.",
+        "difficulty": "medium"
+      },
+      {
+        "id": "hard-question-1",
+        "type": "short_answer",
+        "content": "What is the chemical formula for glucose?",
+        "correctAnswer": "C6H12O6",
+        "explanation": "Glucose has the molecular formula C6H12O6.",
+        "difficulty": "hard"
+      }
+    ]
+  },
+  {
+    "id": "quiz-template-test",
+    "title": "Template Test Quiz",
+    "documentId": "doc-1",
+    "createdAt": "2025-06-16T12:00:00.000Z",
+    "templateId": "technical",
+    "templateInfo": {
+      "name": "Technical Template",
+      "description": "Focuses on technical concepts and implementation details",
+      "questionDistribution": {
+        "concept": 40,
+        "implementation": 40,
+        "application": 20
+      }
+    },
+    "questions": [
+      {
+        "id": "technical-question-1",
+        "type": "multiple_choice",
+        "content": "Which of these is a valid REST API HTTP method?",
+        "options": ["SEND", "PUT", "FETCH", "READ"],
+        "correctAnswer": "PUT",
+        "correctAnswerIndex": 1,
+        "explanation": "PUT is a standard HTTP method used in REST APIs for updating resources.",
+        "difficulty": "medium",
+        "category": "concept"
+      },
+      {
+        "id": "technical-question-2",
+        "type": "true_false",
+        "content": "JSON supports comments.",
+        "options": ["True", "False"],
+        "correctAnswer": "False",
+        "correctAnswerIndex": 1,
+        "explanation": "Standard JSON does not support comments.",
+        "difficulty": "medium",
+        "category": "implementation"
+      },
+      {
+        "id": "technical-question-3",
+        "type": "short_answer",
+        "content": "What JavaScript method would you use to convert a JSON string to an object?",
+        "correctAnswer": "JSON.parse",
+        "explanation": "JSON.parse() method parses a JSON string and returns a JavaScript object.",
+        "difficulty": "medium",
+        "category": "application"
+      }
+    ]
+  }
+]

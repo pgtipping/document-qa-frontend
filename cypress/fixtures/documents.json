@@ -31,5 +31,21 @@
     "updatedAt": "2023-05-17T09:45:00Z",
     "userId": "user-1",
     "size": 3089245
+  },
+  {
+    "id": "test-doc-1",
+    "name": "Test Document 1.pdf",
+    "type": "application/pdf",
+    "status": "active",
+    "createdAt": "2025-06-10T10:00:00.000Z",
+    "updatedAt": "2025-06-10T10:00:00.000Z"
+  },
+  {
+    "id": "test-doc-2",
+    "name": "Test Document 2.docx",
+    "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "status": "active",
+    "createdAt": "2025-06-11T10:00:00.000Z",
+    "updatedAt": "2025-06-11T10:00:00.000Z"
   }
 ]

@@ -10,24 +10,126 @@ jobs:
       fail-fast: false # https://github.com/cypress-io/github-action/issues/48
       matrix:
         containers: [1, 2] # Uses 2 parallel instances
+
+    # Set up PostgreSQL service container
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      # Setup test database
+      - name: Setup test database
+        run: |
+          # Create a test database using a postgresql service container
+          echo "Setting up test database"
+          # Generate a .env.test file with test configuration
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db?schema=public" > .env.test
+          echo "NEXTAUTH_SECRET=test_secret" >> .env.test
+          echo "NEXTAUTH_URL=http://localhost:3004" >> .env.test
+
+          # Run migrations with the test environment
+          npx prisma migrate deploy --preview-feature
+
+          # Seed the test database with test data
+          npm run seed:test
+
       - name: Cypress run
         # Uses the official Cypress GitHub action https://github.com/cypress-io/github-action
         uses: cypress-io/github-action@v6
         with:
-          # Starts web server for E2E tests - replace with your own server invocation
-          # https://docs.cypress.io/guides/continuous-integration/introduction#Boot-your-server
-          start: npm start
-          wait-on: "http://localhost:3000" # Waits for above
+          # Start Next.js development server
+          start: npm run dev
+          wait-on: "http://localhost:3004" # Waits for the development server to start
           # Records to Cypress Cloud
           # https://docs.cypress.io/guides/cloud/projects#Set-up-a-project-to-record
           record: true
           parallel: true # Runs test in parallel using settings above
+          # Enable screenshots & videos
+          config: "screenshotOnRunFailure=true,video=true"
         env:
           # For recording and parallelization to work you must set your CYPRESS_RECORD_KEY
           # in GitHub repo → Settings → Secrets → Actions
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           # Creating a token https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Add any required environment variables your tests might need
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db?schema=public
+          NEXTAUTH_SECRET: test_secret
+          NEXTAUTH_URL: http://localhost:3004
+
+      # Upload screenshots and videos as artifacts (only on failure)
+      - name: Upload screenshots on failure
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots-${{ matrix.containers }}
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Upload videos
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cypress-videos-${{ matrix.containers }}
+          path: cypress/videos
+          if-no-files-found: ignore
+
+  # Run performance audits job after e2e tests pass
+  performance-audits:
+    needs: cypress-run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.12.x
+          npm run build
+          npm run start & npx wait-on http://localhost:3000
+          lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: lighthouse-results
+          path: .lighthouseci
+          if-no-files-found: ignore
