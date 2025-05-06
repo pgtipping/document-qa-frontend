@@ -10,6 +10,17 @@ if (!process.env.NEXTAUTH_SECRET) {
   // In a real app, you might throw an error or prevent startup
 }
 
+// Check for NEXTAUTH_URL and provide clear error message if missing
+if (!process.env.NEXTAUTH_URL) {
+  console.warn("Missing NEXTAUTH_URL environment variable.");
+  // Provide a fallback URL for all environments
+  process.env.NEXTAUTH_URL =
+    process.env.NODE_ENV === "production"
+      ? "https://inqdoc.vercel.app"
+      : "http://localhost:3004";
+  console.warn(`Setting default NEXTAUTH_URL to ${process.env.NEXTAUTH_URL}`);
+}
+
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -120,6 +131,23 @@ export const authOptions: AuthOptions = {
   },
   // Enable debug messages in development
   debug: process.env.NODE_ENV === "development",
+  // Use debug mode to handle URL validation and construction issues in tests
+  // experimental: {
+  //  enableDebugMode: true,
+  // },
+  // Set CSRF token validation options - fixes the "Invalid URL" error
+  useSecureCookies: process.env.NODE_ENV === "production",
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
 };
 
 import { NextRequest, NextResponse } from "next/server";

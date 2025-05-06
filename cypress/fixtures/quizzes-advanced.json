@@ -1,0 +1,267 @@
+[
+  {
+    "id": "quiz-template-difficulty-integration",
+    "title": "Template with Difficulty Distribution Test",
+    "documentId": "doc-1",
+    "createdAt": "2025-06-15T12:00:00.000Z",
+    "templateId": "academic",
+    "templateInfo": {
+      "name": "Academic Template",
+      "description": "Focuses on academic concepts, analysis, and application",
+      "icon": "BookOpen",
+      "questionDistribution": {
+        "concept": 33,
+        "analysis": 33,
+        "application": 34
+      },
+      "focusAreas": [
+        "Research methodology",
+        "Critical analysis",
+        "Thesis support"
+      ]
+    },
+    "difficultyDistribution": {
+      "easy": 3,
+      "medium": 3,
+      "hard": 3
+    },
+    "questions": [
+      {
+        "id": "academic-easy-1",
+        "type": "multiple_choice",
+        "content": "What is the primary purpose of a literature review?",
+        "options": [
+          "To summarize all available literature",
+          "To establish context for current research",
+          "To critique other researchers",
+          "To increase word count"
+        ],
+        "correctAnswer": "To establish context for current research",
+        "correctAnswerIndex": 1,
+        "explanation": "Literature reviews provide context and background for current research.",
+        "difficulty": "easy",
+        "category": "concept",
+        "points": 1
+      },
+      {
+        "id": "academic-easy-2",
+        "type": "true_false",
+        "content": "Qualitative research is primarily concerned with numerical data.",
+        "options": ["True", "False"],
+        "correctAnswer": "False",
+        "correctAnswerIndex": 1,
+        "explanation": "Qualitative research is concerned with non-numerical data like interviews and observations.",
+        "difficulty": "easy",
+        "category": "concept",
+        "points": 1
+      },
+      {
+        "id": "academic-easy-3",
+        "type": "multiple_choice",
+        "content": "Which of these is a primary source?",
+        "options": [
+          "Textbook",
+          "Encyclopedia",
+          "Original research paper",
+          "Literature review"
+        ],
+        "correctAnswer": "Original research paper",
+        "correctAnswerIndex": 2,
+        "explanation": "Primary sources contain original research or direct evidence.",
+        "difficulty": "easy",
+        "category": "analysis",
+        "points": 1
+      },
+      {
+        "id": "academic-medium-1",
+        "type": "multiple_choice",
+        "content": "Which research methodology would be most appropriate for studying historical trends?",
+        "options": [
+          "Experimental research",
+          "Case study",
+          "Longitudinal study",
+          "Cross-sectional study"
+        ],
+        "correctAnswer": "Longitudinal study",
+        "correctAnswerIndex": 2,
+        "explanation": "Longitudinal studies track changes over time, making them suitable for historical trends.",
+        "difficulty": "medium",
+        "category": "application",
+        "points": 2
+      },
+      {
+        "id": "academic-medium-2",
+        "type": "short_answer",
+        "content": "What statistical test would you use to compare means between two independent groups?",
+        "correctAnswer": "t-test",
+        "explanation": "A t-test is used to determine if there is a significant difference between the means of two groups.",
+        "difficulty": "medium",
+        "category": "application",
+        "points": 2
+      },
+      {
+        "id": "academic-medium-3",
+        "type": "multiple_choice",
+        "content": "What is the purpose of peer review in academic publishing?",
+        "options": [
+          "To prevent plagiarism",
+          "To ensure quality and validity",
+          "To increase citation counts",
+          "To format references correctly"
+        ],
+        "correctAnswer": "To ensure quality and validity",
+        "correctAnswerIndex": 1,
+        "explanation": "Peer review helps maintain academic standards by having experts evaluate research.",
+        "difficulty": "medium",
+        "category": "concept",
+        "points": 2
+      },
+      {
+        "id": "academic-hard-1",
+        "type": "short_answer",
+        "content": "What research design combines elements of both qualitative and quantitative methods?",
+        "correctAnswer": "mixed methods",
+        "explanation": "Mixed methods research integrates both qualitative and quantitative data collection and analysis.",
+        "difficulty": "hard",
+        "category": "analysis",
+        "points": 3
+      },
+      {
+        "id": "academic-hard-2",
+        "type": "multiple_choice",
+        "content": "Which of these is NOT a threat to internal validity?",
+        "options": [
+          "History",
+          "Generalizability",
+          "Maturation",
+          "Testing effects"
+        ],
+        "correctAnswer": "Generalizability",
+        "correctAnswerIndex": 1,
+        "explanation": "Generalizability is a threat to external validity, not internal validity.",
+        "difficulty": "hard",
+        "category": "analysis",
+        "points": 3
+      },
+      {
+        "id": "academic-hard-3",
+        "type": "short_answer",
+        "content": "What statistical technique would you use to reduce the dimensionality of a large dataset while preserving most of the variation?",
+        "correctAnswer": "principal component analysis",
+        "explanation": "Principal component analysis (PCA) reduces dimensions while maintaining maximum variance.",
+        "difficulty": "hard",
+        "category": "application",
+        "points": 3
+      }
+    ]
+  },
+  {
+    "id": "quiz-template-switch",
+    "title": "Template Switching Test",
+    "documentId": "doc-1",
+    "createdAt": "2025-06-16T12:00:00.000Z",
+    "templateId": "technical",
+    "templateInfo": {
+      "name": "Technical Template",
+      "description": "Focuses on technical concepts and implementation details",
+      "icon": "Code",
+      "questionDistribution": {
+        "concept": 40,
+        "implementation": 40,
+        "application": 20
+      },
+      "focusAreas": [
+        "Technical fundamentals",
+        "Implementation details",
+        "Best practices"
+      ]
+    },
+    "difficulty": "hard",
+    "questions": [
+      {
+        "id": "technical-hard-1",
+        "type": "multiple_choice",
+        "content": "Which of these database isolation levels provides the strongest guarantees against concurrency problems?",
+        "options": [
+          "Read Uncommitted",
+          "Read Committed",
+          "Repeatable Read",
+          "Serializable"
+        ],
+        "correctAnswer": "Serializable",
+        "correctAnswerIndex": 3,
+        "explanation": "Serializable provides the strongest isolation guarantees but with the highest performance cost.",
+        "difficulty": "hard",
+        "category": "concept",
+        "points": 3
+      },
+      {
+        "id": "technical-hard-2",
+        "type": "short_answer",
+        "content": "What design pattern would you use to add responsibilities to objects dynamically?",
+        "correctAnswer": "decorator",
+        "explanation": "The Decorator pattern allows behavior to be added to objects without affecting other objects of the same class.",
+        "difficulty": "hard",
+        "category": "implementation",
+        "points": 3
+      },
+      {
+        "id": "technical-hard-3",
+        "type": "multiple_choice",
+        "content": "Which of these is NOT a valid approach to handle race conditions in distributed systems?",
+        "options": [
+          "Optimistic locking",
+          "Pessimistic locking",
+          "CRDTs",
+          "Stack randomization"
+        ],
+        "correctAnswer": "Stack randomization",
+        "correctAnswerIndex": 3,
+        "explanation": "Stack randomization is a security technique, not a method for handling race conditions.",
+        "difficulty": "hard",
+        "category": "application",
+        "points": 3
+      }
+    ]
+  },
+  {
+    "id": "quiz-template-difficulty-results",
+    "title": "Results Analysis Test",
+    "documentId": "doc-1",
+    "createdAt": "2025-06-17T12:00:00.000Z",
+    "templateId": "academic",
+    "templateInfo": {
+      "name": "Academic Template",
+      "description": "Focuses on academic concepts, analysis, and application",
+      "icon": "BookOpen",
+      "questionDistribution": {
+        "concept": 33,
+        "analysis": 33,
+        "application": 34
+      }
+    },
+    "difficultyDistribution": {
+      "easy": 3,
+      "medium": 3,
+      "hard": 3
+    },
+    "results": {
+      "score": 70,
+      "totalQuestions": 9,
+      "correctAnswers": 6,
+      "timeSpent": "00:05:30",
+      "detailedResults": {
+        "byDifficulty": {
+          "easy": { "correct": 3, "total": 3, "percentage": 100 },
+          "medium": { "correct": 2, "total": 3, "percentage": 67 },
+          "hard": { "correct": 1, "total": 3, "percentage": 33 }
+        },
+        "byCategory": {
+          "concept": { "correct": 2, "total": 3, "percentage": 67 },
+          "analysis": { "correct": 2, "total": 3, "percentage": 67 },
+          "application": { "correct": 2, "total": 3, "percentage": 67 }
+        }
+      }
+    }
+  }
+]

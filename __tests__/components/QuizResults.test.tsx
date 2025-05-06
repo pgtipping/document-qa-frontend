@@ -1,7 +1,186 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import QuizResults from "@/components/QuizResults";
+import QuizResults from "@/src/components/QuizResults";
 import "@testing-library/jest-dom";
 import { useRouter } from "next/navigation";
+
+// Mock UI components
+jest.mock("@/components/ui/button", () => ({
+  Button: ({ children, onClick, ...props }: any) => (
+    <button onClick={onClick} {...props} data-testid="mock-button">
+      {children}
+    </button>
+  ),
+}));
+
+jest.mock("@/components/ui/card", () => ({
+  Card: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-card">
+      {children}
+    </div>
+  ),
+  CardContent: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-card-content">
+      {children}
+    </div>
+  ),
+  CardHeader: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-card-header">
+      {children}
+    </div>
+  ),
+  CardFooter: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-card-footer">
+      {children}
+    </div>
+  ),
+  CardTitle: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-card-title">
+      {children}
+    </div>
+  ),
+  CardDescription: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-card-description">
+      {children}
+    </div>
+  ),
+}));
+
+jest.mock("@/components/ui/tabs", () => ({
+  Tabs: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-tabs">
+      {children}
+    </div>
+  ),
+  TabsContent: ({ children, value, ...props }: any) => (
+    <div {...props} data-testid={`mock-tabs-content-${value}`}>
+      {children}
+    </div>
+  ),
+  TabsList: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-tabs-list" role="tablist">
+      {children}
+    </div>
+  ),
+  TabsTrigger: ({ children, value, ...props }: any) => (
+    <button
+      role="tab"
+      {...props}
+      data-testid={`mock-tabs-trigger-${value}`}
+      aria-label={children?.toString()}
+    >
+      {children}
+    </button>
+  ),
+}));
+
+jest.mock("@/components/ui/badge", () => ({
+  Badge: ({ children, ...props }: any) => (
+    <span {...props} data-testid="mock-badge">
+      {children}
+    </span>
+  ),
+}));
+
+jest.mock("@/components/ui/switch", () => ({
+  Switch: ({ onCheckedChange, checked, ...props }: any) => (
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={(e) => onCheckedChange?.(e.target.checked)}
+      {...props}
+      data-testid="mock-switch"
+    />
+  ),
+}));
+
+jest.mock("@/components/ui/label", () => ({
+  Label: ({ children, ...props }: any) => (
+    <label {...props} data-testid="mock-label">
+      {children}
+    </label>
+  ),
+}));
+
+jest.mock("@/components/ui/accordion", () => ({
+  Accordion: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-accordion">
+      {children}
+    </div>
+  ),
+  AccordionItem: ({ children, value, ...props }: any) => (
+    <div {...props} data-testid={`mock-accordion-item-${value}`}>
+      {children}
+    </div>
+  ),
+  AccordionTrigger: ({ children, ...props }: any) => (
+    <button {...props} data-testid="mock-accordion-trigger">
+      {children}
+    </button>
+  ),
+  AccordionContent: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-accordion-content">
+      {children}
+    </div>
+  ),
+}));
+
+jest.mock("@/components/ui/alert-dialog", () => ({
+  AlertDialog: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-alert-dialog">
+      {children}
+    </div>
+  ),
+  AlertDialogAction: ({ children, ...props }: any) => (
+    <button {...props} data-testid="mock-alert-dialog-action">
+      {children}
+    </button>
+  ),
+  AlertDialogCancel: ({ children, ...props }: any) => (
+    <button {...props} data-testid="mock-alert-dialog-cancel">
+      {children}
+    </button>
+  ),
+  AlertDialogContent: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-alert-dialog-content">
+      {children}
+    </div>
+  ),
+  AlertDialogDescription: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-alert-dialog-description">
+      {children}
+    </div>
+  ),
+  AlertDialogFooter: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-alert-dialog-footer">
+      {children}
+    </div>
+  ),
+  AlertDialogHeader: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-alert-dialog-header">
+      {children}
+    </div>
+  ),
+  AlertDialogTitle: ({ children, ...props }: any) => (
+    <div {...props} data-testid="mock-alert-dialog-title">
+      {children}
+    </div>
+  ),
+  AlertDialogTrigger: ({ children, ...props }: any) => (
+    <button {...props} data-testid="mock-alert-dialog-trigger">
+      {children}
+    </button>
+  ),
+}));
+
+// Mock Lucide icons
+jest.mock("lucide-react", () => ({
+  ClipboardCopy: () => <div data-testid="mock-icon-clipboard" />,
+  Share2: () => <div data-testid="mock-icon-share" />,
+  Check: () => <div data-testid="mock-icon-check" />,
+  X: () => <div data-testid="mock-icon-x" />,
+  Clock: () => <div data-testid="mock-icon-clock" />,
+  Award: () => <div data-testid="mock-icon-award" />,
+}));
 
 // Mock next/navigation
 jest.mock("next/navigation", () => ({

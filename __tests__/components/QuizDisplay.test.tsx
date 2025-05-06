@@ -11,6 +11,159 @@ jest.mock("next/navigation", () => ({
   })),
 }));
 
+// Mock the UI components
+jest.mock("@/components/ui/card", () => ({
+  Card: ({ children, ...props }: any) => (
+    <div data-testid="mock-card" role="region" {...props}>
+      {children}
+    </div>
+  ),
+  CardContent: ({ children, ...props }: any) => (
+    <div data-testid="mock-card-content" {...props}>
+      {children}
+    </div>
+  ),
+  CardHeader: ({ children, ...props }: any) => (
+    <div data-testid="mock-card-header" {...props}>
+      {children}
+    </div>
+  ),
+  CardFooter: ({ children, ...props }: any) => (
+    <div data-testid="mock-card-footer" {...props}>
+      {children}
+    </div>
+  ),
+  CardTitle: ({ children, ...props }: any) => (
+    <div data-testid="mock-card-title" role="heading" aria-level="2" {...props}>
+      {children}
+    </div>
+  ),
+  CardDescription: ({ children, ...props }: any) => (
+    <div data-testid="mock-card-description" {...props}>
+      {children}
+    </div>
+  ),
+}));
+
+jest.mock("@/components/ui/button", () => ({
+  Button: ({ children, onClick, ...props }: any) => (
+    <button
+      onClick={onClick}
+      data-testid="mock-button"
+      type={props.type || "button"}
+      {...props}
+    >
+      {children}
+    </button>
+  ),
+}));
+
+jest.mock("@/components/ui/badge", () => ({
+  Badge: ({ children, variant, ...props }: any) => (
+    <span
+      data-testid={`mock-badge-${variant || "default"}`}
+      data-variant={variant || "default"}
+      role="status"
+      {...props}
+    >
+      {children}
+    </span>
+  ),
+}));
+
+jest.mock("@/components/ui/radio-group", () => ({
+  RadioGroup: ({ children, ...props }: any) => (
+    <div data-testid="mock-radio-group" {...props}>
+      {children}
+    </div>
+  ),
+  RadioGroupItem: ({ value, id, ...props }: any) => (
+    <input
+      type="radio"
+      id={id}
+      value={value}
+      data-testid={`mock-radio-item-${value}`}
+      {...props}
+    />
+  ),
+}));
+
+jest.mock("@/components/ui/textarea", () => ({
+  Textarea: (props: any) => <textarea data-testid="mock-textarea" {...props} />,
+}));
+
+jest.mock("@/components/ui/label", () => ({
+  Label: ({ children, htmlFor, ...props }: any) => (
+    <label htmlFor={htmlFor} data-testid="mock-label" {...props}>
+      {children}
+    </label>
+  ),
+}));
+
+jest.mock("@/components/ui/progress", () => ({
+  Progress: (props: any) => (
+    <div
+      data-testid="mock-progress"
+      role="progressbar"
+      aria-valuenow={String(props.value)}
+      {...props}
+    />
+  ),
+}));
+
+jest.mock("@/components/ui/alert", () => ({
+  Alert: ({ children, ...props }: any) => (
+    <div data-testid="mock-alert" {...props}>
+      {children}
+    </div>
+  ),
+  AlertTitle: ({ children, ...props }: any) => (
+    <div data-testid="mock-alert-title" {...props}>
+      {children}
+    </div>
+  ),
+  AlertDescription: ({ children, ...props }: any) => (
+    <div data-testid="mock-alert-description" {...props}>
+      {children}
+    </div>
+  ),
+}));
+
+// Use an absolute mock for CountdownTimer since path resolution seems to be an issue
+jest.mock("../../src/ui/CountdownTimer", () => ({
+  CountdownTimer: ({ timeRemaining, ...props }: any) => {
+    // Ensure timeRemaining is a number to prevent NaN display
+    const seconds = typeof timeRemaining === "number" ? timeRemaining : 600;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    const formattedTime = `${minutes}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
+
+    return (
+      <div data-testid="mock-timer" {...props}>
+        {formattedTime}
+      </div>
+    );
+  },
+}));
+
+jest.mock("lucide-react", () => ({
+  ArrowLeft: () => (
+    <div data-testid="mock-icon-arrow-left" aria-hidden="true" />
+  ),
+  ArrowRight: () => (
+    <div data-testid="mock-icon-arrow-right" aria-hidden="true" />
+  ),
+  Flag: () => <div data-testid="mock-icon-flag" aria-hidden="true" />,
+  AlertCircle: () => (
+    <div data-testid="mock-icon-alert-circle" aria-hidden="true" />
+  ),
+  Zap: () => <div data-testid="mock-icon-zap" aria-hidden="true" />,
+  Trophy: () => <div data-testid="mock-icon-trophy" aria-hidden="true" />,
+  Badge: () => <div data-testid="mock-icon-badge" aria-hidden="true" />,
+}));
+
 // Mock fetch API
 global.fetch = jest.fn();
 
@@ -60,18 +213,23 @@ describe("QuizDisplay", () => {
     jest.clearAllMocks();
 
     // Mock successful quiz fetch
-    (global.fetch as jest.Mock).mockImplementation((url) => {
-      if (url === `/api/quiz/${mockQuizId}` && !url.includes("POST")) {
+    (global.fetch as jest.Mock).mockImplementation((url, options) => {
+      // For GET requests to fetch the quiz
+      if (
+        url === `/api/quiz/${mockQuizId}` &&
+        (!options || options.method !== "POST")
+      ) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve(mockQuizData),
         });
       }
 
-      // Mock successful quiz submission
+      // For POST requests to submit the quiz - ensure this returns the correct result
       if (
         url === `/api/quiz/${mockQuizId}` &&
-        (global.fetch as jest.Mock).mock.calls[0][1]?.method === "POST"
+        options &&
+        options.method === "POST"
       ) {
         return Promise.resolve({
           ok: true,

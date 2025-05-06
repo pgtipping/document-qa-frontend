@@ -1,12 +1,87 @@
-import { PrismaClient } from "@prisma/client";
-import { hash } from "bcrypt";
+// Use require for compatibility with both ESM and CommonJS
+const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcrypt");
 
+// Initialize PrismaClient
 const prisma = new PrismaClient();
 
 async function seedTestDatabase() {
   console.log("Seeding test database...");
 
   try {
+    // Clean up existing test data to avoid unique constraint errors
+    console.log("Cleaning up existing test data...");
+
+    // Delete test quiz results and responses first (respect foreign key constraints)
+    const testQuizIds = await prisma.quiz.findMany({
+      where: {
+        id: {
+          startsWith: "test-",
+        },
+      },
+      select: { id: true },
+    });
+
+    const quizIds = testQuizIds.map((q) => q.id);
+
+    if (quizIds.length > 0) {
+      // Find and delete quiz responses
+      await prisma.quizResponse.deleteMany({
+        where: {
+          result: {
+            quizId: {
+              in: quizIds,
+            },
+          },
+        },
+      });
+
+      // Delete quiz results
+      await prisma.quizResult.deleteMany({
+        where: {
+          quizId: {
+            in: quizIds,
+          },
+        },
+      });
+
+      // Delete quiz questions
+      await prisma.quizQuestion.deleteMany({
+        where: {
+          quizId: {
+            in: quizIds,
+          },
+        },
+      });
+
+      // Now delete the quizzes
+      await prisma.quiz.deleteMany({
+        where: {
+          id: {
+            in: quizIds,
+          },
+        },
+      });
+    }
+
+    // Delete test documents
+    await prisma.document.deleteMany({
+      where: {
+        id: {
+          in: [
+            "academic-doc",
+            "technical-doc",
+            "business-doc",
+            "narrative-doc",
+            "test-doc-1",
+            "test-doc-2",
+          ],
+        },
+      },
+    });
+
+    console.log("Test data cleanup completed.");
+
     // Create a test user
     const testUser = await prisma.user.upsert({
       where: { email: "test@example.com" },
@@ -14,7 +89,7 @@ async function seedTestDatabase() {
       create: {
         email: "test@example.com",
         name: "Test User",
-        password: await hash("testpassword123", 10),
+        password: await bcrypt.hash("testpassword123", 10),
       },
     });
     console.log(`Created test user: ${testUser.id}`);
@@ -26,7 +101,7 @@ async function seedTestDatabase() {
       create: {
         email: "admin@example.com",
         name: "Admin User",
-        password: await hash("adminpassword123", 10),
+        password: await bcrypt.hash("adminpassword123", 10),
       },
     });
     console.log(`Created admin user: ${adminUser.id}`);
@@ -250,17 +325,15 @@ async function seedTestDatabase() {
         }
       }
 
-      // Use type assertion to bypass TypeScript's type checking for known fields
-      // that exist in the database schema but might not be properly represented in the TypeScript types
-      await (prisma.quiz as any).create({
+      await prisma.quiz.create({
         data: {
           id: template.id,
           title: template.title,
           documentId: template.documentId,
           userId: testUser.id,
-          difficulty: "medium", // This exists in the schema but might be missing in TypeScript types
-          templateId: template.templateId, // This exists in the schema but might be missing in TypeScript types
-          templateInfo: template.templateInfo, // This exists in the schema but might be missing in TypeScript types
+          difficulty: "medium",
+          templateId: template.templateId,
+          templateInfo: template.templateInfo,
           createdAt: new Date(
             Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)
           ), // Random date within last week
@@ -367,14 +440,18 @@ async function seedTestDatabase() {
   }
 }
 
-// Execute the seed function if this file is run directly
+// CommonJS export for better compatibility
+module.exports = seedTestDatabase;
+
+// Call the function directly when this script is run directly
 if (require.main === module) {
   seedTestDatabase()
-    .then(() => console.log("Seed completed successfully"))
-    .catch((e) => {
-      console.error(e);
+    .then(() => {
+      console.log("Database seeding completed.");
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error("Error seeding database:", error);
       process.exit(1);
     });
 }
-
-export default seedTestDatabase;

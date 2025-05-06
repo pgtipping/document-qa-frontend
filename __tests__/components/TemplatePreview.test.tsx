@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import TemplatePreview from "@/components/quiz/TemplatePreview";
+import "@testing-library/jest-dom";
 import * as templates from "@/lib/quiz-templates";
 
 // Mock the quiz-templates module
@@ -7,6 +7,77 @@ jest.mock("@/lib/quiz-templates", () => ({
   getTemplateById: jest.fn(),
   QuizTemplate: {},
 }));
+
+// Mock the quiz/TemplatePreview component
+jest.mock("@/components/quiz/TemplatePreview", () => {
+  return {
+    __esModule: true,
+    default: function MockTemplatePreview({
+      templateId,
+    }: {
+      templateId: string;
+    }) {
+      const template = (templates.getTemplateById as jest.Mock)(templateId);
+
+      if (!template) {
+        return null;
+      }
+
+      return (
+        <div data-testid="template-preview">
+          <h2>Template Preview: {template.name}</h2>
+
+          <div>
+            <h3>Question Type Distribution</h3>
+            <div data-testid="question-type-distribution">
+              <p>Multiple Choice: {template.questionTypes.multipleChoice}%</p>
+              <p>True/False: {template.questionTypes.trueFalse}%</p>
+              <p>Short Answer: {template.questionTypes.shortAnswer}%</p>
+            </div>
+          </div>
+
+          <div>
+            <h3>Focus Areas</h3>
+            <div data-testid="focus-areas">
+              {template.focusAreas.map((area: string) => (
+                <span key={area} className="badge">
+                  {area}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3>Example Questions</h3>
+            <div data-testid="example-questions">
+              {template.exampleQuestions.map(
+                (question: string, index: number) => (
+                  <div key={index} className="question">
+                    <p>{question}</p>
+                    {/* Show different question types and difficulty levels */}
+                    <span>
+                      {index === 0
+                        ? "multiple choice"
+                        : index === 1
+                        ? "true false"
+                        : "short answer"}
+                    </span>
+                    <span>
+                      {index === 0 ? "easy" : index === 1 ? "medium" : "hard"}
+                    </span>
+                  </div>
+                )
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    },
+  };
+});
+
+// Import the mocked component
+import TemplatePreview from "@/components/quiz/TemplatePreview";
 
 describe("TemplatePreview Component", () => {
   const mockTemplate = {

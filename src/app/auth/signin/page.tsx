@@ -140,6 +140,7 @@ export default function SignInPage() {
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     placeholder="user@example.com"
                     required
@@ -152,6 +153,7 @@ export default function SignInPage() {
                   <Label htmlFor="password">Password</Label>
                   <Input
                     id="password"
+                    name="password"
                     type="password"
                     required
                     value={password}

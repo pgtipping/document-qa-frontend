@@ -95,6 +95,7 @@ export default function RegisterPage() {
               <Label htmlFor="name">Name (Optional)</Label>
               <Input
                 id="name"
+                name="name"
                 type="text"
                 placeholder="Your Name"
                 value={name}
@@ -106,6 +107,7 @@ export default function RegisterPage() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="user@example.com"
                 required
@@ -118,6 +120,7 @@ export default function RegisterPage() {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 required
                 minLength={8}
@@ -128,6 +131,18 @@ export default function RegisterPage() {
               <p className="text-xs text-muted-foreground">
                 Minimum 8 characters.
               </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                minLength={8}
+                disabled={isLoading}
+                // Add validation for password confirmation later
+              />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">

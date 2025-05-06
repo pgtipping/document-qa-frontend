@@ -15,9 +15,18 @@
 
 // Import commands.js using ES2015 syntax:
 import "./commands";
+// Add Testing Library queries
+import "@testing-library/cypress/add-commands";
+
+// Handle NextAuth URL validation errors globally
+Cypress.on("uncaught:exception", (err) => {
+  // Return false to prevent Cypress from failing the test
+  if (err.message.includes("Failed to construct 'URL'")) {
+    return false;
+  }
+  // We still want to fail the test for other errors
+  return true;
+});
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
-
-// Add Testing Library queries
-import "@testing-library/cypress/add-commands";
