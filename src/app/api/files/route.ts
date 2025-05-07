@@ -1,51 +1,184 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { getAuthSession } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { z } from "zod";
+import { PrismaClient } from "@prisma/client";
+import { authOptions } from "@/lib/auth";
 
-export async function GET(_request: NextRequest) {
-  // Prefix unused parameter with _
+// Initialize Prisma client
+const prisma = new PrismaClient();
+
+// Input validation schema for query parameters
+const QuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(20),
+  sortBy: z
+    .enum(["createdAt", "updatedAt", "name", "fileSize"])
+    .optional()
+    .default("createdAt"),
+  sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
+  search: z.string().optional(),
+  status: z.enum(["pending", "processing", "completed", "error"]).optional(),
+});
+
+/**
+ * GET /api/files
+ * Retrieves a paginated list of documents for the authenticated user
+ */
+export async function GET(req: NextRequest) {
   try {
-    // --- Authentication Check ---
-    const session = await getAuthSession();
-    if (!session?.user?.id) {
-      console.log("GET /api/files: Unauthorized access attempt.");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Verify user authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
     }
-    const userId = session.user.id;
-    // --- End Authentication Check ---
 
-    console.log(`Fetching active documents for user ID: ${userId}`);
+    // Parse and validate query parameters
+    const url = new URL(req.url);
+    const queryParams = Object.fromEntries(url.searchParams.entries());
+    const validatedQuery = QuerySchema.safeParse(queryParams);
 
-    // --- Prisma Integration: Fetch active documents for the user ---
+    if (!validatedQuery.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid query parameters",
+          details: validatedQuery.error.format(),
+        },
+        { status: 400 }
+      );
+    }
+
+    const { page, limit, sortBy, sortOrder, search, status } =
+      validatedQuery.data;
+
+    // Construct filter based on query parameters
+    const filter: any = {
+      userId: session.user.id,
+    };
+
+    // Add search filter if provided
+    if (search) {
+      filter.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    // Add status filter if provided
+    if (status) {
+      filter.status = status;
+    }
+
+    // Retrieve documents from database with pagination
     const documents = await prisma.document.findMany({
-      where: {
-        userId: userId,
-        status: "active", // Only fetch active documents
+      where: filter,
+      orderBy: {
+        [sortBy]: sortOrder,
       },
+      skip: (page - 1) * limit,
+      take: limit,
       select: {
         id: true,
-        filename: true,
+        name: true,
+        description: true,
+        fileType: true,
+        fileSize: true,
+        status: true,
         createdAt: true,
-        s3Key: true, // Include s3Key if needed for deletion or other actions client-side
-      },
-      orderBy: {
-        createdAt: "desc", // Order by creation date, newest first
+        updatedAt: true,
+        // Don't include content or other sensitive/large fields
       },
     });
 
-    console.log(
-      `Found ${documents.length} active documents for user ${userId}.`
-    );
+    // Get total count for pagination
+    const totalCount = await prisma.document.count({
+      where: filter,
+    });
 
-    return NextResponse.json({ documents });
+    const totalPages = Math.ceil(totalCount / limit);
+
+    // Return formatted response
+    return NextResponse.json({
+      documents,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+      filters: {
+        search,
+        status,
+        sortBy,
+        sortOrder,
+      },
+    });
   } catch (error) {
-    console.error("GET /api/files error:", error);
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : "Unknown error fetching documents";
+    console.error("Error retrieving documents:", error);
     return NextResponse.json(
-      { error: "Failed to fetch documents", details: errorMessage },
+      { error: "Failed to retrieve documents" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/files
+ * Creates a new document metadata entry (without content)
+ */
+export async function POST(req: NextRequest) {
+  try {
+    // Verify user authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    // Validate request body
+    const DocumentSchema = z.object({
+      name: z.string().min(1).max(255),
+      description: z.string().optional(),
+      fileType: z.string().min(1).max(50),
+      fileSize: z.number().int().positive(),
+      s3Key: z.string().optional(),
+      status: z
+        .enum(["pending", "processing", "completed", "error"])
+        .default("pending"),
+    });
+
+    const body = await req.json();
+    const validatedBody = DocumentSchema.safeParse(body);
+
+    if (!validatedBody.success) {
+      return NextResponse.json(
+        {
+          error: "Invalid document data",
+          details: validatedBody.error.format(),
+        },
+        { status: 400 }
+      );
+    }
+
+    // Create document in database
+    const document = await prisma.document.create({
+      data: {
+        ...validatedBody.data,
+        userId: session.user.id,
+      },
+    });
+
+    return NextResponse.json(document, { status: 201 });
+  } catch (error) {
+    console.error("Error creating document:", error);
+    return NextResponse.json(
+      { error: "Failed to create document" },
       { status: 500 }
     );
   }

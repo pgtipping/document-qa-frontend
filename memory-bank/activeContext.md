@@ -1,3 +1,104 @@
+# Active Context - 2025-05-06 22:02:47
+
+## Document API Migration Implementation - 2025-05-06 22:02:47
+
+- **Project Area:** Document Management API Migration from Python to Next.js
+- **Implementation Status:**
+  - Completed E2E testing infrastructure for document processing workflow
+  - All document processing test cases are now passing in Cypress
+  - Defined API route structure for document management
+  - Prepared implementation plan for S3 integration
+
+## Document API Structure Planning - 2025-05-06 22:02:47
+
+The Document API Migration project focuses on transitioning document management functionality from the Python backend to Next.js API routes. This includes:
+
+1. **Core API Routes:**
+
+   - `/api/files` - List all user documents with filtering, sorting, and pagination
+   - `/api/files/:id` - CRUD operations for document metadata
+   - `/api/files/:id/view` - Secure document content retrieval with access controls
+   - `/api/files/:id/status` - Check document processing status
+   - `/api/files/:id/annotations` - Get/update document annotations
+   - `/api/upload` - Secure document upload with validation
+
+2. **S3 Integration Requirements:**
+
+   - Direct-to-S3 uploads with pre-signed URLs for better performance
+   - Secure access controls based on user authentication
+   - Proper file organization and versioning
+   - Efficient download mechanisms for large documents
+
+3. **Document Processing Architecture:**
+
+   - Queue-based processing for better scalability
+   - Status tracking and progress reporting
+   - Text extraction for different document formats
+   - Chunking strategy for improved QA performance
+   - Metadata extraction for enhanced search
+
+4. **User Integration:**
+   - Document ownership and access control
+   - Sharing functionality with granular permissions
+   - Activity tracking for document interactions
+
+## Implementation Approach - 2025-05-06 22:02:47
+
+- **API First Development:**
+
+  - Create API route structure with full TypeScript typing
+  - Implement OpenAPI documentation for all endpoints
+  - Start with core document listing and metadata endpoints
+  - Use TDD approach with comprehensive test coverage
+
+- **Incremental Migration Strategy:**
+
+  - Migrate one endpoint at a time to ensure smooth transition
+  - Run Python and Next.js implementations in parallel initially
+  - Implement feature flags to control routing between implementations
+  - Gradually shift traffic to new endpoints after validation
+
+- **Security-focused Implementation:**
+  - Comprehensive authentication for all document operations
+  - Input validation on all API parameters
+  - Rate limiting for upload and processing endpoints
+  - Proper error handling with standardized response formats
+
+## Immediate Next Tasks - 2025-05-06 22:02:47
+
+1. **Create Base API Structure:**
+
+   - Implement `/api/files` route for document listing
+   - Setup authentication middleware for all document routes
+   - Create Prisma schema updates for document metadata
+   - Develop response formatting utilities for consistent API responses
+
+2. **Setup S3 Integration:**
+
+   - Create S3 client wrapper with proper error handling
+   - Implement secure URL generation for uploads and downloads
+   - Setup bucket policies and permissions
+   - Create file naming and organization strategy
+
+3. **Develop Document Processing Pipeline:**
+   - Create processing queue implementation
+   - Implement status tracking mechanism
+   - Develop text extraction services for different file types
+   - Setup document chunking and indexing functionality
+
+## E2E Testing Status - 2025-05-06 22:02:47
+
+The E2E testing for document processing is now complete with the following test coverage:
+
+- ✅ Document upload and processing workflow
+- ✅ Error handling during document processing
+- ✅ Document processing status updates
+- ✅ Document processing cancellation
+- ✅ Chat interaction with processed documents
+- ✅ Quiz generation from processed documents
+
+All tests are now passing using the DOM simulation approach with mocked API interactions.
+
 # Active Context - 2025-05-12 18:35:00 EDT
 
 ## Document Upload Testing Completion - 2025-05-12 18:35:00 EDT
@@ -1554,9 +1655,10 @@ As part of our E2E testing infrastructure enhancement, we've implemented compreh
    - Added document types for different processing scenarios
 
 4. **Resilient Testing Strategy:**
-   - Implemented fallback selector patterns for all processing status indicators
-   - Added timeout and waitUntilComplete options for status transitions
-   - Enhanced error handling to detect failed document processing
+   - Implemented tests with resilient selectors and fallback mechanisms
+   - Used DOM manipulation to create test environments on-the-fly
+   - Added proper event handlers to simulate user interactions
+   - Structured tests to be independent and maintainable
 
 ## Integration with Existing Infrastructure - 2025-05-08 09:45:00 EDT
 
