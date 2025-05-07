@@ -10,7 +10,17 @@ import { DocumentMetadata, DocumentSection } from "../extractors/baseExtractor";
 /**
  * Enhanced section with additional metadata
  */
-export interface EnhancedDocumentSection extends DocumentSection {
+export interface EnhancedDocumentSection {
+  /**
+   * Section title
+   */
+  title: string;
+
+  /**
+   * Section heading level (1-6, where 1 is the highest level)
+   */
+  level: number;
+
   /**
    * Character position where this section starts
    */
@@ -30,6 +40,26 @@ export interface EnhancedDocumentSection extends DocumentSection {
    * Page number where this section ends (if applicable)
    */
   endPage?: number;
+
+  /**
+   * Section content text
+   */
+  content?: string;
+
+  /**
+   * Section identifier
+   */
+  id?: string;
+
+  /**
+   * Parent section identifier (if part of a hierarchy)
+   */
+  parentId?: string;
+
+  /**
+   * Additional metadata for this section
+   */
+  metadata?: Record<string, any>;
 
   /**
    * Child sections within this section
@@ -166,7 +196,7 @@ export async function analyzeDocumentStructure(
       title: result.title || "Document",
       level: 0,
       startPosition: 0,
-    },
+    } as EnhancedDocumentSection,
   ];
 
   for (let i = 0; i < lines.length; i++) {
@@ -200,7 +230,7 @@ export async function analyzeDocumentStructure(
         title: heading.title,
         level: heading.level,
         startPosition: currentPosition,
-      };
+      } as EnhancedDocumentSection;
 
       // Add to flat sections list
       sections.push(section);
