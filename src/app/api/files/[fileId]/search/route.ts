@@ -26,16 +26,16 @@ const SearchOptionsSchema = z.object({
 });
 
 /**
- * GET /api/files/[id]/search
+ * GET /api/files/[fileId]/search
  * Search within a document using vector search
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { fileId: string } }
 ) {
   try {
     // Validate document ID
-    const documentId = params.id;
+    const documentId = params.fileId;
     if (!documentId) {
       return NextResponse.json(
         { error: "Document ID is required" },
@@ -214,25 +214,25 @@ export async function GET(
       mode: "mock",
     });
   } catch (error) {
-    console.error("Error performing document search:", error);
+    console.error("Error in search API:", error);
     return NextResponse.json(
-      { error: "Failed to search document" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
 
 /**
- * POST /api/files/[id]/search
- * More complex search with request body for advanced options
+ * POST /api/files/[fileId]/search
+ * Advanced search with body payload
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { fileId: string } }
 ) {
   try {
     // Validate document ID
-    const documentId = params.id;
+    const documentId = params.fileId;
     if (!documentId) {
       return NextResponse.json(
         { error: "Document ID is required" },
@@ -250,29 +250,25 @@ export async function POST(
     }
 
     // Parse and validate request body
-    let requestBody;
-    try {
-      requestBody = await req.json();
-    } catch (error) {
+    const body = await req.json();
+    const parseResult = SearchOptionsSchema.safeParse(body);
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: "Invalid request body" },
+        { error: "Invalid search options", details: parseResult.error },
         { status: 400 }
       );
     }
-
-    // Validate search options
-    const validationResult = SearchOptionsSchema.safeParse(requestBody);
-    if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid search options",
-          details: validationResult.error.format(),
-        },
-        { status: 400 }
-      );
-    }
-
-    const searchOptions = validationResult.data;
+    const {
+      query,
+      limit,
+      offset,
+      minScore,
+      filter,
+      enhanceContext,
+      rerank,
+      keywordWeight,
+      semanticWeight,
+    } = parseResult.data;
 
     // Retrieve document from database
     const document = await prisma.document.findUnique({
@@ -324,30 +320,11 @@ export async function POST(
 
     if (useVectorStore) {
       try {
-        // Extract search options
-        const {
-          query,
-          limit = 10,
-          offset = 0,
-          minScore = 0.5,
-          enhanceContext = true,
-          rerank = true,
-          keywordWeight = 0.3,
-          semanticWeight = 0.7,
-          filter = {},
-        } = searchOptions;
-
-        // Add document filter
-        const searchFilter = {
-          ...filter,
-          documentId,
-        };
-
         // Perform search using the search optimizer
         console.log(`Performing vector search for query: "${query}"`);
 
         const searchResults = await hybridSearch(query, {
-          filter: searchFilter,
+          filter: { documentId },
           topK: limit,
           enhanceContext,
           rerank,
@@ -387,7 +364,6 @@ export async function POST(
     }
 
     // Fallback: Return mock search results if vector search is not available
-    const { query } = searchOptions;
     console.log("Using mock search results");
     const mockSearchResults = [
       {
@@ -425,13 +401,21 @@ export async function POST(
         id: document.id,
         filename: document.filename,
       },
-      searchParams: searchOptions,
+      searchParams: {
+        limit,
+        offset,
+        minScore,
+        enhanceContext,
+        rerank,
+        keywordWeight,
+        semanticWeight,
+      },
       mode: "mock",
     });
   } catch (error) {
-    console.error("Error performing document search:", error);
+    console.error("Error in search API:", error);
     return NextResponse.json(
-      { error: "Failed to search document" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

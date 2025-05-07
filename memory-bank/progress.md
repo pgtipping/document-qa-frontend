@@ -1762,3 +1762,94 @@ Based on the gap analysis, implementation priorities are:
    - Address npm audit warnings by updating or replacing vulnerable packages
    - Ensure all dependencies are compatible with Next.js 14
    - Document dependency relationships to avoid future conflicts
+
+# 2025-05-07 03:22:55 - Quiz Templates Feature Analysis and Test Planning
+
+## Completed - 2025-05-07 03:22:55
+
+- **Task:** Analyze Quiz Templates implementation and test suite
+- **Actions:**
+  - Performed code review of Quiz Templates feature components:
+    - Analyzed TemplateSelector and TemplatePreview components
+    - Examined quiz-templates.ts library functionality and template definitions
+    - Reviewed existing unit tests for template components
+    - Examined Cypress E2E test setup for quiz templates and difficulty levels
+  - Identified issues with component test failures:
+    - Located missing component import errors in QuizResults tests
+    - Found undefined UI component references in test modules
+    - Discovered E2E test configuration issues with development server
+
+## Technical Notes - 2025-05-07 03:22:55
+
+- **Component Architecture:**
+  - Template component architecture uses shadcn/ui components for consistent UI
+  - TemplateSelector implements automatic recommendation based on document filename
+  - TemplatePreview provides visual representation of template distribution and focus areas
+  - Quiz generation API includes template-specific prompt modifications
+- **Testing Infrastructure:**
+  - Unit tests for template components are configured with proper mocks
+  - E2E Cypress tests require running development server on port 3004
+  - Test setup needs proper database seeding with `npm run seed:test`
+  - Current Jest configuration shows multiple component test failures
+
+## Next Steps - 2025-05-07 03:22:55
+
+1. **Fix Component Test Issues:**
+
+   - Resolve import errors in QuizResults and QuizDisplay components
+   - Check shadcn/ui component imports and ensure proper exports
+   - Run specific component tests to isolate and fix issues
+   - Update mocks for UI components in test files
+
+2. **Configure E2E Testing:**
+
+   - Set up proper test environment with automatic server startup
+   - Create fixture data for testing quiz templates with various document types
+   - Ensure database seeding works correctly for E2E scenarios
+   - Implement more comprehensive template selection tests
+
+3. **UI Refinements:**
+
+   - Add loading states for template selection during quiz generation
+   - Enhance visual feedback for template selection and preview
+   - Implement responsive design improvements for mobile devices
+   - Add animations for smoother template transitions
+
+4. **Documentation:**
+   - Document template extension process for developers
+   - Create user documentation for template selection benefits
+   - Update API documentation with template parameters
+
+# 2025-05-09 10:00:00 - Fixed Vercel Dynamic Route Conflict ([fileId] vs [id])
+
+## Completed - 2025-05-09 10:00:00
+
+- **Task:** Resolve Vercel build error due to conflicting dynamic route slugs in Next.js App Router
+- **Actions:**
+  - Identified duplicate dynamic route segments: `[fileId]` and `[id]` under `/api/files/`
+  - Standardized all dynamic segments to `[fileId]` for file/document APIs
+  - Renamed `/api/files/[id]/search/route.ts` to `/api/files/[fileId]/search/route.ts` and updated all parameter references
+  - Deleted the old `[id]` folder and verified no lingering references
+  - Successfully ran `npm run build` with no dynamic route errors
+
+## Technical Notes - 2025-05-09 10:00:00
+
+- **Next.js Restriction:** Only one dynamic segment name is allowed per path level; mixing `[id]` and `[fileId]` causes build failure
+- **Refactor:** All API and import references now use `fileId` for clarity and consistency
+- **Build:** Project builds cleanly; warnings are unrelated to dynamic routing
+
+## Next Steps - 2025-05-09 10:00:00
+
+1. **QA & Regression:**
+   - Test all file/document API endpoints for regressions
+   - Run E2E and integration tests for document search and deletion
+2. **Documentation:**
+   - Update developer docs to clarify dynamic route naming conventions
+   - Add a note in onboarding docs about Next.js dynamic route restrictions
+3. **CI/CD:**
+   - Monitor next Vercel deployment for successful build and runtime
+   - Add a regression test for dynamic route conflicts in future PRs
+
+# Previous Progress (Summarized)
+
+- Enhanced Cypress testing infrastructure, improved database seeding, implemented quiz templates and question difficulty features, and consolidated test setup. See earlier entries for details.
