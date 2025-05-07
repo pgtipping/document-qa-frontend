@@ -81,15 +81,20 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4">
+    <main
+      className="flex min-h-screen flex-col items-center justify-center p-4"
+      data-testid="register-page"
+    >
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Register</CardTitle>
+          <CardTitle className="text-2xl" data-testid="register-title">
+            Register
+          </CardTitle>
           <CardDescription>
             Create a new account to start using the application.
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} data-testid="register-form">
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name (Optional)</Label>
@@ -101,6 +106,7 @@ export default function RegisterPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isLoading}
+                data-testid="register-name-input"
               />
             </div>
             <div className="space-y-2">
@@ -114,6 +120,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
+                data-testid="register-email-input"
               />
             </div>
             <div className="space-y-2">
@@ -127,6 +134,7 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
+                data-testid="register-password-input"
               />
               <p className="text-xs text-muted-foreground">
                 Minimum 8 characters.
@@ -141,12 +149,18 @@ export default function RegisterPage() {
                 required
                 minLength={8}
                 disabled={isLoading}
+                data-testid="register-confirm-password-input"
                 // Add validation for password confirmation later
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+              data-testid="register-submit-button"
+            >
               {isLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
@@ -157,6 +171,7 @@ export default function RegisterPage() {
               <Link
                 href="/api/auth/signin"
                 className="underline hover:text-primary"
+                data-testid="signin-link"
               >
                 Sign In
               </Link>

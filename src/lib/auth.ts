@@ -130,7 +130,7 @@ export const authOptions: AuthOptions = {
     },
   },
   // Enable debug messages in development
-  debug: process.env.NODE_ENV === "development",
+  debug: process.env.NODE_ENV !== "production",
   // Use debug mode to handle URL validation and construction issues in tests
   // experimental: {
   //  enableDebugMode: true,

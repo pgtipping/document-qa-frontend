@@ -124,15 +124,20 @@ export default function SignInPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4">
+    <main
+      className="flex min-h-screen flex-col items-center justify-center p-4"
+      data-testid="signin-page"
+    >
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign In</CardTitle>
+          <CardTitle className="text-2xl" data-testid="signin-title">
+            Sign In
+          </CardTitle>
           <CardDescription>
             Enter your credentials or use a provider to sign in.
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleCredentialsSubmit}>
+        <form onSubmit={handleCredentialsSubmit} data-testid="signin-form">
           <CardContent className="space-y-4">
             {providers?.credentials && (
               <>
@@ -147,6 +152,7 @@ export default function SignInPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
+                    data-testid="login-email-input"
                   />
                 </div>
                 <div className="space-y-2">
@@ -159,9 +165,15 @@ export default function SignInPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
+                    data-testid="login-password-input"
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                  data-testid="login-submit-button"
+                >
                   {isLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
@@ -186,7 +198,7 @@ export default function SignInPage() {
               )}
 
             {/* OAuth Providers */}
-            <div className="space-y-2">
+            <div className="space-y-2" data-testid="oauth-providers">
               {providers &&
                 Object.values(providers).map((provider) => {
                   if (provider.id === "credentials") return null; // Skip credentials provider here
@@ -197,6 +209,7 @@ export default function SignInPage() {
                       className="w-full"
                       onClick={() => handleOAuthSignIn(provider.id)}
                       disabled={isLoading}
+                      data-testid={`login-${provider.id}-button`}
                     >
                       {isLoading ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -212,7 +225,11 @@ export default function SignInPage() {
           {/* Registration Link */}
           <p>
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="underline hover:text-primary">
+            <Link
+              href="/register"
+              className="underline hover:text-primary"
+              data-testid="register-link"
+            >
               Register
             </Link>
           </p>

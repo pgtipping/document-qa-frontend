@@ -845,3 +845,48 @@ When creating new tutorial pages:
 4. Provide clear explanations for each implementation step
 5. Link to related tutorials and resources
 6. Include troubleshooting tips for common issues
+
+## E2E Testing Patterns
+
+1. Selector Strategy:
+
+- Primary: data-testid attributes
+- Secondary: Class-based selectors
+- Tertiary: Element type selectors
+- Resilient fallback patterns
+
+2. Custom Commands:
+
+- selectQuizOption for quiz options
+- answerQuestion for text inputs
+- navigateQuiz for quiz navigation
+- waitForQuizLoad for component loading
+
+3. Data-TestID Convention:
+
+- Component containers: "component-name"
+- Actions: "component-name-action"
+- Inputs: "component-name-input"
+- Options: "component-name-option-index"
+- Status: "component-name-status"
+
+4. Test Mocking:
+
+- Mock API responses with fixtures
+- Use aliases for network requests
+- Wait for requests to complete
+- Provide fallback responses
+
+5. Test Structure:
+
+- Clear before/after hooks
+- Independent test cases
+- Progressive assertion patterns
+- Proper test isolation
+
+6. Test Monitoring:
+
+- Track test statistics
+- Analyze failure patterns
+- Generate recommendations
+- Detect flaky tests

@@ -20,44 +20,11 @@ describe("Authentication Flows", () => {
   });
 
   it("should allow login with valid credentials", () => {
-    // Intercept auth requests
-    cy.intercept("POST", "/api/auth/callback/credentials", {
-      statusCode: 200,
-      body: {
-        user: {
-          email: "test@example.com",
-          name: "Test User",
-          id: "user-1",
-          role: "user",
-        },
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      },
-    }).as("loginRequest");
+    // Use custom loginWithUI command that has resilient selectors
+    cy.loginWithUI("test@example.com", "password123");
 
-    cy.intercept("GET", "/api/auth/session", {
-      statusCode: 200,
-      body: {
-        user: {
-          email: "test@example.com",
-          name: "Test User",
-          id: "user-1",
-          role: "user",
-        },
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      },
-    }).as("sessionRequest");
-
-    // Navigate to login page
-    cy.visit("/auth/signin");
-
-    // Fill in credentials
-    cy.get('input[name="email"]').type("test@example.com");
-    cy.get('input[name="password"]').type("password123");
-    cy.get("form").submit();
-
-    // Check we stay on the login page due to mock/test environment
-    // (In a real app it would redirect, but our test setup doesn't fully simulate this)
-    cy.url().should("include", "/auth/signin");
+    // Should be on the docs page after successful login
+    cy.url().should("include", "/docs");
   });
 
   it("should show error with invalid credentials", () => {
@@ -72,47 +39,42 @@ describe("Authentication Flows", () => {
     // Navigate to login page
     cy.visit("/auth/signin");
 
-    // Fill in credentials
-    cy.get('input[name="email"]').type("test@example.com");
-    cy.get('input[name="password"]').type("wrongpassword");
-    cy.get("form").submit();
+    // Use resilient selectors for login
+    cy.get("body").then(($body) => {
+      // Email input
+      if ($body.find('[data-testid="login-email-input"]').length > 0) {
+        cy.get('[data-testid="login-email-input"]').type("test@example.com");
+      } else {
+        cy.get('input[name="email"]').type("test@example.com");
+      }
+
+      // Password input
+      if ($body.find('[data-testid="login-password-input"]').length > 0) {
+        cy.get('[data-testid="login-password-input"]').type("wrongpassword");
+      } else {
+        cy.get('input[name="password"]').type("wrongpassword");
+      }
+
+      // Submit button
+      if ($body.find('[data-testid="login-submit-button"]').length > 0) {
+        cy.get('[data-testid="login-submit-button"]').click();
+      } else if ($body.find('[data-testid="signin-form"]').length > 0) {
+        cy.get('[data-testid="signin-form"]').submit();
+      } else {
+        cy.get("form").submit();
+      }
+    });
 
     // Verify error is displayed
     cy.wait("@failedLoginRequest");
 
     // Stay on the signin page
     cy.url().should("include", "/auth/signin");
-
-    // Since the error might be shown differently in the UI, just check we're still on login page
-    cy.get('input[name="email"]').should("exist");
   });
 
   it("should allow registration with valid information", () => {
-    // Intercept registration request
-    cy.intercept("POST", "/api/auth/register", {
-      statusCode: 200,
-      body: {
-        message: "Registration successful",
-        user: {
-          id: "new-user-id",
-          email: "new@example.com",
-          name: "New User",
-        },
-      },
-    }).as("registrationRequest");
-
-    // Navigate to registration page
-    cy.visit("/register");
-
-    // Fill in registration form
-    cy.get('input[name="name"]').type("New User");
-    cy.get('input[name="email"]').type("new@example.com");
-    cy.get('input[name="password"]').type("newpassword123");
-    cy.get('input[name="confirmPassword"]').type("newpassword123");
-    cy.get("form").submit();
-
-    // Verify registration was successful
-    cy.wait("@registrationRequest");
+    // Use custom registerWithUI command that has resilient selectors
+    cy.registerWithUI("new@example.com", "newpassword123", "New User");
 
     // Should redirect to the login page after registration
     cy.url().should("include", "/auth/signin");
@@ -178,10 +140,31 @@ describe("Authentication Flows", () => {
       },
     }).as("failedLogin");
 
-    // Submit invalid credentials
-    cy.get('input[name="email"]').type("wrong@example.com");
-    cy.get('input[name="password"]').type("wrongpassword");
-    cy.get("form").submit();
+    // Use resilient selectors for login form interaction with fallbacks
+    cy.get("body").then(($body) => {
+      // Email input
+      if ($body.find('[data-testid="login-email-input"]').length > 0) {
+        cy.get('[data-testid="login-email-input"]').type("wrong@example.com");
+      } else {
+        cy.get('input[name="email"]').type("wrong@example.com");
+      }
+
+      // Password input
+      if ($body.find('[data-testid="login-password-input"]').length > 0) {
+        cy.get('[data-testid="login-password-input"]').type("wrongpassword");
+      } else {
+        cy.get('input[name="password"]').type("wrongpassword");
+      }
+
+      // Submit button
+      if ($body.find('[data-testid="login-submit-button"]').length > 0) {
+        cy.get('[data-testid="login-submit-button"]').click();
+      } else if ($body.find('[data-testid="signin-form"]').length > 0) {
+        cy.get('[data-testid="signin-form"]').submit();
+      } else {
+        cy.get("form").submit();
+      }
+    });
 
     // Wait for the request to complete
     cy.wait("@failedLogin");
@@ -189,9 +172,20 @@ describe("Authentication Flows", () => {
     // Verify we're still on the login page
     cy.url().should("include", "/auth/signin");
 
-    // Verify form is still there
-    cy.get('input[name="email"]').should("exist");
-    cy.get('input[name="password"]').should("exist");
+    // Verify form is still there with resilient selectors
+    cy.get("body").then(($body) => {
+      if ($body.find('[data-testid="login-email-input"]').length > 0) {
+        cy.get('[data-testid="login-email-input"]').should("exist");
+      } else {
+        cy.get('input[name="email"]').should("exist");
+      }
+
+      if ($body.find('[data-testid="login-password-input"]').length > 0) {
+        cy.get('[data-testid="login-password-input"]').should("exist");
+      } else {
+        cy.get('input[name="password"]').should("exist");
+      }
+    });
   });
 
   it("Should redirect unauthenticated users to login page", () => {

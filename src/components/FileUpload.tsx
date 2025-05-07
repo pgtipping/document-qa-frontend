@@ -193,7 +193,7 @@ export default function FileUpload() {
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4" data-testid="document-upload-container">
       <div
         {...getRootProps()}
         className={`
@@ -210,8 +210,9 @@ export default function FileUpload() {
               : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50"
           }
         `}
+        data-testid="document-upload-dropzone"
       >
-        <input {...getInputProps()} />
+        <input {...getInputProps()} data-testid="document-upload-input" />
         {isLoadingSession ? (
           <div className="text-center text-muted-foreground">
             Loading session...
@@ -260,17 +261,26 @@ export default function FileUpload() {
 
       {file &&
         isAuthenticated && ( // Only show file details if authenticated
-          <div className="flex flex-col space-y-2">
+          <div
+            className="flex flex-col space-y-2"
+            data-testid="document-file-details"
+          >
             <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
               <div className="flex items-center space-x-4">
                 <div className="p-2 rounded-full bg-primary/10">
                   <IconWrapper Icon={File} size={24} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium truncate max-w-[200px]">
+                  <p
+                    className="text-sm font-medium truncate max-w-[200px]"
+                    data-testid="document-file-name"
+                  >
                     {file.name}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p
+                    className="text-xs text-muted-foreground"
+                    data-testid="document-file-size"
+                  >
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
@@ -281,13 +291,14 @@ export default function FileUpload() {
                 className="text-muted-foreground hover:text-destructive"
                 onClick={removeFile}
                 disabled={isUploading}
+                data-testid="document-remove-file-button"
               >
                 <IconWrapper Icon={X} size={16} />
               </Button>
             </div>
 
             {isUploading && (
-              <div className="space-y-2">
+              <div className="space-y-2" data-testid="document-upload-progress">
                 <Progress value={uploadProgress} className="w-full" />
                 <p className="text-xs text-center text-muted-foreground">
                   Uploading... {Math.round(uploadProgress)}%

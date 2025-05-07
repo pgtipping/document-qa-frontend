@@ -209,7 +209,7 @@ export default function QuizDisplay({ quizId, onComplete }: QuizDisplayProps) {
   // Loading state
   if (loading) {
     return (
-      <Card className="w-full">
+      <Card className="w-full" data-testid="quiz-loading">
         <CardHeader>
           <CardTitle>Loading Quiz...</CardTitle>
           <CardDescription>Please wait while we load your quiz</CardDescription>
@@ -228,7 +228,7 @@ export default function QuizDisplay({ quizId, onComplete }: QuizDisplayProps) {
   // Error state
   if (error || !quiz) {
     return (
-      <Card className="w-full">
+      <Card className="w-full" data-testid="quiz-error">
         <CardHeader>
           <CardTitle>Error</CardTitle>
           <CardDescription>
@@ -249,128 +249,155 @@ export default function QuizDisplay({ quizId, onComplete }: QuizDisplayProps) {
 
   // Current question
   const currentQuestion = quiz.questions[currentQuestionIndex];
-  const currentAnswer = userAnswers[currentQuestionIndex]?.userAnswer || "";
-  const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
+  const { color: difficultyColor, icon: difficultyIcon } = getDifficultyBadge(
+    currentQuestion.difficulty
+  );
+
+  // Progress percentage
+  const progressPercentage =
+    ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
 
   return (
-    <Card className="w-full">
+    <Card className="w-full max-w-3xl mx-auto" data-testid="quiz-display">
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle>{quiz.title}</CardTitle>
-          {timeRemaining !== null && (
-            <CountdownTimer
-              initialSeconds={timeRemaining}
-              onComplete={handleTimerComplete}
-              warningThreshold={120} // 2 minutes warning
-              dangerThreshold={60} // 1 minute danger
-              size="lg"
-              onWarningThreshold={() => handleTimeWarning()}
-            />
-          )}
-        </div>
-        <CardDescription>{quiz.description}</CardDescription>
-
-        {/* Time Warning Alert */}
-        {showTimeWarning && (
-          <Alert className="mt-2 bg-amber-50 text-amber-800 border-amber-200">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Time is running out!</AlertTitle>
-            <AlertDescription>
-              You have less than 2 minutes remaining to complete this quiz.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Progress */}
-        <div className="pt-2">
-          <div className="flex justify-between text-sm mb-1">
-            <span>
-              Question {currentQuestionIndex + 1} of {quiz.questions.length}
-            </span>
-            <span>{Math.round(progress)}%</span>
+          <div>
+            <CardTitle data-testid="quiz-title">{quiz.title}</CardTitle>
+            <CardDescription>{quiz.description}</CardDescription>
           </div>
-          <Progress value={progress} />
+          {quiz.timeLimit && (
+            <div className="text-right">
+              <CountdownTimer
+                initialSeconds={timeRemaining || 0}
+                onComplete={handleTimerComplete}
+                onWarningThreshold={handleTimeWarning}
+                warningThreshold={60} // 1 minute warning
+              />
+            </div>
+          )}
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
-        {/* Question */}
-        <div className="space-y-2">
-          <h3 className="text-lg font-medium">
-            {currentQuestion.questionText}
-          </h3>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>
-              {currentQuestion.points} point
-              {currentQuestion.points !== 1 ? "s" : ""}
+      {showTimeWarning && (
+        <Alert variant="destructive" className="mx-4 mb-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Time is running out!</AlertTitle>
+          <AlertDescription>
+            You have less than 1 minute remaining.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <CardContent>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-500">
+              Question {currentQuestionIndex + 1} of {quiz.questions.length}
             </span>
-            <span>•</span>
-            <span>
-              {currentQuestion.answerType === "multiple_choice"
-                ? "Choose one option"
-                : currentQuestion.answerType === "true_false"
-                ? "Select True or False"
-                : "Enter your answer"}
-            </span>
-            <span>•</span>
-            {currentQuestion.difficulty && (
-              <Badge
-                variant="outline"
-                className={`${
-                  getDifficultyBadge(currentQuestion.difficulty).color
-                } flex items-center`}
+            <Badge
+              variant="outline"
+              className={`${difficultyColor} flex items-center`}
+            >
+              {difficultyIcon}
+              {currentQuestion.difficulty.charAt(0).toUpperCase() +
+                currentQuestion.difficulty.slice(1)}
+            </Badge>
+          </div>
+
+          <Progress value={progressPercentage} />
+
+          <div className="mt-4">
+            <h3
+              className="text-lg font-medium mb-4"
+              data-testid="quiz-question"
+            >
+              {currentQuestion.questionText}
+            </h3>
+
+            {/* Multiple choice question */}
+            {currentQuestion.answerType === "multiple_choice" &&
+              currentQuestion.options && (
+                <RadioGroup
+                  value={userAnswers[currentQuestionIndex]?.userAnswer || ""}
+                  onValueChange={handleAnswerChange}
+                  className="space-y-3"
+                >
+                  {currentQuestion.options.map((option, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 p-2 rounded border border-gray-200 hover:bg-gray-50 quiz-option"
+                      data-testid={`quiz-option-${index}`}
+                    >
+                      <RadioGroupItem
+                        value={option}
+                        id={`option-${index}`}
+                        className="quiz-option-radio"
+                      />
+                      <Label
+                        htmlFor={`option-${index}`}
+                        className="flex-grow cursor-pointer py-1"
+                      >
+                        {option}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              )}
+
+            {/* True/False question */}
+            {currentQuestion.answerType === "true_false" && (
+              <RadioGroup
+                value={userAnswers[currentQuestionIndex]?.userAnswer || ""}
+                onValueChange={handleAnswerChange}
+                className="space-y-3"
               >
-                {getDifficultyBadge(currentQuestion.difficulty).icon}
-                {currentQuestion.difficulty.charAt(0).toUpperCase() +
-                  currentQuestion.difficulty.slice(1)}
-              </Badge>
+                <div
+                  className="flex items-center space-x-2 p-2 rounded border border-gray-200 hover:bg-gray-50 quiz-option"
+                  data-testid="quiz-option-0"
+                >
+                  <RadioGroupItem
+                    value="True"
+                    id="option-true"
+                    className="quiz-option-radio"
+                  />
+                  <Label
+                    htmlFor="option-true"
+                    className="flex-grow cursor-pointer py-1"
+                  >
+                    True
+                  </Label>
+                </div>
+                <div
+                  className="flex items-center space-x-2 p-2 rounded border border-gray-200 hover:bg-gray-50 quiz-option"
+                  data-testid="quiz-option-1"
+                >
+                  <RadioGroupItem
+                    value="False"
+                    id="option-false"
+                    className="quiz-option-radio"
+                  />
+                  <Label
+                    htmlFor="option-false"
+                    className="flex-grow cursor-pointer py-1"
+                  >
+                    False
+                  </Label>
+                </div>
+              </RadioGroup>
+            )}
+
+            {/* Short answer question */}
+            {currentQuestion.answerType === "short_answer" && (
+              <Textarea
+                value={userAnswers[currentQuestionIndex]?.userAnswer || ""}
+                onChange={(e) => handleAnswerChange(e.target.value)}
+                placeholder="Type your answer here..."
+                className="w-full h-32 quiz-short-answer"
+                data-testid="quiz-answer-input"
+              />
             )}
           </div>
         </div>
-
-        {/* Answer Input */}
-        {currentQuestion.answerType === "multiple_choice" && (
-          <RadioGroup value={currentAnswer} onValueChange={handleAnswerChange}>
-            <div className="space-y-3">
-              {currentQuestion.options?.map((option, i) => (
-                <div key={i} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option} id={`option-${i}`} />
-                  <Label htmlFor={`option-${i}`} className="cursor-pointer">
-                    {option}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </RadioGroup>
-        )}
-
-        {currentQuestion.answerType === "true_false" && (
-          <RadioGroup value={currentAnswer} onValueChange={handleAnswerChange}>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="True" id="true" />
-                <Label htmlFor="true" className="cursor-pointer">
-                  True
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="False" id="false" />
-                <Label htmlFor="false" className="cursor-pointer">
-                  False
-                </Label>
-              </div>
-            </div>
-          </RadioGroup>
-        )}
-
-        {currentQuestion.answerType === "short_answer" && (
-          <Textarea
-            placeholder="Enter your answer here..."
-            value={currentAnswer}
-            onChange={(e) => handleAnswerChange(e.target.value)}
-            rows={4}
-          />
-        )}
       </CardContent>
 
       <CardFooter className="flex justify-between">
@@ -378,24 +405,23 @@ export default function QuizDisplay({ quizId, onComplete }: QuizDisplayProps) {
           variant="outline"
           onClick={goToPreviousQuestion}
           disabled={currentQuestionIndex === 0}
+          data-testid="quiz-prev-button"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Previous
+          <ArrowLeft className="mr-2 h-4 w-4" /> Previous
         </Button>
 
         {currentQuestionIndex < quiz.questions.length - 1 ? (
-          <Button onClick={goToNextQuestion}>
-            Next
-            <ArrowRight className="ml-2 h-4 w-4" />
+          <Button onClick={goToNextQuestion} data-testid="quiz-next-button">
+            Next <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         ) : (
           <Button
             onClick={submitQuiz}
             disabled={submitting}
-            className="bg-green-600 hover:bg-green-700"
+            data-testid="quiz-submit-button"
           >
-            <Flag className="mr-2 h-4 w-4" />
-            {submitting ? "Submitting..." : "Submit Quiz"}
+            {submitting ? "Submitting..." : "Submit Quiz"}{" "}
+            <Flag className="ml-2 h-4 w-4" />
           </Button>
         )}
       </CardFooter>

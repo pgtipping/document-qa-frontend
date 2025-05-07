@@ -204,7 +204,7 @@ export default function QuizGenerator({
             onValueChange={handleDocumentSelect}
             disabled={isGenerating}
           >
-            <SelectTrigger id="document-select">
+            <SelectTrigger id="document-select" data-testid="document-select">
               <SelectValue placeholder="Select a document" />
             </SelectTrigger>
             <SelectContent>
@@ -277,6 +277,7 @@ export default function QuizGenerator({
               </div>
               <Slider
                 id="quiz-size"
+                data-testid="quiz-num-questions"
                 defaultValue={[5]}
                 min={3}
                 max={10}
@@ -312,6 +313,7 @@ export default function QuizGenerator({
                   <HoverCardTrigger asChild>
                     <Button
                       variant="outline"
+                      data-testid="quiz-difficulty-easy"
                       className={`flex justify-start items-center ${
                         difficulty === "easy" ? getDifficultyColor("easy") : ""
                       } ${
@@ -340,6 +342,7 @@ export default function QuizGenerator({
                   <HoverCardTrigger asChild>
                     <Button
                       variant="outline"
+                      data-testid="quiz-difficulty-medium"
                       className={`flex justify-start items-center ${
                         difficulty === "medium"
                           ? getDifficultyColor("medium")
@@ -373,6 +376,7 @@ export default function QuizGenerator({
                   <HoverCardTrigger asChild>
                     <Button
                       variant="outline"
+                      data-testid="quiz-difficulty-hard"
                       className={`flex justify-start items-center ${
                         difficulty === "hard" ? getDifficultyColor("hard") : ""
                       } ${
@@ -448,6 +452,7 @@ export default function QuizGenerator({
           <Button
             onClick={handleGenerateQuiz}
             disabled={isGenerating || !selectedDocumentId}
+            data-testid="quiz-generate-button"
           >
             {isGenerating ? (
               <>

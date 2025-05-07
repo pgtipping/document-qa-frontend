@@ -1,80 +1,96 @@
 #!/bin/bash
 
-# setup-test-env.sh - Script for setting up and running E2E tests
-# Updated: $(date +"%Y-%m-%d %H:%M:%S %Z")
-# Usage: ./scripts/setup-test-env.sh [test_spec]
-# Example: ./scripts/setup-test-env.sh cypress/e2e/auth-flows.cy.ts
+# Enhanced E2E test setup script
+# Created: 2025-05-06 04:26:49
 
-# Check if a specific test is specified
-if [ $# -eq 1 ]; then
-  TEST_SPEC="--spec $1"
-else
-  TEST_SPEC=""
-fi
+set -e  # Exit on any error
 
-# Colors for better output
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Set up environment
+export NODE_ENV=test
+export NEXTAUTH_URL=http://localhost:3004
+export NEXTAUTH_SECRET=e2etestsecretkey
 
-echo -e "${YELLOW}===== Setting Up E2E Testing Environment =====${NC}"
-
-# Ensure we're using .env.test
-echo -e "${YELLOW}Checking environment settings...${NC}"
-if [ ! -f ".env.test" ]; then
-  echo -e "${RED}Error: .env.test file not found.${NC}"
-  echo -e "Please create an .env.test file with test environment variables."
-  exit 1
-fi
-
-# Run Prisma migrations if needed
-echo -e "${YELLOW}Running database migrations...${NC}"
-npx prisma migrate deploy
-
-# Seed the database with test data
-echo -e "${YELLOW}Seeding test database...${NC}"
-# Use ts-node with the esm flag to run the TypeScript seed script
-npx ts-node --esm scripts/seed-test-db.ts || {
-  echo -e "${RED}Warning: Database seeding completed with errors.${NC}"
-  echo -e "Some test data may already exist. Continuing..."
+# Function to check if a port is in use
+port_in_use() {
+  nc -z localhost $1 > /dev/null 2>&1
 }
 
-# Check if server is running
-echo -e "${YELLOW}Checking if server is already running...${NC}"
-if curl -s http://localhost:3004 > /dev/null; then
-  echo -e "${GREEN}Server already running on port 3004.${NC}"
-else
-  echo -e "${YELLOW}Starting server on port 3004...${NC}"
-  # Start the Next.js server in the background
+# Create a timestamp for log files
+TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
+LOG_DIR="performance_logs"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/e2e_test_$TIMESTAMP.log"
+
+# Log function
+log() {
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+log "Starting E2E test setup"
+
+# Check if server is already running
+if ! port_in_use 3004; then
+  log "Starting test server on port 3004..."
   npm run dev -- -p 3004 &
-  # Store the process ID
   SERVER_PID=$!
-  # Wait for the server to start
-  echo -e "${YELLOW}Waiting for server to start...${NC}"
-  until curl -s http://localhost:3004 > /dev/null; do
+  
+  # Wait for server to start
+  log "Waiting for server to start..."
+  attempt=0
+  max_attempts=30
+  
+  until port_in_use 3004 || [ $attempt -ge $max_attempts ]; do
+    attempt=$((attempt+1))
+    log "Waiting for server (attempt $attempt/$max_attempts)..."
     sleep 1
   done
-  echo -e "${GREEN}Server started on port 3004 (PID: ${SERVER_PID})${NC}"
-fi
-
-# Run the Cypress tests
-echo -e "${YELLOW}Running Cypress tests...${NC}"
-if [ -z "$TEST_SPEC" ]; then
-  echo -e "${YELLOW}Running all E2E tests...${NC}"
+  
+  if port_in_use 3004; then
+    log "Server started successfully."
+  else
+    log "Server failed to start after $max_attempts attempts."
+    exit 1
+  fi
 else
-  echo -e "${YELLOW}Running test: ${TEST_SPEC}${NC}"
+  log "Server already running on port 3004."
 fi
 
-# Run the tests with the CYPRESS_BASE_URL set to localhost:3004
-CYPRESS_BASE_URL=http://localhost:3004 npx cypress run $TEST_SPEC
+# Set up database
+log "Setting up test database..."
+npx prisma migrate deploy
+node scripts/seed-test-db.js
 
-# Check if we should clean up when done
-if [ -n "$SERVER_PID" ]; then
-  echo -e "${YELLOW}Tests completed. Cleaning up...${NC}"
-  # Kill the server if we started it
+# Run specified tests or all tests
+if [ -z "$1" ]; then
+  log "Running all tests..."
+  npm run cy:run
+else
+  log "Running tests for $1..."
+  npm run cy:run -- --spec "$1"
+fi
+
+# Cleanup
+if [ ! -z "$SERVER_PID" ]; then
+  log "Shutting down test server..."
   kill $SERVER_PID
-  echo -e "${GREEN}Server stopped.${NC}"
+  
+  # Wait for server to shut down
+  attempt=0
+  max_attempts=10
+  
+  until ! port_in_use 3004 || [ $attempt -ge $max_attempts ]; do
+    attempt=$((attempt+1))
+    log "Waiting for server to shut down (attempt $attempt/$max_attempts)..."
+    sleep 1
+  done
+  
+  if ! port_in_use 3004; then
+    log "Server shut down successfully."
+  else
+    log "Warning: Server did not shut down cleanly."
+    # Force kill if needed
+    kill -9 $SERVER_PID 2>/dev/null || true
+  fi
 fi
 
-echo -e "${YELLOW}===== E2E Testing Complete =====${NC}" 
+log "Test run completed."

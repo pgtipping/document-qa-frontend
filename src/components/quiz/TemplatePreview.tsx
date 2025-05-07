@@ -91,7 +91,7 @@ export default function TemplatePreview({ templateId }: TemplatePreviewProps) {
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full" data-testid="template-preview">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">
           Template Preview: {template.name}
@@ -147,7 +147,7 @@ export default function TemplatePreview({ templateId }: TemplatePreviewProps) {
           </div>
 
           {/* Focus areas */}
-          <div>
+          <div data-testid="template-focus-areas">
             <h4 className="text-sm font-medium mb-2">Focus Areas</h4>
             <div className="flex flex-wrap gap-1">
               {template.focusAreas.map((area) => (
@@ -159,7 +159,7 @@ export default function TemplatePreview({ templateId }: TemplatePreviewProps) {
           </div>
 
           {/* Example Questions */}
-          <div>
+          <div data-testid="template-example-questions">
             <h4 className="text-sm font-medium mb-2">Example Questions</h4>
             <div className="space-y-3">
               {template.exampleQuestions.map((question, idx) => {
@@ -168,7 +168,11 @@ export default function TemplatePreview({ templateId }: TemplatePreviewProps) {
                 const difficulty = ["easy", "medium", "hard"][idx % 3];
 
                 return (
-                  <div key={idx} className="border rounded-md p-3 bg-gray-50">
+                  <div
+                    key={idx}
+                    className="border rounded-md p-3 bg-gray-50"
+                    data-testid={`example-question-${idx}`}
+                  >
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center space-x-1">
                         {getQuestionTypeIcon(questionType)}

@@ -1,5 +1,38 @@
 [
   {
+    "id": "quiz-1",
+    "title": "Sample Quiz 1",
+    "documentId": "doc-1",
+    "createdAt": "2025-06-10T12:00:00.000Z",
+    "questions": [
+      {
+        "id": "test-question-1",
+        "type": "multiple_choice",
+        "content": "What is the capital of France?",
+        "options": ["London", "Paris", "Berlin", "Madrid"],
+        "correctAnswer": "Paris",
+        "correctAnswerIndex": 1,
+        "explanation": "Paris is the capital of France."
+      },
+      {
+        "id": "test-question-2",
+        "type": "true_false",
+        "content": "The Earth is flat.",
+        "options": ["True", "False"],
+        "correctAnswer": "False",
+        "correctAnswerIndex": 1,
+        "explanation": "The Earth is approximately spherical."
+      },
+      {
+        "id": "test-question-3",
+        "type": "short_answer",
+        "content": "What is the chemical symbol for water?",
+        "correctAnswer": "H2O",
+        "explanation": "H2O is the chemical formula for water."
+      }
+    ]
+  },
+  {
     "id": "test-quiz-1",
     "title": "Test Quiz 1",
     "documentId": "test-doc-1",

@@ -172,7 +172,10 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
 
   if (status === "loading") {
     return (
-      <div className="flex justify-center items-center p-8">
+      <div
+        className="flex justify-center items-center p-8"
+        data-testid="document-list-loading"
+      >
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -180,7 +183,10 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
 
   if (status === "unauthenticated") {
     return (
-      <div className="p-4 text-center text-muted-foreground border rounded-lg">
+      <div
+        className="p-4 text-center text-muted-foreground border rounded-lg"
+        data-testid="document-list-unauthenticated"
+      >
         Please log in to view and manage your documents.
       </div>
     );
@@ -188,7 +194,10 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
 
   if (error) {
     return (
-      <div className="p-4 text-center text-destructive border border-destructive/50 rounded-lg bg-destructive/10 flex items-center justify-center gap-2">
+      <div
+        className="p-4 text-center text-destructive border border-destructive/50 rounded-lg bg-destructive/10 flex items-center justify-center gap-2"
+        data-testid="document-list-error"
+      >
         <AlertTriangle className="h-5 w-5" />
         <span>{error}</span>
       </div>
@@ -199,7 +208,7 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
   let tableBodyContent;
   if (isLoading && documents.length === 0) {
     tableBodyContent = (
-      <TableRow>
+      <TableRow data-testid="document-list-loading-row">
         <TableCell colSpan={5} className="h-24 text-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto" />
         </TableCell>
@@ -207,7 +216,7 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
     );
   } else if (documents.length === 0) {
     tableBodyContent = (
-      <TableRow>
+      <TableRow data-testid="document-list-empty-row">
         <TableCell
           colSpan={5}
           className="h-24 text-center text-muted-foreground"
@@ -221,6 +230,7 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
       <TableRow
         key={doc.id}
         data-state={selectedDocuments.has(doc.id) ? "selected" : undefined}
+        data-testid={`document-item-${doc.id}`}
       >
         <TableCell>
           <Checkbox
@@ -230,15 +240,22 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
             }
             aria-label={`Select document ${doc.filename}`}
             disabled={isLoading}
+            data-testid={`document-checkbox-${doc.id}`}
           />
         </TableCell>
         <TableCell className="hidden sm:table-cell">
           <FileText className="h-5 w-5 text-muted-foreground" />
         </TableCell>
-        <TableCell className="font-medium truncate max-w-xs">
+        <TableCell
+          className="font-medium truncate max-w-xs"
+          data-testid={`document-filename-${doc.id}`}
+        >
           {doc.filename}
         </TableCell>
-        <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
+        <TableCell
+          className="hidden md:table-cell text-muted-foreground text-sm"
+          data-testid={`document-date-${doc.id}`}
+        >
           {format(new Date(doc.createdAt), "PPp")}
         </TableCell>
         <TableCell className="text-right">
@@ -250,6 +267,7 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
                   size="icon"
                   className="text-muted-foreground hover:text-destructive"
                   disabled={isLoading}
+                  data-testid={`document-delete-${doc.id}`}
                 >
                   <Trash2 className="h-4 w-4" />
                   <span className="sr-only">Delete {doc.filename}</span>
@@ -272,6 +290,7 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
                     onClick={() => handleDelete(doc.id)}
                     disabled={isLoading}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    data-testid={`document-confirm-delete-${doc.id}`}
                   >
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -288,7 +307,10 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div
+      className="border rounded-lg overflow-hidden"
+      data-testid="document-list-container"
+    >
       <Table>
         <TableHeader>
           <TableRow>
@@ -301,6 +323,7 @@ export default function DocumentList({ onSelectionChange }: DocumentListProps) {
                 onCheckedChange={handleSelectAll}
                 aria-label="Select all rows"
                 disabled={isLoading || documents.length === 0}
+                data-testid="document-select-all"
               />
             </TableHead>
             <TableHead className="w-[60px] hidden sm:table-cell">

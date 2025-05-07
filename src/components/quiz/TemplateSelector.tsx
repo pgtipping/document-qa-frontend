@@ -86,7 +86,7 @@ export default function TemplateSelector({
   }, [documentFilename, selectedTemplateId, onTemplateSelect]);
 
   const renderTemplateCard = (template: QuizTemplate) => (
-    <div key={template.id} className="relative">
+    <div key={template.id} className="relative" data-testid={`template-card-${template.id}`}>
       <HoverCard>
         <HoverCardTrigger asChild>
           <div className="cursor-pointer">
@@ -168,7 +168,7 @@ export default function TemplateSelector({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="template-selector">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <Label className="mr-2 text-base font-medium">Quiz Template</Label>
@@ -193,6 +193,7 @@ export default function TemplateSelector({
             size="sm"
             onClick={() => setShowAllTemplates(!showAllTemplates)}
             disabled={disabled}
+            data-testid="show-all-templates-button"
           >
             {showAllTemplates ? "Show Recommended" : "Show All Templates"}
           </Button>
@@ -204,6 +205,7 @@ export default function TemplateSelector({
         onValueChange={onTemplateSelect}
         className="space-y-4"
         disabled={disabled}
+        data-testid="template-radio-group"
       >
         {recommendedTemplates.length > 0 && !showAllTemplates && (
           <>

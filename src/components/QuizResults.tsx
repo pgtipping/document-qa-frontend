@@ -180,7 +180,7 @@ export default function QuizResults({ quizId, resultId }: QuizResultsProps) {
   // Loading state
   if (loading) {
     return (
-      <Card className="w-full">
+      <Card className="w-full" data-testid="quiz-results-loading">
         <CardHeader>
           <CardTitle>Loading Results...</CardTitle>
           <CardDescription>
@@ -201,7 +201,7 @@ export default function QuizResults({ quizId, resultId }: QuizResultsProps) {
   // Error state
   if (error || !result) {
     return (
-      <Card className="w-full">
+      <Card className="w-full" data-testid="quiz-results-error">
         <CardHeader>
           <CardTitle>Error</CardTitle>
           <CardDescription>
@@ -225,279 +225,402 @@ export default function QuizResults({ quizId, resultId }: QuizResultsProps) {
   const incorrectCount = result.responses.length - correctCount;
 
   return (
-    <Card className="w-full">
+    <Card className="w-full" data-testid="quiz-results">
       <CardHeader>
         <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
           <div>
-            <CardTitle className="text-2xl">
+            <CardTitle className="text-2xl" data-testid="results-quiz-title">
               {result.quiz.title} - Results
             </CardTitle>
-            <CardDescription>
+            <CardDescription data-testid="results-document-name">
               From document: {result.quiz.document.filename}
             </CardDescription>
           </div>
-          <div className="flex flex-col items-center">
-            <div className="text-3xl font-bold">{result.score.toFixed(1)}%</div>
-            <div className="text-sm text-muted-foreground">
+          <div
+            className="flex flex-col items-center"
+            data-testid="results-score-container"
+          >
+            <div
+              className="text-3xl font-bold"
+              data-testid="results-score-percentage"
+            >
+              {result.score.toFixed(1)}%
+            </div>
+            <div
+              className="text-sm text-muted-foreground"
+              data-testid="results-score-points"
+            >
               {result.earnedPoints} / {result.totalPoints} points
             </div>
           </div>
         </div>
 
         {/* Result stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-md">
+        <div
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4"
+          data-testid="results-stats"
+        >
+          <div
+            className="flex items-center gap-2 p-3 bg-green-50 border border-green-100 rounded-md"
+            data-testid="results-correct-count"
+          >
             <Check className="h-5 w-5 text-green-600" />
             <div>
-              <div className="text-sm font-semibold">
-                {correctCount} Correct
-              </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="font-medium">{correctCount} Correct</div>
+              <div className="text-sm text-muted-foreground">
                 {((correctCount / result.responses.length) * 100).toFixed(0)}%
-                of answers
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-md">
+          <div
+            className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-md"
+            data-testid="results-incorrect-count"
+          >
             <X className="h-5 w-5 text-red-600" />
             <div>
-              <div className="text-sm font-semibold">
-                {incorrectCount} Incorrect
-              </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="font-medium">{incorrectCount} Incorrect</div>
+              <div className="text-sm text-muted-foreground">
                 {((incorrectCount / result.responses.length) * 100).toFixed(0)}%
-                of answers
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-100 rounded-md">
+          <div
+            className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-100 rounded-md"
+            data-testid="results-time-taken"
+          >
             <Clock className="h-5 w-5 text-blue-600" />
             <div>
-              <div className="text-sm font-semibold">
+              <div className="font-medium">Time Taken</div>
+              <div className="text-sm text-muted-foreground">
                 {result.timeTaken
                   ? formatTime(result.timeTaken)
-                  : "Time not recorded"}
+                  : "Not recorded"}
               </div>
-              <div className="text-xs text-muted-foreground">
-                {result.timeTaken && result.responses.length
-                  ? `~${Math.round(
-                      result.timeTaken / result.responses.length
-                    )}s per question`
-                  : ""}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Feedback */}
-        <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-md">
-          <div className="flex items-start gap-2">
-            <Award className="h-5 w-5 text-amber-600 mt-0.5" />
-            <div>
-              <div className="text-sm font-semibold">Feedback</div>
-              <div className="text-sm">{result.feedback}</div>
             </div>
           </div>
         </div>
       </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Quick stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="bg-slate-50">
+            <CardContent className="pt-6 flex items-center gap-4">
+              <Award className="w-10 h-10 text-amber-500" />
+              <div>
+                <p className="text-sm text-muted-foreground">Score</p>
+                <p
+                  className="text-xl font-semibold"
+                  data-testid="results-score"
+                >
+                  {result.score.toFixed(1)}%
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-      <CardContent>
-        <Tabs defaultValue="answers">
-          <TabsList className="mb-4">
-            <TabsTrigger value="answers">Answers</TabsTrigger>
-            <TabsTrigger value="summary">Summary</TabsTrigger>
+          <Card className="bg-green-50">
+            <CardContent className="pt-6 flex items-center gap-4">
+              <Check className="w-10 h-10 text-green-500" />
+              <div>
+                <p className="text-sm text-muted-foreground">Correct</p>
+                <p
+                  className="text-xl font-semibold"
+                  data-testid="results-correct-count"
+                >
+                  {correctCount} / {result.responses.length}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-blue-50">
+            <CardContent className="pt-6 flex items-center gap-4">
+              <Clock className="w-10 h-10 text-blue-500" />
+              <div>
+                <p className="text-sm text-muted-foreground">Time Taken</p>
+                <p
+                  className="text-xl font-semibold"
+                  data-testid="results-time-taken"
+                >
+                  {result.timeTaken ? formatTime(result.timeTaken) : "N/A"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Share controls */}
+        <div className="flex items-center justify-between p-4 rounded-lg border">
+          <div className="flex flex-col gap-1">
+            <div className="font-medium">Share this quiz result</div>
+            <div className="text-sm text-muted-foreground">
+              Allow others to view your results with a link
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="sharing"
+              checked={isShared}
+              onCheckedChange={handleSharingChange}
+              data-testid="results-share-switch"
+            />
+            <Label htmlFor="sharing">
+              {isShared ? "Sharing enabled" : "Sharing disabled"}
+            </Label>
+          </div>
+        </div>
+
+        {shareUrl && (
+          <div className="flex items-center p-4 bg-slate-50 rounded-lg">
+            <div
+              className="flex-1 text-sm truncate"
+              data-testid="results-share-url"
+            >
+              {shareUrl}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyShareUrl}
+              className="ml-2"
+              data-testid="results-copy-button"
+            >
+              <ClipboardCopy className="h-4 w-4 mr-2" />
+              Copy
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-2"
+              data-testid="results-share-button"
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Share
+            </Button>
+          </div>
+        )}
+
+        {sharingUpdated && (
+          <div className="p-3 bg-green-50 rounded-lg text-green-700 text-sm">
+            Sharing settings updated successfully.
+          </div>
+        )}
+
+        {/* Questions and answers */}
+        <Tabs defaultValue="all" className="mt-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all" data-testid="results-tab-all">
+              All ({result.responses.length})
+            </TabsTrigger>
+            <TabsTrigger value="correct" data-testid="results-tab-correct">
+              Correct ({correctCount})
+            </TabsTrigger>
+            <TabsTrigger value="incorrect" data-testid="results-tab-incorrect">
+              Incorrect ({incorrectCount})
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="answers">
-            <Accordion type="single" collapsible className="w-full">
+          <TabsContent value="all" className="mt-4">
+            <Accordion
+              type="multiple"
+              className="w-full space-y-4"
+              defaultValue={["question-0"]}
+            >
               {result.responses.map((response, index) => (
-                <AccordionItem key={response.id} value={`q-${index}`}>
-                  <AccordionTrigger className="hover:no-underline py-4">
-                    <div className="flex items-center gap-3 text-left">
-                      <Badge
-                        variant={response.isCorrect ? "default" : "destructive"}
-                        className="shrink-0"
-                      >
-                        {response.isCorrect ? "Correct" : "Incorrect"}
-                      </Badge>
-                      <span className="text-sm font-medium">
-                        {index + 1}.{" "}
-                        {response.questionText.length > 60
-                          ? `${response.questionText.substring(0, 60)}...`
-                          : response.questionText}
-                      </span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="border-l-2 pl-4 ml-4 space-y-3">
-                    <div>
-                      <div className="text-sm font-semibold">Question:</div>
-                      <div className="text-sm">{response.questionText}</div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <div className="text-sm font-semibold text-green-700">
-                          Correct Answer:
-                        </div>
-                        <div className="text-sm p-2 bg-green-50 border border-green-100 rounded">
-                          {response.correctAnswer}
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="text-sm font-semibold text-blue-700">
-                          Your Answer:
-                        </div>
-                        <div
-                          className={`text-sm p-2 ${
-                            response.isCorrect
-                              ? "bg-green-50 border border-green-100"
-                              : "bg-red-50 border border-red-100"
-                          } rounded`}
-                        >
-                          {response.userAnswer || "<No answer provided>"}
-                        </div>
-                      </div>
-                    </div>
-
-                    {response.explanation && (
-                      <div>
-                        <div className="text-sm font-semibold">
-                          Explanation:
-                        </div>
-                        <div className="text-sm">{response.explanation}</div>
-                      </div>
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
+                <ResultItem
+                  key={index}
+                  response={response}
+                  index={index}
+                  defaultOpen={index === 0}
+                />
               ))}
             </Accordion>
           </TabsContent>
 
-          <TabsContent value="summary">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-2">Score Breakdown</h3>
-                <div className="w-full bg-gray-100 rounded-full h-4 mb-1">
-                  <div
-                    className="bg-green-600 h-4 rounded-full"
-                    style={{ width: `${result.score}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>0%</span>
-                  <span>{result.score.toFixed(1)}%</span>
-                  <span>100%</span>
-                </div>
-              </div>
+          <TabsContent value="correct" className="mt-4">
+            <Accordion type="multiple" className="w-full space-y-4">
+              {result.responses
+                .filter((r) => r.isCorrect)
+                .map((response, index) => (
+                  <ResultItem
+                    key={index}
+                    response={response}
+                    index={index}
+                    defaultOpen={index === 0}
+                  />
+                ))}
+            </Accordion>
+          </TabsContent>
 
-              <div>
-                <h3 className="text-lg font-medium mb-2">Completion Time</h3>
-                {result.timeTaken ? (
-                  <p>{formatTime(result.timeTaken)}</p>
-                ) : (
-                  <p>Time not recorded</p>
-                )}
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium mb-2">Completed At</h3>
-                <p>{new Date(result.completedAt).toLocaleString()}</p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="share-results">Share Results</Label>
-                  <div className="flex items-center gap-2">
-                    {sharingUpdated && (
-                      <span className="text-xs text-green-600">✓ Updated</span>
-                    )}
-                    <Switch
-                      id="share-results"
-                      checked={isShared}
-                      onCheckedChange={handleSharingChange}
-                    />
-                  </div>
-                </div>
-
-                {isShared && shareUrl && (
-                  <div className="flex items-center gap-2 p-2 bg-gray-50 border rounded text-sm">
-                    <div className="truncate flex-1">{shareUrl}</div>
-                    <Button variant="outline" size="sm" onClick={copyShareUrl}>
-                      <ClipboardCopy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
+          <TabsContent value="incorrect" className="mt-4">
+            <Accordion type="multiple" className="w-full space-y-4">
+              {result.responses
+                .filter((r) => !r.isCorrect)
+                .map((response, index) => (
+                  <ResultItem
+                    key={index}
+                    response={response}
+                    index={index}
+                    defaultOpen={index === 0}
+                  />
+                ))}
+            </Accordion>
           </TabsContent>
         </Tabs>
       </CardContent>
 
-      <CardFooter className="flex justify-between gap-4">
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.back()}>
-            Go Back
-          </Button>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline">
-                <Share2 className="h-4 w-4 mr-2" />
-                Share
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Share Your Quiz Results</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {isShared
-                    ? "Your quiz results are currently shared. Anyone with the link can view them."
-                    : "Your quiz results are currently private. Enable sharing to get a link."}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-
-              <div className="flex items-center justify-between py-4">
-                <Label htmlFor="share-dialog-switch">Enable sharing</Label>
-                <Switch
-                  id="share-dialog-switch"
-                  checked={isShared}
-                  onCheckedChange={handleSharingChange}
-                />
-              </div>
-
-              {isShared && shareUrl && (
-                <div className="flex items-center gap-2 p-2 bg-gray-50 border rounded text-sm">
-                  <div className="truncate flex-1">{shareUrl}</div>
-                  <Button variant="outline" size="sm" onClick={copyShareUrl}>
-                    <ClipboardCopy className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-
-              <AlertDialogFooter>
-                <AlertDialogCancel>Close</AlertDialogCancel>
-                {isShared && shareUrl && (
-                  <AlertDialogAction asChild>
-                    <Button onClick={copyShareUrl}>Copy Link</Button>
-                  </AlertDialogAction>
-                )}
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-
+      <CardFooter className="flex justify-between">
         <Button
-          variant="default"
+          variant="outline"
+          onClick={() => router.push("/docs")}
+          data-testid="results-back-button"
+        >
+          Back to Documents
+        </Button>
+        <Button
           onClick={() =>
             router.push(`/quiz/new?documentId=${result.quiz.document.id}`)
           }
+          data-testid="results-new-quiz-button"
         >
           Create New Quiz
         </Button>
       </CardFooter>
     </Card>
+  );
+}
+
+// Individual result item component
+function ResultItem({
+  response,
+  index,
+  defaultOpen,
+}: {
+  response: QuizResponse;
+  index: number;
+  defaultOpen: boolean;
+}) {
+  return (
+    <AccordionItem
+      value={`question-${index}`}
+      className="border rounded-lg p-2"
+      data-testid={`results-question-${index}`}
+    >
+      <AccordionTrigger className="py-4 hover:no-underline">
+        <div className="flex items-center justify-between w-full px-2 text-left">
+          <div className="flex items-center gap-3">
+            {response.isCorrect ? (
+              <Badge
+                className="bg-green-100 text-green-700 hover:bg-green-100"
+                data-testid={`results-question-${index}-status`}
+              >
+                <Check className="mr-1 h-3 w-3" />
+                Correct
+              </Badge>
+            ) : (
+              <Badge
+                className="bg-red-100 text-red-700 hover:bg-red-100"
+                data-testid={`results-question-${index}-status`}
+              >
+                <X className="mr-1 h-3 w-3" />
+                Incorrect
+              </Badge>
+            )}
+            <span className="text-base font-medium line-clamp-1">
+              {response.questionText}
+            </span>
+          </div>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className="px-4 pt-2 pb-4">
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground mb-1">
+              Question:
+            </p>
+            <p className="text-base">{response.questionText}</p>
+          </div>
+
+          {response.answerType === "multiple_choice" && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">
+                Options:
+              </p>
+              <ul className="ml-4 space-y-1">
+                {response.options?.map((option, i) => (
+                  <li
+                    key={i}
+                    className={`flex items-center ${
+                      option === response.correctAnswer
+                        ? "text-green-600 font-medium"
+                        : option === response.userAnswer &&
+                          option !== response.correctAnswer
+                        ? "text-red-600 line-through"
+                        : ""
+                    }`}
+                    data-testid={`results-question-${index}-option-${i}`}
+                  >
+                    {option === response.correctAnswer && (
+                      <Check className="mr-1 h-3 w-3 text-green-500" />
+                    )}
+                    {option === response.userAnswer &&
+                      option !== response.correctAnswer && (
+                        <X className="mr-1 h-3 w-3 text-red-500" />
+                      )}
+                    {option}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-1">
+                Your Answer:
+              </p>
+              <p
+                className={`rounded px-2 py-1 ${
+                  response.isCorrect
+                    ? "bg-green-50 text-green-700"
+                    : "bg-red-50 text-red-700"
+                }`}
+                data-testid={`results-question-${index}-user-answer`}
+              >
+                {response.userAnswer || "(No answer provided)"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-1">
+                Correct Answer:
+              </p>
+              <p
+                className="bg-green-50 text-green-700 rounded px-2 py-1"
+                data-testid={`results-question-${index}-correct-answer`}
+              >
+                {response.correctAnswer}
+              </p>
+            </div>
+          </div>
+
+          {response.explanation && (
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-1">
+                Explanation:
+              </p>
+              <p
+                className="text-sm bg-blue-50 p-3 rounded"
+                data-testid={`results-question-${index}-explanation`}
+              >
+                {response.explanation}
+              </p>
+            </div>
+          )}
+        </div>
+      </AccordionContent>
+    </AccordionItem>
   );
 }
