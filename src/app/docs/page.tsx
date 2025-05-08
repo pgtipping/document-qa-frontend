@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 const Documentation = () => {
   return (
@@ -151,31 +152,109 @@ const Documentation = () => {
           <h2 className="text-2xl font-semibold mb-4">
             Getting Started: Onboarding Guide
           </h2>
-          <ol className="list-decimal pl-6 space-y-2">
+          <ol className="list-decimal pl-6 space-y-8">
             <li>
               <strong>Register:</strong> Create your free InQDoc account using
               the Sign Up button at the top right.
+              <div className="mt-2">
+                <Image
+                  src="/onboarding/register.png"
+                  alt="Registration Screenshot"
+                  width={600}
+                  height={350}
+                  className="rounded shadow"
+                />
+              </div>
             </li>
             <li>
               <strong>Upload Documents:</strong> Go to the Chat page and use the
               Upload button to add your PDF, DOCX, or TXT files. Uploaded
               documents will appear in your document list.
+              <div className="mt-2">
+                <Image
+                  src="/onboarding/upload.png"
+                  alt="Upload Screenshot"
+                  width={600}
+                  height={350}
+                  className="rounded shadow"
+                />
+              </div>
             </li>
             <li>
               <strong>Ask Questions:</strong> Select a document and type your
               question in the chat input. The AI will answer based on your
               document's content.
+              <div className="mt-2">
+                <Image
+                  src="/onboarding/ask.png"
+                  alt="Ask Question Screenshot"
+                  width={600}
+                  height={350}
+                  className="rounded shadow"
+                />
+              </div>
             </li>
             <li>
               <strong>Generate Quizzes:</strong> Use the quiz feature to
               automatically generate questions and test your understanding of
               the document.
+              <div className="mt-2">
+                <Image
+                  src="/onboarding/quiz.png"
+                  alt="Quiz Screenshot"
+                  width={600}
+                  height={350}
+                  className="rounded shadow"
+                />
+              </div>
             </li>
             <li>
               <strong>Review Results:</strong> View your quiz results and chat
               history at any time from your dashboard.
+              <div className="mt-2">
+                <Image
+                  src="/onboarding/results.png"
+                  alt="Results Screenshot"
+                  width={600}
+                  height={350}
+                  className="rounded shadow"
+                />
+              </div>
             </li>
           </ol>
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold mb-2">
+              Watch the Quick Start Video
+            </h3>
+            <video controls width="600" className="rounded shadow">
+              <source src="/onboarding/intro.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          <div className="mt-8 bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+            <h4 className="font-semibold mb-2">Tips for Best Results</h4>
+            <ul className="list-disc pl-5 space-y-1 text-blue-900">
+              <li>
+                Upload documents with clear, searchable text (avoid scanned
+                images).
+              </li>
+              <li>
+                Select only the documents you want to query for focused answers.
+              </li>
+              <li>
+                Use the "Generate Question" feature for inspiration if you're
+                not sure what to ask.
+              </li>
+              <li>
+                Review your quiz results to identify knowledge gaps and track
+                your progress.
+              </li>
+              <li>
+                If you get an unexpected answer, try rephrasing your question or
+                checking the selected documents.
+              </li>
+            </ul>
+          </div>
           <div className="mt-4 text-gray-600">
             For more details, see the{" "}
             <Link
