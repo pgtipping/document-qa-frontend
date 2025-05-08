@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import getConfig from "next/config";
 
 export async function GET(_req: NextRequest) {
   // Prefix unused parameter with _
   try {
-    // Get server runtime config to access environment variables
-    const { serverRuntimeConfig } = getConfig();
-    const apiUrl = serverRuntimeConfig.API_URL;
+    // Use direct fallback, not relying on getConfig() which can fail during static export
+    // Use a fallback for API_URL or NEXT_PUBLIC_API_URL
+    const apiUrl =
+      process.env.API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "https://inqdoc.synthalyst.com";
 
     // Forward the request to our backend
     const response = await fetch(`${apiUrl}/api/models`, {
