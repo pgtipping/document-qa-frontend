@@ -145,6 +145,55 @@ const Documentation = () => {
             </ul>
           </div>
         </section>
+
+        {/* Onboarding Guide */}
+        <section className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-2xl font-semibold mb-4">
+            Getting Started: Onboarding Guide
+          </h2>
+          <ol className="list-decimal pl-6 space-y-2">
+            <li>
+              <strong>Register:</strong> Create your free InQDoc account using
+              the Sign Up button at the top right.
+            </li>
+            <li>
+              <strong>Upload Documents:</strong> Go to the Chat page and use the
+              Upload button to add your PDF, DOCX, or TXT files. Uploaded
+              documents will appear in your document list.
+            </li>
+            <li>
+              <strong>Ask Questions:</strong> Select a document and type your
+              question in the chat input. The AI will answer based on your
+              document's content.
+            </li>
+            <li>
+              <strong>Generate Quizzes:</strong> Use the quiz feature to
+              automatically generate questions and test your understanding of
+              the document.
+            </li>
+            <li>
+              <strong>Review Results:</strong> View your quiz results and chat
+              history at any time from your dashboard.
+            </li>
+          </ol>
+          <div className="mt-4 text-gray-600">
+            For more details, see the{" "}
+            <Link
+              href="/docs/how-to-use"
+              className="text-blue-600 hover:text-blue-800"
+            >
+              How to Use Guide
+            </Link>{" "}
+            or visit our{" "}
+            <Link
+              href="/tutorials"
+              className="text-blue-600 hover:text-blue-800"
+            >
+              Tutorials
+            </Link>{" "}
+            for tips and troubleshooting.
+          </div>
+        </section>
       </div>
     </div>
   );
