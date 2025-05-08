@@ -10,7 +10,7 @@
     "lint": "next lint",
     "test": "jest",
     "sitemap": "next-sitemap",
-    "postbuild": "next-sitemap",
+    "postbuild": "prisma migrate deploy && next-sitemap",
     "generate-admin-key": "ts-node scripts/generate-admin-key.ts",
     "cy:open": "cypress open",
     "cy:run": "cypress run",

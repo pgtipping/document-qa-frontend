@@ -1,3 +1,21 @@
+# 2025-05-08 00:58:56 - Automated Production Migration & Registration Fix
+
+## Completed - 2025-05-08 00:58:56
+
+- **Task:** Ensure production database schema is always up to date and registration works
+- **Actions:**
+  - Removed all duplicate route files and cleared the .next build cache, resolving duplicate page warnings
+  - Diagnosed registration 500 error as missing tables in production DB (no `User` table)
+  - Updated `package.json` to run `prisma migrate deploy` automatically after every build, automating DB migrations on Vercel
+
+## Next Steps - 2025-05-08 00:58:56
+
+1. Commit and push the updated `package.json` to main to trigger a new Vercel deployment
+2. After deployment, verify that the `User` table and all required tables exist in the production database
+3. Test registration on production to ensure it works
+4. Monitor Vercel deployment logs for migration/runtime errors
+5. Update onboarding and developer docs to clarify that DB migrations are now automated on every deployment
+
 # 2025-05-08 10:35:00 EDT - Enhanced Cypress Testing Infrastructure
 
 ## Completed - 2025-05-08 10:35:00 EDT
