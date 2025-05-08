@@ -17,6 +17,14 @@ const nextConfig = {
   experimental: {
     largePageDataBytes: 128 * 100000, // Increase size limit for large responses
   },
+  // Make server-side environment variables available
+  serverRuntimeConfig: {
+    // Will only be available on the server side
+    API_URL:
+      process.env.API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "https://inqdoc.synthalyst.com",
+  },
   typescript: {
     // !! WARN !!
     // Dangerously allow production builds to successfully complete even if
