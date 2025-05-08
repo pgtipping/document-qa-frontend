@@ -1871,3 +1871,35 @@ Based on the gap analysis, implementation priorities are:
 # Previous Progress (Summarized)
 
 - Enhanced Cypress testing infrastructure, improved database seeding, implemented quiz templates and question difficulty features, and consolidated test setup. See earlier entries for details.
+
+# 2025-05-08 03:48:57 - Onboarding, Documentation, and Deployment Overhaul
+
+## Completed - 2025-05-08 03:48:57
+
+- **Deployment:**
+  - Fixed all Vercel deployment errors (Prisma migrations, environment variables, DB schema sync).
+- **Documentation:**
+  - Removed all API docs and integration guides (React, Vue, Python) to align with web app–only direction.
+  - Updated `/docs` with a new onboarding guide, including placeholder screenshots, video, and user tips.
+  - Enhanced onboarding for clarity and user-friendliness; all changes pushed to main.
+- **Tutorials:**
+  - Cleaned up integration tutorials, keeping only relevant user-facing content.
+
+## Next Steps - 2025-05-08 03:48:57
+
+1. Add real screenshots and a video walkthrough to `public/onboarding/` for the onboarding guide.
+2. Test the onboarding flow as a new user to ensure clarity and completeness.
+3. Expand tutorials and tips based on user questions and support requests.
+4. Add accessibility and mobile-first checks to onboarding and docs.
+5. Monitor for any new deployment or runtime errors.
+
+---
+
+# Progress Summary (older than 5 days)
+
+- Automated production migration and registration fix
+- Enhanced Cypress testing infrastructure
+- Fixed database seeding TypeScript issues
+- Implemented question difficulty levels
+- Implemented quiz templates feature
+- Consolidated Cypress testing setup
