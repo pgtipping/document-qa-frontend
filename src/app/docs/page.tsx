@@ -31,37 +31,19 @@ const Documentation = () => {
 
         {/* Integration Guides */}
         <section className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold mb-4">Integration Guides</h2>
+          <h2 className="text-2xl font-semibold mb-4">How to Use InQDoc</h2>
           <div className="space-y-4">
-            <div>
-              <h3 className="text-xl font-medium mb-2">Framework Guides</h3>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>
-                  <Link
-                    href="/docs/react"
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    React Integration Guide
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/docs/vue"
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Vue Integration Guide
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/docs/python"
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    Python/FastAPI Integration Guide
-                  </Link>
-                </li>
-              </ul>
-            </div>
+            <p>
+              Learn how to use InQDoc to upload documents, ask questions, and
+              generate quizzes. See the{" "}
+              <Link
+                href="/docs/how-to-use"
+                className="text-blue-600 hover:text-blue-800"
+              >
+                How to Use Guide
+              </Link>{" "}
+              for a step-by-step walkthrough.
+            </p>
           </div>
         </section>
 
